@@ -274,4 +274,4 @@ pkg/
 
 ## License
 
-MIT
+MPL
