@@ -5,6 +5,7 @@ safeanalyze.exe
 
 # Output directories
 safeanalyze-out/
+safeanalyze-test-out/
 *.out/
 
 # Test repos
