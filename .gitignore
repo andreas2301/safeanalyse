@@ -1,0 +1,32 @@
+# Binaries
+safeanalyze
+safeanalyze.exe
+*.exe
+
+# Output directories
+safeanalyze-out/
+*.out/
+
+# Test repos
+safeanalyze-testrepo/
+
+# Go
+vendor/
+*.test
+*.prof
+*.log
+
+# IDE
+.idea/
+.vscode/
+*.swp
+*.swo
+*~
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Debug files
+debug_*.go
+writetest.py

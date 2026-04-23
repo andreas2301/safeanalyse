@@ -1,0 +1,86 @@
+# safeanalyze configuration file
+# See README.md for documentation
+
+scanners:
+  - name: trufflehog
+    command: "trufflehog filesystem {path} --json"
+    enabled: true
+    fail_on_findings: true
+  - name: semgrep
+    command: "semgrep --config=auto {path} --json"
+    enabled: false
+    fail_on_findings: false
+
+sanitization:
+  strip_comments: true
+  remove_non_ascii: true
+  max_file_size_bytes: 50000
+  max_lines_per_file: 500
+  allowed_extensions:
+    - .go
+    - .py
+    - .js
+    - .ts
+    - .jsx
+    - .tsx
+    - .rs
+    - .java
+    - .c
+    - .cpp
+    - .h
+    - .rb
+    - .php
+    - .swift
+    - .kt
+    - .scala
+    - .sh
+    - .bash
+    - .zsh
+    - .yaml
+    - .yml
+    - .sql
+    - .html
+    - .xml
+    - .css
+    - .lua
+    - .r
+  excluded_paths:
+    - .git
+    - node_modules
+    - vendor
+    - target
+    - build
+    - dist
+    - .venv
+    - __pycache__
+    - .idea
+    - .vscode
+
+hidden_chars:
+  enabled: true
+  categories:
+    - zero_width
+    - bidi
+    - control
+  fail_on_findings: true
+
+entropy:
+  enabled: true
+  threshold: 4.5
+  min_length: 20
+  fail_on_findings: false
+
+yara:
+  enabled: true
+  fail_on_findings: true
+
+output:
+  format: markdown
+  single_file: false
+  include_file_tree: true
+  out_dir: ./safeanalyze-out
+
+sandbox:
+  mode: none
+  docker_image: alpine:latest
+  firejail_profile: default
