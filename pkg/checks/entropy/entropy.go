@@ -272,13 +272,14 @@ func Summary(findings []Finding) string {
 
 // Stage wraps the entropy detector as a pipeline stage.
 type Stage struct {
-	threshold     float64
-	excludedPaths []string
+	threshold        float64
+	maxFileSizeBytes int
+	excludedPaths    []string
 }
 
 // NewStage creates an entropy pipeline stage.
-func NewStage(threshold float64, excludedPaths []string) *Stage {
-	return &Stage{threshold: threshold, excludedPaths: excludedPaths}
+func NewStage(threshold float64, maxFileSizeBytes int, excludedPaths []string) *Stage {
+	return &Stage{threshold: threshold, maxFileSizeBytes: maxFileSizeBytes, excludedPaths: excludedPaths}
 }
 
 // Name returns the stage name.
@@ -300,6 +301,10 @@ func (s *Stage) Run(ctx context.Context, target string, input *report.Report) (*
 		case <-ctx.Done():
 			return ctx.Err()
 		default:
+		}
+		if s.maxFileSizeBytes > 0 && len(content) > s.maxFileSizeBytes {
+			out.AddError(s.Name(), fmt.Sprintf("skipped %s: size %d exceeds entropy max %d", rel, len(content), s.maxFileSizeBytes))
+			return nil
 		}
 		findings := det.ScanContent(string(content), rel)
 		for _, f := range findings {

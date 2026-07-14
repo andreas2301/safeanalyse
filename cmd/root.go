@@ -5,6 +5,7 @@ import (
 
 	"github.com/spf13/cobra"
 	"github.com/user/safeanalyze/pkg/config"
+	"github.com/user/safeanalyze/pkg/version"
 )
 
 var (
@@ -29,6 +30,7 @@ It implements a defense-in-depth pipeline inspired by Zones of Distrust:
 
 Use 'safeanalyze init' to create a configuration file.
 `,
+	Version: version.Version,
 	PersistentPreRunE: func(cmd *cobra.Command, args []string) error {
 		if cfgFile != "" {
 			var err error
@@ -50,5 +52,5 @@ func Execute() error {
 
 func init() {
 	rootCmd.PersistentFlags().StringVarP(&cfgFile, "config", "c", "", "config file path")
-	rootCmd.AddCommand(initCmd, scanCmd, sanitizeCmd, ingestCmd, diffCmd)
+	rootCmd.AddCommand(initCmd, installCmd, inspectCmd, scanCmd, sanitizeCmd, ingestCmd, diffCmd)
 }

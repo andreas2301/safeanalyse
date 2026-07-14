@@ -11,6 +11,7 @@ import (
 	"github.com/user/safeanalyze/pkg/checks/yara"
 	"github.com/user/safeanalyze/pkg/pipeline"
 	"github.com/user/safeanalyze/pkg/report"
+	"github.com/user/safeanalyze/pkg/version"
 )
 
 var scanCmd = &cobra.Command{
@@ -23,23 +24,32 @@ report (SARIF, Markdown, HTML) in the configured output directory.`,
 		target := args[0]
 		verbose, _ := cmd.Flags().GetBool("verbose")
 		outputDir, _ := cmd.Flags().GetString("output-dir")
+		mode, _ := cmd.Flags().GetString("mode")
 
 		if _, err := os.Stat(target); err != nil {
 			return fmt.Errorf("target path does not exist: %s", target)
 		}
 
-		registry := pipeline.BuiltInRegistry(cfg)
-		if err := external.RegisterAll(registry, cfg); err != nil {
-			return fmt.Errorf("registering external scanners: %w", err)
-		}
-
-		stageNames := pipeline.DefaultStages()
-		for _, name := range registry.Names() {
-			if !contains(stageNames, name) {
-				stageNames = append(stageNames, name)
+		var stageNames []string
+		switch mode {
+		case "fast":
+			stageNames = []string{"yara", "hiddenchars"}
+		case "thorough":
+			registry := pipeline.BuiltInRegistry(cfg)
+			if err := external.RegisterAll(registry, cfg); err != nil {
+				return fmt.Errorf("registering external scanners: %w", err)
 			}
+			stageNames = pipeline.DefaultStages()
+			for _, name := range registry.Names() {
+				if !contains(stageNames, name) {
+					stageNames = append(stageNames, name)
+				}
+			}
+		default:
+			return fmt.Errorf("unknown mode %q; use fast or thorough", mode)
 		}
 
+		registry := pipeline.BuiltInRegistry(cfg)
 		stages, err := registry.Build(stageNames)
 		if err != nil {
 			return fmt.Errorf("building pipeline: %w", err)
@@ -48,13 +58,15 @@ report (SARIF, Markdown, HTML) in the configured output directory.`,
 		engine := pipeline.NewEngine(stages, 4)
 		ctx := context.Background()
 		if verbose {
-			color.Cyan("Running pipeline with %d stage(s)...\n", len(stages))
+			color.Cyan("Running %s pipeline with %d stage(s)...\n", mode, len(stages))
 		}
 
 		rep, err := engine.Run(ctx, target)
 		if err != nil {
 			return fmt.Errorf("pipeline failed: %w", err)
 		}
+		rep.Metadata["safeanalyze_version"] = version.Version
+		rep.Metadata["scan_mode"] = mode
 
 		printReportSummary(rep)
 

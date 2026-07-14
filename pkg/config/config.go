@@ -46,10 +46,12 @@ type HiddenCharsConfig struct {
 
 // EntropyConfig controls entropy analysis.
 type EntropyConfig struct {
-	Enabled        bool    `yaml:"enabled"`
-	Threshold      float64 `yaml:"threshold"`
-	MinLength      int     `yaml:"min_length"`
-	FailOnFindings bool    `yaml:"fail_on_findings"`
+	Enabled          bool    `yaml:"enabled"`
+	Threshold        float64 `yaml:"threshold"`
+	MinLength        int     `yaml:"min_length"`
+	MaxLength        int     `yaml:"max_length"`
+	MaxFileSizeBytes int     `yaml:"max_file_size_bytes"`
+	FailOnFindings   bool    `yaml:"fail_on_findings"`
 }
 
 // YARAConfig controls the built-in YARA-like rule engine.
@@ -129,10 +131,12 @@ func DefaultConfig() *Config {
 			FailOnFindings: true,
 		},
 		Entropy: EntropyConfig{
-			Enabled:        true,
-			Threshold:      4.5,
-			MinLength:      20,
-			FailOnFindings: false,
+			Enabled:          true,
+			Threshold:        4.5,
+			MinLength:        20,
+			MaxLength:        4096,
+			MaxFileSizeBytes: 5 * 1024 * 1024, // 5 MB
+			FailOnFindings:   false,
 		},
 		YARA: YARAConfig{
 			Enabled:        true,

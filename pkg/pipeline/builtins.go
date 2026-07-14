@@ -15,7 +15,7 @@ func BuiltInRegistry(cfg *config.Config) *Registry {
 		return yara.NewStage(cfg.Sanitization.ExcludedPaths)
 	})
 	r.Register("entropy", func() Stage {
-		return entropy.NewStage(cfg.Entropy.Threshold, cfg.Sanitization.ExcludedPaths)
+		return entropy.NewStage(cfg.Entropy.Threshold, cfg.Entropy.MaxFileSizeBytes, cfg.Sanitization.ExcludedPaths)
 	})
 	r.Register("hiddenchars", func() Stage {
 		return hiddenchars.NewStage(cfg.HiddenChars.Categories, cfg.Sanitization.ExcludedPaths)
