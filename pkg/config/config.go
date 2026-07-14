@@ -9,13 +9,14 @@ import (
 
 // Config is the top-level configuration for safeanalyze.
 type Config struct {
-	Scanners      []ScannerConfig      `yaml:"scanners"`
-	Sanitization  SanitizationConfig   `yaml:"sanitization"`
-	HiddenChars   HiddenCharsConfig    `yaml:"hidden_chars"`
-	Entropy       EntropyConfig        `yaml:"entropy"`
-	YARA          YARAConfig           `yaml:"yara"`
-	Output        OutputConfig         `yaml:"output"`
-	Sandbox       SandboxConfig        `yaml:"sandbox"`
+	Scanners     []ScannerConfig    `yaml:"scanners"`
+	Sanitization SanitizationConfig `yaml:"sanitization"`
+	HiddenChars  HiddenCharsConfig  `yaml:"hidden_chars"`
+	Entropy      EntropyConfig      `yaml:"entropy"`
+	YARA         YARAConfig         `yaml:"yara"`
+	ML           MLConfig           `yaml:"ml"`
+	Output       OutputConfig       `yaml:"output"`
+	Sandbox      SandboxConfig      `yaml:"sandbox"`
 }
 
 // ScannerConfig defines an external tool to run.
@@ -28,12 +29,12 @@ type ScannerConfig struct {
 
 // SanitizationConfig controls how files are cleaned before AI ingestion.
 type SanitizationConfig struct {
-	StripComments    bool     `yaml:"strip_comments"`
-	RemoveNonASCII   bool     `yaml:"remove_non_ascii"`
-	MaxFileSizeBytes int      `yaml:"max_file_size_bytes"`
-	MaxLinesPerFile  int      `yaml:"max_lines_per_file"`
+	StripComments     bool     `yaml:"strip_comments"`
+	RemoveNonASCII    bool     `yaml:"remove_non_ascii"`
+	MaxFileSizeBytes  int      `yaml:"max_file_size_bytes"`
+	MaxLinesPerFile   int      `yaml:"max_lines_per_file"`
 	AllowedExtensions []string `yaml:"allowed_extensions"`
-	ExcludedPaths    []string `yaml:"excluded_paths"`
+	ExcludedPaths     []string `yaml:"excluded_paths"`
 }
 
 // HiddenCharsConfig controls invisible character detection.
@@ -57,18 +58,43 @@ type YARAConfig struct {
 	FailOnFindings bool `yaml:"fail_on_findings"`
 }
 
+// MLConfig controls the prompt-injection classifier.
+type MLConfig struct {
+	Enabled           bool     `yaml:"enabled"`
+	ModelPath         string   `yaml:"model_path"`
+	Threshold         float64  `yaml:"threshold"`
+	BatchSize         int      `yaml:"batch_size"`
+	AllowedExtensions []string `yaml:"allowed_extensions"`
+	ExcludedPaths     []string `yaml:"excluded_paths"`
+	FailOnFindings    bool     `yaml:"fail_on_findings"`
+}
+
 // OutputConfig controls how results are formatted.
 type OutputConfig struct {
-	Format          string `yaml:"format"` // markdown, json, plain
-	SingleFile      bool   `yaml:"single_file"`
-	IncludeFileTree bool   `yaml:"include_file_tree"`
-	OutDir          string `yaml:"out_dir"`
+	Formats         []string `yaml:"formats"`
+	Format          string   `yaml:"format"` // deprecated legacy, treat as [format]
+	SingleFile      bool     `yaml:"single_file"`
+	IncludeFileTree bool     `yaml:"include_file_tree"`
+	OutDir          string   `yaml:"out_dir"`
+	Template        string   `yaml:"template"`
+}
+
+// EffectiveFormats returns the configured output formats, normalising the
+// deprecated single Format field into a slice. Defaults to ["markdown"].
+func (o OutputConfig) EffectiveFormats() []string {
+	if len(o.Formats) > 0 {
+		return o.Formats
+	}
+	if o.Format != "" {
+		return []string{o.Format}
+	}
+	return []string{"markdown"}
 }
 
 // SandboxConfig controls isolation settings.
 type SandboxConfig struct {
-	Mode       string   `yaml:"mode"` // none, firejail, docker
-	DockerImage string  `yaml:"docker_image"`
+	Mode            string `yaml:"mode"` // none, firejail, docker
+	DockerImage     string `yaml:"docker_image"`
 	FirejailProfile string `yaml:"firejail_profile"`
 }
 
@@ -111,6 +137,14 @@ func DefaultConfig() *Config {
 		YARA: YARAConfig{
 			Enabled:        true,
 			FailOnFindings: true,
+		},
+		ML: MLConfig{
+			Enabled:           true,
+			Threshold:         0.5,
+			BatchSize:         4,
+			AllowedExtensions: []string{".go", ".py", ".js", ".ts", ".jsx", ".tsx", ".rs", ".java", ".c", ".cpp", ".h", ".rb", ".php", ".swift", ".kt", ".md", ".txt", ".yaml", ".yml", ".json", ".sql"},
+			ExcludedPaths:     []string{".git", "node_modules", "vendor", "target", "build", "dist", ".venv", "__pycache__", ".idea", ".vscode"},
+			FailOnFindings:    false,
 		},
 		Output: OutputConfig{
 			Format:          "markdown",

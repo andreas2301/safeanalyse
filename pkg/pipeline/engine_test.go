@@ -70,14 +70,14 @@ func TestEngineDetectsCycle(t *testing.T) {
 	}
 }
 
-func TestEngineDetectsUnknownDependency(t *testing.T) {
+func TestEngineIgnoresUnknownDependency(t *testing.T) {
 	stages := []Stage{
 		&mockStage{name: "a", deps: []string{"missing"}},
 	}
 	engine := NewEngine(stages, 4)
 	_, err := engine.Run(context.Background(), "target")
-	if err == nil {
-		t.Fatal("expected unknown dependency error")
+	if err != nil {
+		t.Fatalf("expected unknown dependency to be ignored, got error: %v", err)
 	}
 }
 

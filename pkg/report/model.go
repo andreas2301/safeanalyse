@@ -32,8 +32,8 @@ type Finding struct {
 	Column      int    `json:"column"`
 	Match       string `json:"match,omitempty"`
 	Message     string `json:"message"`
-	Source      string `json:"source"`      // which check produced it
-	Confidence  string `json:"confidence"`  // deterministic, heuristic, ml
+	Source      string `json:"source"`     // which check produced it
+	Confidence  string `json:"confidence"` // deterministic, heuristic, ml
 	Remediation string `json:"remediation,omitempty"`
 }
 
@@ -45,33 +45,33 @@ type ErrorRecord struct {
 
 // Summary aggregates report statistics.
 type Summary struct {
-	FilesScanned   int            `json:"files_scanned"`
-	FilesSanitized int            `json:"files_sanitized"`
-	BytesBefore    int64          `json:"bytes_before"`
-	BytesAfter     int64          `json:"bytes_after"`
+	FilesScanned     int            `json:"files_scanned"`
+	FilesSanitized   int            `json:"files_sanitized"`
+	BytesBefore      int64          `json:"bytes_before"`
+	BytesAfter       int64          `json:"bytes_after"`
 	CountsBySeverity map[string]int `json:"counts_by_severity"`
 	CountsBySource   map[string]int `json:"counts_by_source"`
 }
 
 // Report is the unified output of the safeanalyze pipeline.
 type Report struct {
-	Target      string        `json:"target"`
-	StartedAt   time.Time     `json:"started_at"`
-	CompletedAt time.Time     `json:"completed_at"`
-	Findings    []Finding     `json:"findings"`
-	Errors      []ErrorRecord `json:"errors"`
-	Summary     Summary       `json:"summary"`
+	Target      string            `json:"target"`
+	StartedAt   time.Time         `json:"started_at"`
+	CompletedAt time.Time         `json:"completed_at"`
+	Findings    []Finding         `json:"findings"`
+	Errors      []ErrorRecord     `json:"errors"`
+	Summary     Summary           `json:"summary"`
 	Metadata    map[string]string `json:"metadata,omitempty"`
 }
 
 // NewReport creates an empty report for a target.
 func NewReport(target string) *Report {
 	return &Report{
-		Target:   target,
+		Target:    target,
 		StartedAt: time.Now().UTC(),
-		Findings: []Finding{},
-		Errors:   []ErrorRecord{},
-		Metadata: map[string]string{},
+		Findings:  []Finding{},
+		Errors:    []ErrorRecord{},
+		Metadata:  map[string]string{},
 		Summary: Summary{
 			CountsBySeverity: map[string]int{},
 			CountsBySource:   map[string]int{},

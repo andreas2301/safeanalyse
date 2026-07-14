@@ -48,6 +48,13 @@ func (e *Engine) Run(ctx context.Context, target string) (*report.Report, error)
 	// Worker semaphore to limit parallelism.
 	sem := make(chan struct{}, e.maxParallelism)
 
+	// Build a set of known stage names so optional dependencies on stages that
+	// are not part of this run are treated as already satisfied.
+	known := make(map[string]bool, len(ordered))
+	for _, stage := range ordered {
+		known[stage.Name()] = true
+	}
+
 	for _, stage := range ordered {
 		stage := stage
 		wg.Add(1)
@@ -57,6 +64,9 @@ func (e *Engine) Run(ctx context.Context, target string) (*report.Report, error)
 			// Wait for dependencies.
 			mu.Lock()
 			for _, dep := range stage.Dependencies() {
+				if !known[dep] {
+					continue
+				}
 				for !completed[dep] {
 					if ctx.Err() != nil {
 						mu.Unlock()
@@ -73,6 +83,9 @@ func (e *Engine) Run(ctx context.Context, target string) (*report.Report, error)
 			input := report.NewReport(target)
 			mu.Lock()
 			for _, dep := range stage.Dependencies() {
+				if !known[dep] {
+					continue
+				}
 				if r, ok := reports[dep]; ok {
 					// Carry forward metadata only, not findings, to avoid duplication.
 					for k, v := range r.Metadata {
@@ -162,7 +175,9 @@ func (e *Engine) topologicalSort() ([]Stage, error) {
 	for name, s := range byName {
 		for _, dep := range s.Dependencies() {
 			if _, ok := byName[dep]; !ok {
-				return nil, fmt.Errorf("stage %q depends on unknown stage %q", name, dep)
+				// Optional dependency: if the named stage is not part of this
+				// pipeline, treat it as already satisfied so the stage can run.
+				continue
 			}
 			inDegree[name]++
 			dependents[dep] = append(dependents[dep], name)

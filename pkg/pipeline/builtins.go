@@ -3,6 +3,7 @@ package pipeline
 import (
 	"github.com/user/safeanalyze/pkg/checks/entropy"
 	"github.com/user/safeanalyze/pkg/checks/hiddenchars"
+	"github.com/user/safeanalyze/pkg/checks/ml"
 	"github.com/user/safeanalyze/pkg/checks/yara"
 	"github.com/user/safeanalyze/pkg/config"
 )
@@ -19,10 +20,13 @@ func BuiltInRegistry(cfg *config.Config) *Registry {
 	r.Register("hiddenchars", func() Stage {
 		return hiddenchars.NewStage(cfg.HiddenChars.Categories, cfg.Sanitization.ExcludedPaths)
 	})
+	r.Register("ml-prompt-injection", func() Stage {
+		return ml.NewStage(&cfg.ML)
+	})
 	return r
 }
 
 // DefaultStages returns the default ordered list of built-in stage names.
 func DefaultStages() []string {
-	return []string{"yara", "entropy", "hiddenchars"}
+	return []string{"yara", "entropy", "hiddenchars", "ml-prompt-injection"}
 }

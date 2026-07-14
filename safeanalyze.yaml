@@ -74,6 +74,46 @@ yara:
   enabled: true
   fail_on_findings: true
 
+ml:
+  enabled: true
+  model_path: ""
+  threshold: 0.5
+  batch_size: 4
+  allowed_extensions:
+    - .go
+    - .py
+    - .js
+    - .ts
+    - .jsx
+    - .tsx
+    - .rs
+    - .java
+    - .c
+    - .cpp
+    - .h
+    - .rb
+    - .php
+    - .swift
+    - .kt
+    - .md
+    - .txt
+    - .yaml
+    - .yml
+    - .json
+    - .sql
+  excluded_paths:
+    - .git
+    - node_modules
+    - vendor
+    - target
+    - build
+    - dist
+    - .venv
+    - __pycache__
+    - .idea
+    - .vscode
+  fail_on_findings: false
+
 output:
   format: markdown
   single_file: false
