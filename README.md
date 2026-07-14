@@ -1,17 +1,17 @@
-# safeanalyze
+# safeanalyze v0.2.0
 
-A Go CLI tool that sanitizes and scans untrusted code repositories **before** feeding them to Claude or other AI assistants. Implements defense-in-depth inspired by [Zones of Distrust](https://github.com/bluvibytes/zone-of-distrust).
+A Go CLI tool that sanitizes and scans untrusted code repositories **before** feeding them to AI assistants. Implements defense-in-depth inspired by [Zones of Distrust](https://github.com/bluvibytes/zone-of-distrust).
 
 ## Why?
 
 Prompt injection via malicious code is real. A repo can contain:
-- Hidden comments telling Claude to "ignore all prior instructions"
+- Hidden comments telling an LLM to "ignore all prior instructions"
 - Zero-width Unicode characters hiding payload instructions
 - Bidirectional text overrides that reorder displayed code
 - High-entropy encoded payloads (base64, hex)
 - Secrets or malware mixed with legitimate source
 
-**safeanalyze** runs a security pipeline so Claude never sees raw, unverified code.
+**safeanalyze** runs a security pipeline so AI assistants never see raw, unverified code.
 
 ## Pipeline
 
@@ -22,16 +22,14 @@ Untrusted Repo
 [Clone / Read]       <-- git clone wrapper with auto-cleanup
     |
     v
-[External Scanners]  <-- trufflehog, semgrep, yara (optional)
+[Deterministic Checks]  <-- YARA rules, entropy, hidden chars (parallel)
     |
     v
-[Built-in YARA]      <-- prompt injection, backdoor, credential rules
+[Stochastic ML Check]   <-- ONNX prompt-injection classifier (optional)
     |
     v
-[Entropy Analysis]   <-- high-entropy strings, base64/hex blobs
-    |
-    v
-[Hidden Char Scan]   <-- zero-width, bidi overrides, control chars
+[External Scanners]     <-- semgrep, bumblebee, prompt-injection-scanner,
+                              gitleaks, trufflehog (optional, source-installed)
     |
     v
 [Sanitization]       <-- AST-aware comment stripping, non-ASCII removal,
@@ -41,44 +39,58 @@ Untrusted Repo
 [Diff Review]        <-- colored diff showing exactly what was removed
     |
     v
-[Format for AI]      <-- markdown/JSON/plain, bounded chunks
+[Reporting]          <-- SARIF + Markdown + HTML dashboard + JSON
     |
     v
-[Sandbox Launch]     <-- Docker or Firejail isolated Claude session
+[Sandbox Launch]     <-- Docker or Firejail isolated AI session
 ```
 
 ## Install
 
 ```bash
-git clone https://github.com/youruser/safeanalyze.git
-cd safeanalyze
+git clone https://github.com/andreas2301/safeanalyse.git
+cd safeanalyse
 go build -o safeanalyze .
 ```
 
 Or with `go install`:
 ```bash
-go install github.com/youruser/safeanalyze@latest
+go install github.com/andreas2301/safeanalyse@latest
+```
+
+Install optional scanner/model dependencies from source:
+```bash
+./safeanalyze install --all
+./safeanalyze install model
 ```
 
 ## Quick Start
 
 ```bash
+# Version
+./safeanalyze --version
+
 # Create a default config
 ./safeanalyze init
 
-# Full pipeline on a repo
-./safeanalyze ingest ./my-suspicious-repo
+# Full thorough pipeline on a repo
+./safeanalyze scan ./my-suspicious-repo --mode thorough
 
-# Or step by step
-./safeanalyze scan ./my-suspicious-repo          # all scanners
-./safeanalyze sanitize ./my-suspicious-repo      # sanitize only
-./safeanalyze diff ./my-suspicious-repo ./safeanalyze-out/sanitized
+# Fast scan (YARA + hidden chars only, ~1 ms per payload)
+./safeanalyze scan ./my-suspicious-repo --mode fast
+
+# Inspect a single payload for Squid/reverse-proxy integration
+./safeanalyze inspect --body < request.txt
+./safeanalyze inspect --squid  # OK/ERR format
+
+# Sanitize only
+./safeanalyze sanitize ./my-suspicious-repo
+
+# Full ingest pipeline
+./safeanalyze ingest ./my-suspicious-repo
 
 # Clone + analyze a remote repo
 ./safeanalyze clone https://github.com/user/repo.git
-
-# Launch Claude in sandbox after ingestion
-./safeanalyze ingest ./my-suspicious-repo --sandbox
 ```
 
 ## Commands
@@ -86,23 +98,35 @@ go install github.com/youruser/safeanalyze@latest
 | Command | Description |
 |---------|-------------|
 | `init [path]` | Create a `safeanalyze.yaml` config file |
-| `scan <path>` | Run external scanners, YARA rules, entropy analysis, hidden chars |
+| `install --all` | Clone/build external scanners and download ML model |
+| `install model` | Download the prompt-injection ONNX model |
+| `inspect` | Fast stdin/file inspection for reverse proxies (Squid helper) |
+| `scan <path>` | Run security checks and emit SARIF/Markdown/HTML/JSON reports |
 | `sanitize <src> [dst]` | Strip comments (AST-aware), remove non-ASCII, enforce limits |
 | `ingest <path>` | Full pipeline: scan → sanitize → format for AI |
 | `diff <orig> <sanitized>` | Show colored diff of what sanitization removed |
 | `clone <url> [dir]` | Clone repo, run ingest, auto-delete raw clone |
 
+## Scan modes
+
+### Fast mode (`--mode fast`)
+
+- **Checks:** built-in YARA rules + hidden Unicode characters only.
+- **Latency:** ~1 ms per typical HTTP request payload.
+- **Use case:** inline reverse-proxy inspection (Squid external ACL helper), request/response filtering.
+- **No:** ML model, external scanners, entropy analysis, file walking beyond the given payload.
+
+### Thorough mode (`--mode thorough`)
+
+- **Checks:** fast checks + entropy analysis + stochastic ONNX prompt-injection classifier + optional external scanners.
+- **Latency:** seconds to minutes depending on repository size.
+- **Use case:** pre-ingestion security review of an entire repository.
+
 ## Features
 
-### 1. AST-Aware Comment Stripping
+### 1. Built-in YARA-like Rule Engine
 
-For **Go files**, uses `go/ast` to precisely remove comments without touching string literals containing `//` or `/*`. For other languages, uses an enhanced regex engine with string-literal detection.
-
-Supported: Go, Python, JavaScript/TypeScript, Rust, Java, C/C++, Ruby, PHP, Swift, Kotlin, Scala, Shell, SQL, HTML, CSS, Lua, and more.
-
-### 2. Built-in YARA-like Rule Engine
-
-Pure-Go rule engine with embedded detection patterns:
+Pure-Go regex rule engine with embedded detection patterns:
 
 | Rule | Severity | Detects |
 |------|----------|---------|
@@ -114,56 +138,64 @@ Pure-Go rule engine with embedded detection patterns:
 | `data_exfiltration` | high | fetch to external URLs, axios post, XMLHttpRequest |
 | `backdoor_indicator` | critical | reverse_shell, bind_shell, keylogger, rootkit |
 
-### 3. Entropy Analysis
+### 2. Entropy Analysis
 
 Detects high-entropy strings that may be encoded secrets or payloads:
 - **Shannon entropy** scoring (configurable threshold)
 - **Base64 blob detection** with validation
 - **Hex blob detection**
-- String-literal-aware scanning (only checks quoted strings)
-- Filters false positives (UUIDs, URLs, repeated characters)
+- String-literal-aware scanning
+- Skips files larger than `entropy.max_file_size_bytes`
 
-### 4. Hidden Unicode Character Detection
+### 3. Hidden Unicode Character Detection
 
 | Category | Characters |
 |----------|------------|
 | **Zero-Width** | U+200B (ZWSP), U+200C (ZWNJ), U+200D (ZWJ), U+FEFF (BOM), U+2060 (WJ) |
-| **Bidi Overrides** | U+202A-E (LTR/RTL embed/override/pop), U+2066-69 (isolates) |
+| **Bidi Overrides** | U+202A-E, U+2066-69 |
 | **Control** | C0/C1 control chars (excluding tab/newline) |
 | **Whitespace** | Unusual spaces (nbsp, em-space, etc.) |
 | **Format** | Unicode format chars (Cf category) |
 
-### 5. Diff Mode
+### 4. Stochastic Prompt-Injection Classifier
 
-Compare original vs sanitized with colored output:
+Optional ONNX classifier (`protectai/deberta-v3-base-prompt-injection`, ~738 MB) using [hugot](https://github.com/knights-analytics/hugot). Runs after sanitization so it classifies what the AI will actually see.
+
+### 5. External Scanner Bridges
+
+| Scanner | Source | Purpose |
+|---------|--------|---------|
+| Semgrep | `semgrep/semgrep` | SAST + prompt-injection rules |
+| Bumblebee | `perplexityai/bumblebee` | Package/extension inventory |
+| prompt-injection-scanner | `alexh-scrt/prompt-injection-scanner` | GitHub Actions prompt injection |
+| Gitleaks | `gitleaks/gitleaks` | Secret detection |
+| TruffleHog | `trufflesecurity/trufflehog` | Secret detection + verification |
+
+All can be installed automatically via `safeanalyze install`.
+
+### 6. Reporting
+
+Every scan produces a unified `Report` with findings and writes:
+- `safeanalyze.sarif` — SARIF v2.1.0 for security tooling
+- `safeanalyze.md` — human-readable Markdown summary
+- `safeanalyze.html` — self-contained dashboard
+- `safeanalyze.json` — full machine-readable report
+
+Reports include `safeanalyze_version` and `scan_mode` metadata.
+
+### 7. AST-Aware Comment Stripping
+
+For **Go files**, uses `go/ast` to precisely remove comments without touching string literals. For other languages, uses an enhanced regex fallback.
+
+### 8. Sandbox Launch
+
+Launch Claude or another AI assistant in an isolated environment after ingestion:
 ```bash
-# Side-by-side changes
-safeanalyze diff ./repo ./safeanalyze-out/sanitized
-
-# Unified diff format
-safeanalyze diff ./repo ./safeanalyze-out/sanitized --unified
-```
-
-### 6. Git Clone Wrapper
-
-Clone, analyze, and optionally delete the raw repo:
-```bash
-# Clone, ingest, delete raw
-safeanalyze clone https://github.com/user/repo.git
-
-# Clone, ingest, keep raw
-safeanalyze clone https://github.com/user/repo.git --keep-raw
-```
-
-### 7. Sandbox Launch
-
-Launch Claude in an isolated environment after ingestion:
-```bash
-# Docker (Windows, macOS, Linux)
+# Docker (cross-platform)
 safeanalyze ingest ./repo --sandbox
 
 # Firejail (Linux only)
-safeanalyze ingest ./repo --sandbox  # auto-detects firejail on Linux
+safeanalyze ingest ./repo --sandbox
 ```
 
 ## Configuration
@@ -172,12 +204,8 @@ safeanalyze ingest ./repo --sandbox  # auto-detects firejail on Linux
 
 ```yaml
 scanners:
-  - name: trufflehog
-    command: "trufflehog filesystem {path} --json"
-    enabled: true
-    fail_on_findings: true
   - name: semgrep
-    command: "semgrep --config=auto {path} --json"
+    command: "semgrep --config=p/security-audit {path} --json"
     enabled: false
     fail_on_findings: false
 
@@ -209,16 +237,24 @@ entropy:
   enabled: true
   threshold: 4.5
   min_length: 20
+  max_file_size_bytes: 5242880
   fail_on_findings: false
 
 yara:
   enabled: true
   fail_on_findings: true
 
+ml:
+  enabled: false
+  threshold: 0.5
+  batch_size: 4
+
 output:
-  format: markdown        # markdown, json, plain
-  single_file: false
-  include_file_tree: true
+  formats:
+    - markdown
+    - html
+    - sarif
+    - json
   out_dir: ./safeanalyze-out
 
 sandbox:
@@ -227,50 +263,43 @@ sandbox:
   firejail_profile: default
 ```
 
-## External Scanner Dependencies (optional)
+## Squid Integration
 
-| Tool | Install | Purpose |
-|------|---------|---------|
-| `trufflehog` | `brew install trufflesecurity/trufflehog/trufflehog` | Secret detection |
-| `semgrep` | `pip install semgrep` | Static analysis |
-| `git` | System package | Clone wrapper |
+`safeanalyze inspect` is designed to be used as a Squid `external_acl_type` helper:
 
-Built-in YARA, entropy, and hidden-char detection require no external tools.
-
-## Sandbox Recommendation
-
-Even after sanitization, run Claude in isolation:
-
-```bash
-# Linux (firejail)
-firejail --net=none --private --read-only=/home/user claude
-
-# Docker (cross-platform)
-docker run --rm -it --network none --read-only \
-  -v $(pwd)/safeanalyze-out/ingest:/ingest:ro \
-  claude-sandbox
-
-# Or let safeanalyze launch it:
-safeanalyze ingest ./repo --sandbox
+```squid
+external_acl_type prompt_injection_check %SRC %DST %METHOD %URI /usr/local/bin/safeanalyze inspect --squid
+acl prompt_injection_detected external prompt_injection_check
+http_access deny prompt_injection_detected
 ```
+
+The helper reads payloads from stdin, runs the fast check suite, and returns `OK` or `ERR <rule>`.
 
 ## Architecture
 
 ```
-cmd/           Cobra CLI commands
+cmd/              Cobra CLI commands
 pkg/
-  aststrip/    Go AST-based comment stripping + regex fallback
-  config/      YAML configuration loading
-  diff/        Line-by-line diff engine (LCS-based)
-  entropy/     Shannon entropy + base64/hex detection
-  hiddenchars/ Unicode suspicious character detection
-  ingest/      Markdown/JSON/plain formatter for AI consumption
-  sandbox/     Cross-platform sandbox abstraction (Docker/Firejail)
-  sanitize/    Comment stripper + ASCII enforcer + size limits
-  scanner/     External tool orchestrator
-  yara/        Pure-Go YARA-like rule engine
-  utils/       Filesystem helpers
+  checks/         Pluggable pipeline stages
+    yara/         Regex rule engine
+    entropy/      Shannon entropy + base64/hex detection
+    hiddenchars/  Unicode suspicious character detection
+    ml/           ONNX prompt-injection classifier
+    external/     External scanner bridges
+  pipeline/       DAG orchestration engine
+  report/         SARIF / Markdown / HTML / JSON writers
+  install/        Source-based scanner/model installer
+  sanitize/       Comment stripper + ASCII enforcer + limits
+  sandbox/        Cross-platform sandbox abstraction
+  ingest/         Markdown/JSON/plain formatter for AI consumption
+  config/         YAML configuration loading
+  version/        Release version constant
+  utils/          Filesystem helpers
 ```
+
+## Versioning
+
+Releases are tagged with `vMAJOR.MINOR.PATCH`. The current version is embedded in the binary (`safeanalyze --version`) and in every scan report's metadata.
 
 ## License
 
