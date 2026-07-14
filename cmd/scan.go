@@ -7,6 +7,7 @@ import (
 
 	"github.com/fatih/color"
 	"github.com/spf13/cobra"
+	"github.com/user/safeanalyze/pkg/checks/external"
 	"github.com/user/safeanalyze/pkg/checks/yara"
 	"github.com/user/safeanalyze/pkg/pipeline"
 	"github.com/user/safeanalyze/pkg/report"
@@ -21,13 +22,25 @@ report (SARIF, Markdown, HTML) in the configured output directory.`,
 	RunE: func(cmd *cobra.Command, args []string) error {
 		target := args[0]
 		verbose, _ := cmd.Flags().GetBool("verbose")
+		outputDir, _ := cmd.Flags().GetString("output-dir")
 
 		if _, err := os.Stat(target); err != nil {
 			return fmt.Errorf("target path does not exist: %s", target)
 		}
 
 		registry := pipeline.BuiltInRegistry(cfg)
-		stages, err := registry.Build(pipeline.DefaultStages())
+		if err := external.RegisterAll(registry, cfg); err != nil {
+			return fmt.Errorf("registering external scanners: %w", err)
+		}
+
+		stageNames := pipeline.DefaultStages()
+		for _, name := range registry.Names() {
+			if !contains(stageNames, name) {
+				stageNames = append(stageNames, name)
+			}
+		}
+
+		stages, err := registry.Build(stageNames)
 		if err != nil {
 			return fmt.Errorf("building pipeline: %w", err)
 		}
@@ -45,6 +58,17 @@ report (SARIF, Markdown, HTML) in the configured output directory.`,
 
 		printReportSummary(rep)
 
+		outCfg := cfg.Output
+		if outputDir != "" {
+			outCfg.OutDir = outputDir
+		}
+		if err := report.WriteAll(rep, outCfg); err != nil {
+			return fmt.Errorf("writing reports: %w", err)
+		}
+		if verbose {
+			color.Green("Reports written to %s\n", outCfg.OutDir)
+		}
+
 		if cfg.YARA.FailOnFindings && rep.HasSeverity(report.SeverityCritical) {
 			return fmt.Errorf("blocking YARA findings detected")
 		}
@@ -54,6 +78,15 @@ report (SARIF, Markdown, HTML) in the configured output directory.`,
 
 		return nil
 	},
+}
+
+func contains(slice []string, item string) bool {
+	for _, s := range slice {
+		if s == item {
+			return true
+		}
+	}
+	return false
 }
 
 func printReportSummary(rep *report.Report) {
@@ -88,4 +121,5 @@ func printReportSummary(rep *report.Report) {
 
 func init() {
 	scanCmd.Flags().BoolP("verbose", "v", false, "show scanner output")
+	scanCmd.Flags().StringP("output-dir", "o", "", "output directory for reports")
 }
