@@ -1,11 +1,16 @@
+// Package yara provides a pure-Go YARA-like rule engine and a pipeline Stage wrapper.
 package yara
 
 import (
+	"context"
 	"fmt"
+	"os"
+	"path/filepath"
 	"regexp"
 	"strings"
 
 	"github.com/fatih/color"
+	"github.com/user/safeanalyze/pkg/report"
 )
 
 // Rule represents a simple YARA-like detection rule.
@@ -88,7 +93,7 @@ func (e *Engine) LoadBuiltins() {
 		{
 			Name:        "prompt_injection_comment",
 			Description: "Comment containing prompt injection keywords",
-			Severity:    "critical",
+			Severity:    report.SeverityCritical,
 			Patterns: []string{
 				`(?i)ignore\s+(all\s+)?previous\s+instruction`,
 				`(?i)ignore\s+(all\s+)?prior\s+instruction`,
@@ -104,7 +109,7 @@ func (e *Engine) LoadBuiltins() {
 		{
 			Name:        "obfuscated_javascript",
 			Description: "Obfuscated or packed JavaScript patterns",
-			Severity:    "high",
+			Severity:    report.SeverityHigh,
 			Patterns: []string{
 				`eval\s*\(\s*function\s*\(`,
 				`Function\s*\(\s*["\'].*["\']\s*\)\s*\(`,
@@ -118,7 +123,7 @@ func (e *Engine) LoadBuiltins() {
 		{
 			Name:        "suspicious_shell",
 			Description: "Suspicious shell command patterns",
-			Severity:    "high",
+			Severity:    report.SeverityHigh,
 			Patterns: []string{
 				`curl\s+.*\|\s*(ba)?sh`,
 				`wget\s+.*\|\s*(ba)?sh`,
@@ -131,7 +136,7 @@ func (e *Engine) LoadBuiltins() {
 		{
 			Name:        "credential_hardcode",
 			Description: "Potential hardcoded credentials",
-			Severity:    "medium",
+			Severity:    report.SeverityMedium,
 			Patterns: []string{
 				`(?i)(password|passwd|pwd)\s*[=:]\s*["\'][^"\']{4,}["\']`,
 				`(?i)(api[_-]?key|apikey)\s*[=:]\s*["\'][^"\']{8,}["\']`,
@@ -143,7 +148,7 @@ func (e *Engine) LoadBuiltins() {
 		{
 			Name:        "suspicious_imports",
 			Description: "Imports of known suspicious packages",
-			Severity:    "medium",
+			Severity:    report.SeverityMedium,
 			Patterns: []string{
 				`import\s+.*subprocess`,
 				`import\s+.*os\.system`,
@@ -155,7 +160,7 @@ func (e *Engine) LoadBuiltins() {
 		{
 			Name:        "data_exfiltration",
 			Description: "Potential data exfiltration patterns",
-			Severity:    "high",
+			Severity:    report.SeverityHigh,
 			Patterns: []string{
 				`(?i)(post|send|upload)\s*.*\$\{?env`,
 				`(?i)fetch\s*\(\s*["\']https?://`,
@@ -166,7 +171,7 @@ func (e *Engine) LoadBuiltins() {
 		{
 			Name:        "backdoor_indicator",
 			Description: "Common backdoor or persistence patterns",
-			Severity:    "critical",
+			Severity:    report.SeverityCritical,
 			Patterns: []string{
 				`(?i)reverse[_-]?shell`,
 				`(?i)bind[_-]?shell`,
@@ -211,4 +216,93 @@ func SeverityColor(sev string) func(string, ...interface{}) string {
 	default:
 		return color.WhiteString
 	}
+}
+
+// Stage wraps the YARA engine as a pipeline stage.
+type Stage struct {
+	excludedPaths []string
+}
+
+// NewStage creates a YARA pipeline stage.
+func NewStage(excludedPaths []string) *Stage {
+	return &Stage{excludedPaths: excludedPaths}
+}
+
+// Name returns the stage name.
+func (s *Stage) Name() string { return "yara" }
+
+// Dependencies returns no dependencies.
+func (s *Stage) Dependencies() []string { return nil }
+
+// Run scans all files under target and returns findings.
+func (s *Stage) Run(ctx context.Context, target string, input *report.Report) (*report.Report, error) {
+	out := report.NewReport(target)
+	if input != nil {
+		out = input
+	}
+	engine := NewEngine()
+
+	err := WalkDirSorted(target, s.excludedPaths, func(path string, content []byte, rel string) error {
+		select {
+		case <-ctx.Done():
+			return ctx.Err()
+		default:
+		}
+
+		matches := engine.ScanFile(string(content), rel)
+		for _, m := range matches {
+			out.AddFinding(report.Finding{
+				RuleID:      m.Rule,
+				Title:       m.Rule,
+				Description: m.Description,
+				Severity:    m.Severity,
+				Category:    "pattern_match",
+				File:        m.File,
+				Line:        m.Line,
+				Column:      m.Column,
+				Match:       m.Match,
+				Message:     m.Description,
+				Source:      s.Name(),
+				Confidence:  report.ConfidenceDeterministic,
+			})
+		}
+		out.Summary.FilesScanned++
+		return nil
+	})
+	return out, err
+}
+
+// WalkDirSorted walks a directory deterministically, skipping excluded paths,
+// and calls fn for each regular file with its content and relative path.
+func WalkDirSorted(root string, excludedPaths []string, fn func(path string, content []byte, rel string) error) error {
+	excluded := make(map[string]bool)
+	for _, p := range excludedPaths {
+		excluded[p] = true
+	}
+
+	return filepath.WalkDir(root, func(path string, d os.DirEntry, err error) error {
+		if err != nil {
+			return err
+		}
+		rel, err := filepath.Rel(root, path)
+		if err != nil {
+			return err
+		}
+		for _, part := range strings.Split(rel, string(filepath.Separator)) {
+			if excluded[part] {
+				if d.IsDir() {
+					return filepath.SkipDir
+				}
+				return nil
+			}
+		}
+		if d.IsDir() {
+			return nil
+		}
+		content, err := os.ReadFile(path)
+		if err != nil {
+			return err
+		}
+		return fn(path, content, rel)
+	})
 }

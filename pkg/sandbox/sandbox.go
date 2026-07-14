@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"os"
 	"os/exec"
+	"path/filepath"
 	"runtime"
 	"strings"
 )
@@ -171,5 +172,5 @@ func absPath(p string) (string, error) {
 		}
 		p = home + p[1:]
 	}
-	return os.Getwd()
+	return filepath.Abs(p)
 }

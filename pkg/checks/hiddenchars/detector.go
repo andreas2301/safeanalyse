@@ -1,25 +1,19 @@
+// Package hiddenchars provides detection of invisible/suspicious Unicode characters
+// and a pipeline Stage wrapper.
 package hiddenchars
 
 import (
+	"context"
 	"fmt"
 	"os"
 	"path/filepath"
 	"strings"
 	"unicode"
 	"unicode/utf8"
-)
 
-// Finding represents a detected suspicious character.
-type Finding struct {
-	File       string `json:"file"`
-	Line       int    `json:"line"`
-	Column     int    `json:"column"`
-	Rune       rune   `json:"rune"`
-	CodePoint  string `json:"code_point"`
-	Category   string `json:"category"`
-	Name       string `json:"name"`
-	Context    string `json:"context"`
-}
+	"github.com/user/safeanalyze/pkg/checks/yara"
+	"github.com/user/safeanalyze/pkg/report"
+)
 
 // Detector scans files for invisible/suspicious Unicode characters.
 type Detector struct {
@@ -27,7 +21,6 @@ type Detector struct {
 }
 
 // NewDetector creates a detector filtering by category names.
-// Valid categories: "zero_width", "bidi", "control", "whitespace", "homoglyph", "all".
 func NewDetector(categories []string) *Detector {
 	d := &Detector{categories: make(map[string]bool)}
 	for _, c := range categories {
@@ -45,7 +38,6 @@ func NewDetector(categories []string) *Detector {
 
 // IsSuspicious determines if a rune matches the configured categories.
 func (d *Detector) IsSuspicious(r rune) (category, name string, ok bool) {
-	// Zero-width characters
 	if d.categories["zero_width"] {
 		switch r {
 		case '\u200B':
@@ -63,7 +55,6 @@ func (d *Detector) IsSuspicious(r rune) (category, name string, ok bool) {
 		}
 	}
 
-	// Bidirectional override characters
 	if d.categories["bidi"] {
 		switch r {
 		case '\u202A':
@@ -87,7 +78,6 @@ func (d *Detector) IsSuspicious(r rune) (category, name string, ok bool) {
 		}
 	}
 
-	// Control characters (excluding common ones like tab, newline, carriage return)
 	if d.categories["control"] {
 		if unicode.IsControl(r) && r != '\t' && r != '\n' && r != '\r' {
 			name := fmt.Sprintf("CONTROL (U+%04X)", r)
@@ -100,7 +90,6 @@ func (d *Detector) IsSuspicious(r rune) (category, name string, ok bool) {
 		}
 	}
 
-	// Suspicious whitespace
 	if d.categories["whitespace"] {
 		switch r {
 		case '\u00A0', '\u1680', '\u2000', '\u2001', '\u2002', '\u2003',
@@ -110,7 +99,6 @@ func (d *Detector) IsSuspicious(r rune) (category, name string, ok bool) {
 		}
 	}
 
-	// Format characters (Cf category) that aren't already caught
 	if d.categories["zero_width"] || d.categories["control"] {
 		if unicode.Is(unicode.Cf, r) {
 			return "format", fmt.Sprintf("FORMAT CHAR (U+%04X)", r), true
@@ -152,22 +140,98 @@ func (d *Detector) ScanFile(path string) ([]Finding, error) {
 	return findings, nil
 }
 
-// ScanDir recursively scans a directory for suspicious characters.
-func (d *Detector) ScanDir(root string, exclude []string) ([]Finding, error) {
-	var all []Finding
-
-	err := walkDir(root, exclude, func(path string) error {
-		f, err := d.ScanFile(path)
-		if err != nil {
-			return err
-		}
-		all = append(all, f...)
-		return nil
-	})
-
-	return all, err
+// Finding represents a detected suspicious character.
+type Finding struct {
+	File      string `json:"file"`
+	Line      int    `json:"line"`
+	Column    int    `json:"column"`
+	Rune      rune   `json:"rune"`
+	CodePoint string `json:"code_point"`
+	Category  string `json:"category"`
+	Name      string `json:"name"`
+	Context   string `json:"context"`
 }
 
+func truncateContext(line string, center int) string {
+	start := center - 20
+	if start < 0 {
+		start = 0
+	}
+	end := center + 20
+	if end > len(line) {
+		end = len(line)
+	}
+	ctx := line[start:end]
+	ctx = strings.ReplaceAll(ctx, "\t", " ")
+	ctx = strings.ReplaceAll(ctx, "\n", " ")
+	return ctx
+}
+
+// Stage wraps the hidden char detector as a pipeline stage.
+type Stage struct {
+	categories    []string
+	excludedPaths []string
+}
+
+// NewStage creates a hidden-char pipeline stage.
+func NewStage(categories, excludedPaths []string) *Stage {
+	return &Stage{categories: categories, excludedPaths: excludedPaths}
+}
+
+// Name returns the stage name.
+func (s *Stage) Name() string { return "hiddenchars" }
+
+// Dependencies returns no dependencies.
+func (s *Stage) Dependencies() []string { return nil }
+
+// Run scans all files under target and returns findings.
+func (s *Stage) Run(ctx context.Context, target string, input *report.Report) (*report.Report, error) {
+	out := report.NewReport(target)
+	if input != nil {
+		out = input
+	}
+	det := NewDetector(s.categories)
+
+	err := yara.WalkDirSorted(target, s.excludedPaths, func(path string, content []byte, rel string) error {
+		select {
+		case <-ctx.Done():
+			return ctx.Err()
+		default:
+		}
+
+		lines := strings.Split(string(content), "\n")
+		for lineIdx, line := range lines {
+			col := 0
+			for _, r := range line {
+				if cat, name, ok := det.IsSuspicious(r); ok {
+					sev := report.SeverityHigh
+					if cat == "whitespace" {
+						sev = report.SeverityLow
+					}
+					out.AddFinding(report.Finding{
+						RuleID:     "hidden_char_" + cat,
+						Title:      "Hidden Unicode character: " + name,
+						Severity:   sev,
+						Category:   "hidden_char",
+						File:       rel,
+						Line:       lineIdx + 1,
+						Column:     col + 1,
+						Match:      fmt.Sprintf("U+%04X", r),
+						Message:    fmt.Sprintf("%s (%s) in %s", name, cat, rel),
+						Source:     s.Name(),
+						Confidence: report.ConfidenceDeterministic,
+					})
+				}
+				col += utf8.RuneLen(r)
+			}
+		}
+		out.Summary.FilesScanned++
+		return nil
+	})
+	return out, err
+}
+
+// walkDir is retained for non-pipeline consumers.
 func walkDir(root string, exclude []string, fn func(string) error) error {
 	return filepath.Walk(root, func(path string, info os.FileInfo, err error) error {
 		if err != nil {
@@ -185,17 +249,16 @@ func walkDir(root string, exclude []string, fn func(string) error) error {
 	})
 }
 
-func truncateContext(line string, center int) string {
-	start := center - 20
-	if start < 0 {
-		start = 0
-	}
-	end := center + 20
-	if end > len(line) {
-		end = len(line)
-	}
-	ctx := line[start:end]
-	ctx = strings.ReplaceAll(ctx, "\t", " ")
-	ctx = strings.ReplaceAll(ctx, "\n", " ")
-	return ctx
+// ScanDir recursively scans a directory for suspicious characters.
+func (d *Detector) ScanDir(root string, exclude []string) ([]Finding, error) {
+	var all []Finding
+	err := walkDir(root, exclude, func(path string) error {
+		f, err := d.ScanFile(path)
+		if err != nil {
+			return err
+		}
+		all = append(all, f...)
+		return nil
+	})
+	return all, err
 }

@@ -7,7 +7,7 @@ import (
 
 	"github.com/fatih/color"
 	"github.com/spf13/cobra"
-	"github.com/user/safeanalyze/pkg/hiddenchars"
+	"github.com/user/safeanalyze/pkg/checks/hiddenchars"
 	"github.com/user/safeanalyze/pkg/ingest"
 	"github.com/user/safeanalyze/pkg/sanitize"
 	"github.com/user/safeanalyze/pkg/scanner"

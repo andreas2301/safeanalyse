@@ -96,5 +96,4 @@ Examples:
 func init() {
 	cloneCmd.Flags().Bool("keep-raw", false, "keep the raw cloned repository after analysis")
 	cloneCmd.Flags().Bool("ingest", true, "automatically run ingest after clone")
-	rootCmd.AddCommand(cloneCmd)
 }

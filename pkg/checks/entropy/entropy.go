@@ -1,38 +1,31 @@
+// Package entropy provides high-entropy string detection and a pipeline Stage wrapper.
 package entropy
 
 import (
+	"context"
 	"encoding/base64"
 	"fmt"
 	"math"
 	"regexp"
 	"strings"
-)
 
-// Finding represents a high-entropy or suspicious string detection.
-type Finding struct {
-	File       string  `json:"file"`
-	Line       int     `json:"line"`
-	Column     int     `json:"column"`
-	Type       string  `json:"type"`       // "high_entropy", "base64_blob", "hex_blob"
-	Value      string  `json:"value"`
-	Entropy    float64 `json:"entropy"`
-	Length     int     `json:"length"`
-	Context    string  `json:"context"`
-}
+	"github.com/user/safeanalyze/pkg/checks/yara"
+	"github.com/user/safeanalyze/pkg/report"
+)
 
 // Detector scans for suspicious encoded/entropy-heavy strings.
 type Detector struct {
-	minEntropy   float64
-	minLength    int
-	maxLength    int
+	minEntropy float64
+	minLength  int
+	maxLength  int
 }
 
 // NewDetector creates an entropy scanner with sensible defaults.
 func NewDetector() *Detector {
 	return &Detector{
-		minEntropy: 4.5,  // Shannon entropy threshold (0-8 for bytes)
-		minLength:  20,   // Minimum string length to analyze
-		maxLength:  4096, // Maximum string length
+		minEntropy: 4.5,
+		minLength:  20,
+		maxLength:  4096,
 	}
 }
 
@@ -46,7 +39,6 @@ func (d *Detector) WithThreshold(t float64) *Detector {
 func (d *Detector) ScanString(s, file string, line, col int) []Finding {
 	var findings []Finding
 
-	// Check for base64 blobs
 	if b64 := findBase64(s); b64 != "" && len(b64) >= d.minLength {
 		ent := shannonEntropy(b64)
 		if ent >= d.minEntropy {
@@ -63,7 +55,6 @@ func (d *Detector) ScanString(s, file string, line, col int) []Finding {
 		}
 	}
 
-	// Check for hex blobs
 	if hex := findHex(s); hex != "" && len(hex) >= d.minLength {
 		ent := shannonEntropy(hex)
 		if ent >= d.minEntropy {
@@ -80,11 +71,9 @@ func (d *Detector) ScanString(s, file string, line, col int) []Finding {
 		}
 	}
 
-	// Check for high-entropy strings that aren't obviously base64/hex
 	if len(s) >= d.minLength && len(s) <= d.maxLength {
 		ent := shannonEntropy(s)
-		if ent >= d.minEntropy+0.5 { // Higher threshold for general strings
-			// Avoid flagging obvious non-secrets
+		if ent >= d.minEntropy+0.5 {
 			if !isBenignHighEntropy(s) {
 				findings = append(findings, Finding{
 					File:    file,
@@ -106,14 +95,9 @@ func (d *Detector) ScanString(s, file string, line, col int) []Finding {
 // ScanLine analyzes a line of text for entropy anomalies.
 func (d *Detector) ScanLine(line, file string, lineNum int) []Finding {
 	var findings []Finding
-
-	// Tokenize by quotes
-	tokens := tokenizeStrings(line)
-	for _, tok := range tokens {
-		f := d.ScanString(tok.value, file, lineNum, tok.start)
-		findings = append(findings, f...)
+	for _, tok := range tokenizeStrings(line) {
+		findings = append(findings, d.ScanString(tok.value, file, lineNum, tok.start)...)
 	}
-
 	return findings
 }
 
@@ -122,10 +106,21 @@ func (d *Detector) ScanContent(content, file string) []Finding {
 	var findings []Finding
 	lines := strings.Split(content, "\n")
 	for i, line := range lines {
-		f := d.ScanLine(line, file, i+1)
-		findings = append(findings, f...)
+		findings = append(findings, d.ScanLine(line, file, i+1)...)
 	}
 	return findings
+}
+
+// Finding represents a high-entropy or suspicious string detection.
+type Finding struct {
+	File    string  `json:"file"`
+	Line    int     `json:"line"`
+	Column  int     `json:"column"`
+	Type    string  `json:"type"`
+	Value   string  `json:"value"`
+	Entropy float64 `json:"entropy"`
+	Length  int     `json:"length"`
+	Context string  `json:"context"`
 }
 
 type token struct {
@@ -133,7 +128,6 @@ type token struct {
 	start int
 }
 
-// tokenizeStrings extracts quoted strings from a line.
 func tokenizeStrings(line string) []token {
 	var tokens []token
 	inString := false
@@ -172,7 +166,6 @@ func tokenizeStrings(line string) []token {
 	return tokens
 }
 
-// shannonEntropy calculates Shannon entropy of a string in bits per byte.
 func shannonEntropy(s string) float64 {
 	if len(s) == 0 {
 		return 0
@@ -199,7 +192,6 @@ func findBase64(s string) string {
 	var longest string
 	for _, m := range matches {
 		if len(m) > len(longest) {
-			// Validate it's actually decodable base64
 			if _, err := base64.StdEncoding.DecodeString(padBase64(m)); err == nil {
 				longest = m
 			}
@@ -231,18 +223,14 @@ func findHex(s string) string {
 	return longest
 }
 
-// isBenignHighEntropy filters out obvious false positives.
 func isBenignHighEntropy(s string) bool {
-	// UUIDs
 	if matched, _ := regexp.MatchString(`^[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}$`, s); matched {
 		return true
 	}
-	// Common variable names or paths
 	lower := strings.ToLower(s)
 	if strings.Contains(lower, "http") || strings.Contains(lower, "https") || strings.Contains(lower, "www") {
 		return true
 	}
-	// Simple repetition patterns
 	if allSameChar(s) {
 		return true
 	}
@@ -280,4 +268,61 @@ func Summary(findings []Finding) string {
 		parts = append(parts, fmt.Sprintf("%s: %d", t, c))
 	}
 	return strings.Join(parts, ", ")
+}
+
+// Stage wraps the entropy detector as a pipeline stage.
+type Stage struct {
+	threshold     float64
+	excludedPaths []string
+}
+
+// NewStage creates an entropy pipeline stage.
+func NewStage(threshold float64, excludedPaths []string) *Stage {
+	return &Stage{threshold: threshold, excludedPaths: excludedPaths}
+}
+
+// Name returns the stage name.
+func (s *Stage) Name() string { return "entropy" }
+
+// Dependencies returns no dependencies.
+func (s *Stage) Dependencies() []string { return nil }
+
+// Run scans all files under target and returns findings.
+func (s *Stage) Run(ctx context.Context, target string, input *report.Report) (*report.Report, error) {
+	out := report.NewReport(target)
+	if input != nil {
+		out = input
+	}
+	det := NewDetector().WithThreshold(s.threshold)
+
+	err := yara.WalkDirSorted(target, s.excludedPaths, func(path string, content []byte, rel string) error {
+		select {
+		case <-ctx.Done():
+			return ctx.Err()
+		default:
+		}
+		findings := det.ScanContent(string(content), rel)
+		for _, f := range findings {
+			sev := report.SeverityLow
+			if f.Type == "base64_blob" || f.Type == "hex_blob" {
+				sev = report.SeverityMedium
+			}
+			out.AddFinding(report.Finding{
+				RuleID:     "entropy_" + f.Type,
+				Title:      "High-entropy " + f.Type,
+				Severity:   sev,
+				Category:   "entropy",
+				File:       f.File,
+				Line:       f.Line,
+				Column:     f.Column,
+				Match:      f.Value,
+				Message:    fmt.Sprintf("entropy=%.2f len=%d type=%s", f.Entropy, f.Length, f.Type),
+				Source:     s.Name(),
+				Confidence: report.ConfidenceHeuristic,
+			})
+		}
+		out.Summary.FilesScanned++
+		return nil
+	})
+	return out, err
 }
