@@ -1,0 +1,1088 @@
+{
+  "version": "2.1.0",
+  "$schema": "https://raw.githubusercontent.com/oasis-tcs/sarif-spec/master/Schemata/sarif-schema-2.1.0.json",
+  "runs": [
+    {
+      "tool": {
+        "driver": {
+          "name": "safeanalyze",
+          "informationUri": "https://github.com/user/safeanalyze",
+          "rules": [
+            {
+              "id": "credential_hardcode",
+              "name": "credential_hardcode",
+              "shortDescription": {
+                "text": "credential_hardcode"
+              },
+              "fullDescription": {
+                "text": "Potential hardcoded credentials"
+              },
+              "help": {
+                "text": ""
+              },
+              "properties": {
+                "category": "pattern_match"
+              }
+            },
+            {
+              "id": "instruction_to_include_code",
+              "name": "instruction_to_include_code",
+              "shortDescription": {
+                "text": "instruction_to_include_code"
+              },
+              "fullDescription": {
+                "text": "Natural-language instruction telling the model to include, merge, or execute a code snippet"
+              },
+              "help": {
+                "text": ""
+              },
+              "properties": {
+                "category": "pattern_match"
+              }
+            },
+            {
+              "id": "prompt_injection_comment",
+              "name": "prompt_injection_comment",
+              "shortDescription": {
+                "text": "prompt_injection_comment"
+              },
+              "fullDescription": {
+                "text": "Comment containing prompt injection keywords"
+              },
+              "help": {
+                "text": ""
+              },
+              "properties": {
+                "category": "pattern_match"
+              }
+            }
+          ]
+        }
+      },
+      "results": [
+        {
+          "ruleId": "instruction_to_include_code",
+          "ruleIndex": 1,
+          "level": "error",
+          "message": {
+            "text": "Natural-language instruction telling the model to include, merge, or execute a code snippet"
+          },
+          "locations": [
+            {
+              "physicalLocation": {
+                "artifactLocation": {
+                  "uri": "CONTRIBUTING.md"
+                },
+                "region": {
+                  "startLine": 22,
+                  "startColumn": 89,
+                  "snippet": {
+                    "text": "Include the following section"
+                  }
+                }
+              }
+            }
+          ],
+          "properties": {
+            "category": "pattern_match",
+            "confidence": "deterministic",
+            "source": "yara"
+          }
+        },
+        {
+          "ruleId": "prompt_injection_comment",
+          "ruleIndex": 2,
+          "level": "error",
+          "message": {
+            "text": "Comment containing prompt injection keywords"
+          },
+          "locations": [
+            {
+              "physicalLocation": {
+                "artifactLocation": {
+                  "uri": "DETAILS.md"
+                },
+                "region": {
+                  "startLine": 33,
+                  "startColumn": 75,
+                  "snippet": {
+                    "text": "JAILBREAK"
+                  }
+                }
+              }
+            }
+          ],
+          "properties": {
+            "category": "pattern_match",
+            "confidence": "deterministic",
+            "source": "yara"
+          }
+        },
+        {
+          "ruleId": "prompt_injection_comment",
+          "ruleIndex": 2,
+          "level": "error",
+          "message": {
+            "text": "Comment containing prompt injection keywords"
+          },
+          "locations": [
+            {
+              "physicalLocation": {
+                "artifactLocation": {
+                  "uri": "DETAILS.md"
+                },
+                "region": {
+                  "startLine": 35,
+                  "startColumn": 20,
+                  "snippet": {
+                    "text": "JAILBREAK"
+                  }
+                }
+              }
+            }
+          ],
+          "properties": {
+            "category": "pattern_match",
+            "confidence": "deterministic",
+            "source": "yara"
+          }
+        },
+        {
+          "ruleId": "prompt_injection_comment",
+          "ruleIndex": 2,
+          "level": "error",
+          "message": {
+            "text": "Comment containing prompt injection keywords"
+          },
+          "locations": [
+            {
+              "physicalLocation": {
+                "artifactLocation": {
+                  "uri": "README.md"
+                },
+                "region": {
+                  "startLine": 11,
+                  "startColumn": 129,
+                  "snippet": {
+                    "text": "jailbreak"
+                  }
+                }
+              }
+            }
+          ],
+          "properties": {
+            "category": "pattern_match",
+            "confidence": "deterministic",
+            "source": "yara"
+          }
+        },
+        {
+          "ruleId": "prompt_injection_comment",
+          "ruleIndex": 2,
+          "level": "error",
+          "message": {
+            "text": "Comment containing prompt injection keywords"
+          },
+          "locations": [
+            {
+              "physicalLocation": {
+                "artifactLocation": {
+                  "uri": "README.md"
+                },
+                "region": {
+                  "startLine": 39,
+                  "startColumn": 4,
+                  "snippet": {
+                    "text": "jailbreak"
+                  }
+                }
+              }
+            }
+          ],
+          "properties": {
+            "category": "pattern_match",
+            "confidence": "deterministic",
+            "source": "yara"
+          }
+        },
+        {
+          "ruleId": "prompt_injection_comment",
+          "ruleIndex": 2,
+          "level": "error",
+          "message": {
+            "text": "Comment containing prompt injection keywords"
+          },
+          "locations": [
+            {
+              "physicalLocation": {
+                "artifactLocation": {
+                  "uri": "README.md"
+                },
+                "region": {
+                  "startLine": 39,
+                  "startColumn": 76,
+                  "snippet": {
+                    "text": "jailbreak"
+                  }
+                }
+              }
+            }
+          ],
+          "properties": {
+            "category": "pattern_match",
+            "confidence": "deterministic",
+            "source": "yara"
+          }
+        },
+        {
+          "ruleId": "prompt_injection_comment",
+          "ruleIndex": 2,
+          "level": "error",
+          "message": {
+            "text": "Comment containing prompt injection keywords"
+          },
+          "locations": [
+            {
+              "physicalLocation": {
+                "artifactLocation": {
+                  "uri": "README.md"
+                },
+                "region": {
+                  "startLine": 109,
+                  "startColumn": 4,
+                  "snippet": {
+                    "text": "jailbreak"
+                  }
+                }
+              }
+            }
+          ],
+          "properties": {
+            "category": "pattern_match",
+            "confidence": "deterministic",
+            "source": "yara"
+          }
+        },
+        {
+          "ruleId": "prompt_injection_comment",
+          "ruleIndex": 2,
+          "level": "error",
+          "message": {
+            "text": "Comment containing prompt injection keywords"
+          },
+          "locations": [
+            {
+              "physicalLocation": {
+                "artifactLocation": {
+                  "uri": "README.md"
+                },
+                "region": {
+                  "startLine": 109,
+                  "startColumn": 34,
+                  "snippet": {
+                    "text": "jailbreak"
+                  }
+                }
+              }
+            }
+          ],
+          "properties": {
+            "category": "pattern_match",
+            "confidence": "deterministic",
+            "source": "yara"
+          }
+        },
+        {
+          "ruleId": "prompt_injection_comment",
+          "ruleIndex": 2,
+          "level": "error",
+          "message": {
+            "text": "Comment containing prompt injection keywords"
+          },
+          "locations": [
+            {
+              "physicalLocation": {
+                "artifactLocation": {
+                  "uri": "README.md"
+                },
+                "region": {
+                  "startLine": 109,
+                  "startColumn": 96,
+                  "snippet": {
+                    "text": "Jailbreak"
+                  }
+                }
+              }
+            }
+          ],
+          "properties": {
+            "category": "pattern_match",
+            "confidence": "deterministic",
+            "source": "yara"
+          }
+        },
+        {
+          "ruleId": "prompt_injection_comment",
+          "ruleIndex": 2,
+          "level": "error",
+          "message": {
+            "text": "Comment containing prompt injection keywords"
+          },
+          "locations": [
+            {
+              "physicalLocation": {
+                "artifactLocation": {
+                  "uri": "README.md"
+                },
+                "region": {
+                  "startLine": 138,
+                  "startColumn": 43,
+                  "snippet": {
+                    "text": "Jailbreak"
+                  }
+                }
+              }
+            }
+          ],
+          "properties": {
+            "category": "pattern_match",
+            "confidence": "deterministic",
+            "source": "yara"
+          }
+        },
+        {
+          "ruleId": "prompt_injection_comment",
+          "ruleIndex": 2,
+          "level": "error",
+          "message": {
+            "text": "Comment containing prompt injection keywords"
+          },
+          "locations": [
+            {
+              "physicalLocation": {
+                "artifactLocation": {
+                  "uri": "README.md"
+                },
+                "region": {
+                  "startLine": 174,
+                  "startColumn": 59,
+                  "snippet": {
+                    "text": "Jailbreak"
+                  }
+                }
+              }
+            }
+          ],
+          "properties": {
+            "category": "pattern_match",
+            "confidence": "deterministic",
+            "source": "yara"
+          }
+        },
+        {
+          "ruleId": "prompt_injection_comment",
+          "ruleIndex": 2,
+          "level": "error",
+          "message": {
+            "text": "Comment containing prompt injection keywords"
+          },
+          "locations": [
+            {
+              "physicalLocation": {
+                "artifactLocation": {
+                  "uri": "benchmark/data/example-dataset.yaml"
+                },
+                "region": {
+                  "startLine": 16,
+                  "startColumn": 10,
+                  "snippet": {
+                    "text": "Ignore previous instructions"
+                  }
+                }
+              }
+            }
+          ],
+          "properties": {
+            "category": "pattern_match",
+            "confidence": "deterministic",
+            "source": "yara"
+          }
+        },
+        {
+          "ruleId": "prompt_injection_comment",
+          "ruleIndex": 2,
+          "level": "error",
+          "message": {
+            "text": "Comment containing prompt injection keywords"
+          },
+          "locations": [
+            {
+              "physicalLocation": {
+                "artifactLocation": {
+                  "uri": "benchmark/data/example-dataset.yaml"
+                },
+                "region": {
+                  "startLine": 21,
+                  "startColumn": 26,
+                  "snippet": {
+                    "text": "Developer Mode"
+                  }
+                }
+              }
+            }
+          ],
+          "properties": {
+            "category": "pattern_match",
+            "confidence": "deterministic",
+            "source": "yara"
+          }
+        },
+        {
+          "ruleId": "prompt_injection_comment",
+          "ruleIndex": 2,
+          "level": "error",
+          "message": {
+            "text": "Comment containing prompt injection keywords"
+          },
+          "locations": [
+            {
+              "physicalLocation": {
+                "artifactLocation": {
+                  "uri": "benchmark/data/example-dataset.yaml"
+                },
+                "region": {
+                  "startLine": 21,
+                  "startColumn": 110,
+                  "snippet": {
+                    "text": "Developer Mode"
+                  }
+                }
+              }
+            }
+          ],
+          "properties": {
+            "category": "pattern_match",
+            "confidence": "deterministic",
+            "source": "yara"
+          }
+        },
+        {
+          "ruleId": "prompt_injection_comment",
+          "ruleIndex": 2,
+          "level": "error",
+          "message": {
+            "text": "Comment containing prompt injection keywords"
+          },
+          "locations": [
+            {
+              "physicalLocation": {
+                "artifactLocation": {
+                  "uri": "benchmark/data/example-dataset.yaml"
+                },
+                "region": {
+                  "startLine": 21,
+                  "startColumn": 164,
+                  "snippet": {
+                    "text": "Developer Mode"
+                  }
+                }
+              }
+            }
+          ],
+          "properties": {
+            "category": "pattern_match",
+            "confidence": "deterministic",
+            "source": "yara"
+          }
+        },
+        {
+          "ruleId": "prompt_injection_comment",
+          "ruleIndex": 2,
+          "level": "error",
+          "message": {
+            "text": "Comment containing prompt injection keywords"
+          },
+          "locations": [
+            {
+              "physicalLocation": {
+                "artifactLocation": {
+                  "uri": "benchmark/data/example-dataset.yaml"
+                },
+                "region": {
+                  "startLine": 21,
+                  "startColumn": 415,
+                  "snippet": {
+                    "text": "Developer Mode"
+                  }
+                }
+              }
+            }
+          ],
+          "properties": {
+            "category": "pattern_match",
+            "confidence": "deterministic",
+            "source": "yara"
+          }
+        },
+        {
+          "ruleId": "prompt_injection_comment",
+          "ruleIndex": 2,
+          "level": "error",
+          "message": {
+            "text": "Comment containing prompt injection keywords"
+          },
+          "locations": [
+            {
+              "physicalLocation": {
+                "artifactLocation": {
+                  "uri": "benchmark/data/example-dataset.yaml"
+                },
+                "region": {
+                  "startLine": 22,
+                  "startColumn": 14,
+                  "snippet": {
+                    "text": "jailbreak"
+                  }
+                }
+              }
+            }
+          ],
+          "properties": {
+            "category": "pattern_match",
+            "confidence": "deterministic",
+            "source": "yara"
+          }
+        },
+        {
+          "ruleId": "credential_hardcode",
+          "ruleIndex": 0,
+          "level": "warning",
+          "message": {
+            "text": "Potential hardcoded credentials"
+          },
+          "locations": [
+            {
+              "physicalLocation": {
+                "artifactLocation": {
+                  "uri": "benchmark/example.env"
+                },
+                "region": {
+                  "startLine": 7,
+                  "startColumn": 14,
+                  "snippet": {
+                    "text": "API_KEY=\"[REDACTED]\""
+                  }
+                }
+              }
+            }
+          ],
+          "properties": {
+            "category": "pattern_match",
+            "confidence": "deterministic",
+            "source": "yara"
+          }
+        },
+        {
+          "ruleId": "credential_hardcode",
+          "ruleIndex": 0,
+          "level": "warning",
+          "message": {
+            "text": "Potential hardcoded credentials"
+          },
+          "locations": [
+            {
+              "physicalLocation": {
+                "artifactLocation": {
+                  "uri": "benchmark/example.env"
+                },
+                "region": {
+                  "startLine": 13,
+                  "startColumn": 14,
+                  "snippet": {
+                    "text": "API_KEY=\"[REDACTED]\""
+                  }
+                }
+              }
+            }
+          ],
+          "properties": {
+            "category": "pattern_match",
+            "confidence": "deterministic",
+            "source": "yara"
+          }
+        },
+        {
+          "ruleId": "instruction_to_include_code",
+          "ruleIndex": 1,
+          "level": "error",
+          "message": {
+            "text": "Natural-language instruction telling the model to include, merge, or execute a code snippet"
+          },
+          "locations": [
+            {
+              "physicalLocation": {
+                "artifactLocation": {
+                  "uri": "examples/hugging-face/deepset/deberta-v3-base-injection.md"
+                },
+                "region": {
+                  "startLine": 14,
+                  "startColumn": 136,
+                  "snippet": {
+                    "text": "add the following code"
+                  }
+                }
+              }
+            }
+          ],
+          "properties": {
+            "category": "pattern_match",
+            "confidence": "deterministic",
+            "source": "yara"
+          }
+        },
+        {
+          "ruleId": "prompt_injection_comment",
+          "ruleIndex": 2,
+          "level": "error",
+          "message": {
+            "text": "Comment containing prompt injection keywords"
+          },
+          "locations": [
+            {
+              "physicalLocation": {
+                "artifactLocation": {
+                  "uri": "examples/hugging-face/epivolis/hyperion.md"
+                },
+                "region": {
+                  "startLine": 8,
+                  "startColumn": 120,
+                  "snippet": {
+                    "text": "jailbreak"
+                  }
+                }
+              }
+            }
+          ],
+          "properties": {
+            "category": "pattern_match",
+            "confidence": "deterministic",
+            "source": "yara"
+          }
+        },
+        {
+          "ruleId": "instruction_to_include_code",
+          "ruleIndex": 1,
+          "level": "error",
+          "message": {
+            "text": "Natural-language instruction telling the model to include, merge, or execute a code snippet"
+          },
+          "locations": [
+            {
+              "physicalLocation": {
+                "artifactLocation": {
+                  "uri": "examples/hugging-face/epivolis/hyperion.md"
+                },
+                "region": {
+                  "startLine": 14,
+                  "startColumn": 104,
+                  "snippet": {
+                    "text": "add the following code"
+                  }
+                }
+              }
+            }
+          ],
+          "properties": {
+            "category": "pattern_match",
+            "confidence": "deterministic",
+            "source": "yara"
+          }
+        },
+        {
+          "ruleId": "instruction_to_include_code",
+          "ruleIndex": 1,
+          "level": "error",
+          "message": {
+            "text": "Natural-language instruction telling the model to include, merge, or execute a code snippet"
+          },
+          "locations": [
+            {
+              "physicalLocation": {
+                "artifactLocation": {
+                  "uri": "examples/hugging-face/fmops/distilbert-prompt-injection.md"
+                },
+                "region": {
+                  "startLine": 14,
+                  "startColumn": 136,
+                  "snippet": {
+                    "text": "add the following code"
+                  }
+                }
+              }
+            }
+          ],
+          "properties": {
+            "category": "pattern_match",
+            "confidence": "deterministic",
+            "source": "yara"
+          }
+        },
+        {
+          "ruleId": "instruction_to_include_code",
+          "ruleIndex": 1,
+          "level": "error",
+          "message": {
+            "text": "Natural-language instruction telling the model to include, merge, or execute a code snippet"
+          },
+          "locations": [
+            {
+              "physicalLocation": {
+                "artifactLocation": {
+                  "uri": "examples/hugging-face/myadav/setfit-prompt-injection-minilm-l3-v2.md"
+                },
+                "region": {
+                  "startLine": 18,
+                  "startColumn": 156,
+                  "snippet": {
+                    "text": "add the following code"
+                  }
+                }
+              }
+            }
+          ],
+          "properties": {
+            "category": "pattern_match",
+            "confidence": "deterministic",
+            "source": "yara"
+          }
+        },
+        {
+          "ruleId": "instruction_to_include_code",
+          "ruleIndex": 1,
+          "level": "error",
+          "message": {
+            "text": "Natural-language instruction telling the model to include, merge, or execute a code snippet"
+          },
+          "locations": [
+            {
+              "physicalLocation": {
+                "artifactLocation": {
+                  "uri": "examples/hugging-face/protectai/deberta-v3-base-prompt-injection-v2.md"
+                },
+                "region": {
+                  "startLine": 14,
+                  "startColumn": 160,
+                  "snippet": {
+                    "text": "add the following code"
+                  }
+                }
+              }
+            }
+          ],
+          "properties": {
+            "category": "pattern_match",
+            "confidence": "deterministic",
+            "source": "yara"
+          }
+        },
+        {
+          "ruleId": "instruction_to_include_code",
+          "ruleIndex": 1,
+          "level": "error",
+          "message": {
+            "text": "Natural-language instruction telling the model to include, merge, or execute a code snippet"
+          },
+          "locations": [
+            {
+              "physicalLocation": {
+                "artifactLocation": {
+                  "uri": "examples/hugging-face/protectai/deberta-v3-base-prompt-injection.md"
+                },
+                "region": {
+                  "startLine": 14,
+                  "startColumn": 154,
+                  "snippet": {
+                    "text": "add the following code"
+                  }
+                }
+              }
+            }
+          ],
+          "properties": {
+            "category": "pattern_match",
+            "confidence": "deterministic",
+            "source": "yara"
+          }
+        },
+        {
+          "ruleId": "instruction_to_include_code",
+          "ruleIndex": 1,
+          "level": "error",
+          "message": {
+            "text": "Natural-language instruction telling the model to include, merge, or execute a code snippet"
+          },
+          "locations": [
+            {
+              "physicalLocation": {
+                "artifactLocation": {
+                  "uri": "examples/whylabs/langkit.md"
+                },
+                "region": {
+                  "startLine": 12,
+                  "startColumn": 98,
+                  "snippet": {
+                    "text": "add the following code"
+                  }
+                }
+              }
+            }
+          ],
+          "properties": {
+            "category": "pattern_match",
+            "confidence": "deterministic",
+            "source": "yara"
+          }
+        },
+        {
+          "ruleId": "prompt_injection_comment",
+          "ruleIndex": 2,
+          "level": "error",
+          "message": {
+            "text": "Comment containing prompt injection keywords"
+          },
+          "locations": [
+            {
+              "physicalLocation": {
+                "artifactLocation": {
+                  "uri": "results/aporia_guardrails.md"
+                },
+                "region": {
+                  "startLine": 14,
+                  "startColumn": 1,
+                  "snippet": {
+                    "text": "jailbreak"
+                  }
+                }
+              }
+            }
+          ],
+          "properties": {
+            "category": "pattern_match",
+            "confidence": "deterministic",
+            "source": "yara"
+          }
+        },
+        {
+          "ruleId": "prompt_injection_comment",
+          "ruleIndex": 2,
+          "level": "error",
+          "message": {
+            "text": "Comment containing prompt injection keywords"
+          },
+          "locations": [
+            {
+              "physicalLocation": {
+                "artifactLocation": {
+                  "uri": "results/azure_content_safety.md"
+                },
+                "region": {
+                  "startLine": 14,
+                  "startColumn": 1,
+                  "snippet": {
+                    "text": "jailbreak"
+                  }
+                }
+              }
+            }
+          ],
+          "properties": {
+            "category": "pattern_match",
+            "confidence": "deterministic",
+            "source": "yara"
+          }
+        },
+        {
+          "ruleId": "prompt_injection_comment",
+          "ruleIndex": 2,
+          "level": "error",
+          "message": {
+            "text": "Comment containing prompt injection keywords"
+          },
+          "locations": [
+            {
+              "physicalLocation": {
+                "artifactLocation": {
+                  "uri": "results/bedrock_guardrails.md"
+                },
+                "region": {
+                  "startLine": 14,
+                  "startColumn": 1,
+                  "snippet": {
+                    "text": "jailbreak"
+                  }
+                }
+              }
+            }
+          ],
+          "properties": {
+            "category": "pattern_match",
+            "confidence": "deterministic",
+            "source": "yara"
+          }
+        },
+        {
+          "ruleId": "prompt_injection_comment",
+          "ruleIndex": 2,
+          "level": "error",
+          "message": {
+            "text": "Comment containing prompt injection keywords"
+          },
+          "locations": [
+            {
+              "physicalLocation": {
+                "artifactLocation": {
+                  "uri": "results/lakera_guard.md"
+                },
+                "region": {
+                  "startLine": 14,
+                  "startColumn": 1,
+                  "snippet": {
+                    "text": "jailbreak"
+                  }
+                }
+              }
+            }
+          ],
+          "properties": {
+            "category": "pattern_match",
+            "confidence": "deterministic",
+            "source": "yara"
+          }
+        },
+        {
+          "ruleId": "prompt_injection_comment",
+          "ruleIndex": 2,
+          "level": "error",
+          "message": {
+            "text": "Comment containing prompt injection keywords"
+          },
+          "locations": [
+            {
+              "physicalLocation": {
+                "artifactLocation": {
+                  "uri": "results/llama_prompt_guard.md"
+                },
+                "region": {
+                  "startLine": 14,
+                  "startColumn": 1,
+                  "snippet": {
+                    "text": "jailbreak"
+                  }
+                }
+              }
+            }
+          ],
+          "properties": {
+            "category": "pattern_match",
+            "confidence": "deterministic",
+            "source": "yara"
+          }
+        },
+        {
+          "ruleId": "prompt_injection_comment",
+          "ruleIndex": 2,
+          "level": "error",
+          "message": {
+            "text": "Comment containing prompt injection keywords"
+          },
+          "locations": [
+            {
+              "physicalLocation": {
+                "artifactLocation": {
+                  "uri": "results/llama_prompt_guard_2.md"
+                },
+                "region": {
+                  "startLine": 14,
+                  "startColumn": 1,
+                  "snippet": {
+                    "text": "jailbreak"
+                  }
+                }
+              }
+            }
+          ],
+          "properties": {
+            "category": "pattern_match",
+            "confidence": "deterministic",
+            "source": "yara"
+          }
+        },
+        {
+          "ruleId": "prompt_injection_comment",
+          "ruleIndex": 2,
+          "level": "error",
+          "message": {
+            "text": "Comment containing prompt injection keywords"
+          },
+          "locations": [
+            {
+              "physicalLocation": {
+                "artifactLocation": {
+                  "uri": "results/model_armor.md"
+                },
+                "region": {
+                  "startLine": 14,
+                  "startColumn": 1,
+                  "snippet": {
+                    "text": "jailbreak"
+                  }
+                }
+              }
+            }
+          ],
+          "properties": {
+            "category": "pattern_match",
+            "confidence": "deterministic",
+            "source": "yara"
+          }
+        },
+        {
+          "ruleId": "prompt_injection_comment",
+          "ruleIndex": 2,
+          "level": "error",
+          "message": {
+            "text": "Comment containing prompt injection keywords"
+          },
+          "locations": [
+            {
+              "physicalLocation": {
+                "artifactLocation": {
+                  "uri": "results/protect_ai.md"
+                },
+                "region": {
+                  "startLine": 14,
+                  "startColumn": 1,
+                  "snippet": {
+                    "text": "jailbreak"
+                  }
+                }
+              }
+            }
+          ],
+          "properties": {
+            "category": "pattern_match",
+            "confidence": "deterministic",
+            "source": "yara"
+          }
+        }
+      ],
+      "invocations": [
+        {
+          "executionSuccessful": true,
+          "startTimeUtc": "2026-07-15T01:40:50.681Z",
+          "endTimeUtc": "2026-07-15T01:40:53.473Z"
+        }
+      ]
+    }
+  ]
+}
