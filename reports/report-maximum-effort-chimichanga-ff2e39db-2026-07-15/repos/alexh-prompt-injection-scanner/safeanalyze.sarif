@@ -1,0 +1,437 @@
+{
+  "version": "2.1.0",
+  "$schema": "https://raw.githubusercontent.com/oasis-tcs/sarif-spec/master/Schemata/sarif-schema-2.1.0.json",
+  "runs": [
+    {
+      "tool": {
+        "driver": {
+          "name": "safeanalyze",
+          "informationUri": "https://github.com/user/safeanalyze",
+          "rules": [
+            {
+              "id": "PI007",
+              "name": "GitHub Event Expression in AI Action Input",
+              "shortDescription": {
+                "text": "GitHub Event Expression in AI Action Input"
+              },
+              "fullDescription": {
+                "text": "The AI action `openai/openai-github-action@v1` receives the GitHub event expression `${{ github.event.pull_request.body }}` via the `prompt` input parameter. While this expression may not be the highest-risk source, it could still carry attacker-controlled content (e.g. via forked repositories, external contributors, or social engineering)."
+              },
+              "help": {
+                "text": ""
+              },
+              "properties": {
+                "category": "prompt_injection"
+              }
+            },
+            {
+              "id": "PI010",
+              "name": "Issue/Comment Body in run Step",
+              "shortDescription": {
+                "text": "Issue/Comment Body in run Step"
+              },
+              "fullDescription": {
+                "text": "The ``run`` step embeds `${{ github.event.issue.title }}`, which originates from user-submitted issue or comment content. Any GitHub user can craft issue bodies or comments containing prompt injection payloads to manipulate AI agents triggered by this workflow."
+              },
+              "help": {
+                "text": ""
+              },
+              "properties": {
+                "category": "prompt_injection"
+              }
+            },
+            {
+              "id": "obfuscated_javascript",
+              "name": "obfuscated_javascript",
+              "shortDescription": {
+                "text": "obfuscated_javascript"
+              },
+              "fullDescription": {
+                "text": "Obfuscated or packed JavaScript patterns"
+              },
+              "help": {
+                "text": ""
+              },
+              "properties": {
+                "category": "pattern_match"
+              }
+            },
+            {
+              "id": "prompt_injection_comment",
+              "name": "prompt_injection_comment",
+              "shortDescription": {
+                "text": "prompt_injection_comment"
+              },
+              "fullDescription": {
+                "text": "Comment containing prompt injection keywords"
+              },
+              "help": {
+                "text": ""
+              },
+              "properties": {
+                "category": "pattern_match"
+              }
+            }
+          ]
+        }
+      },
+      "results": [
+        {
+          "ruleId": "PI007",
+          "ruleIndex": 0,
+          "level": "error",
+          "message": {
+            "text": "The AI action `openai/openai-github-action@v1` receives the GitHub event expression `${{ github.event.pull_request.body }}` via the `prompt` input parameter. While this expression may not be the highest-risk source, it could still carry attacker-controlled content (e.g. via forked repositories, external contributors, or social engineering)."
+          },
+          "locations": [
+            {
+              "physicalLocation": {
+                "artifactLocation": {
+                  "uri": "/tmp/safeanalyze-prompt-injection-scanner/tests/fixtures/vulnerable_workflow.yml"
+                },
+                "region": {
+                  "startLine": 1,
+                  "startColumn": 1,
+                  "snippet": {
+                    "text": "${{ github.event.pull_request.body }}"
+                  }
+                }
+              }
+            }
+          ],
+          "properties": {
+            "category": "prompt_injection",
+            "confidence": "deterministic",
+            "source": "prompt-injection-scanner"
+          }
+        },
+        {
+          "ruleId": "PI007",
+          "ruleIndex": 0,
+          "level": "error",
+          "message": {
+            "text": "The AI action `anthropic-ai/claude-action@v2` receives the GitHub event expression `${{ github.event.pull_request.title }}` via the `prompt` input parameter. While this expression may not be the highest-risk source, it could still carry attacker-controlled content (e.g. via forked repositories, external contributors, or social engineering)."
+          },
+          "locations": [
+            {
+              "physicalLocation": {
+                "artifactLocation": {
+                  "uri": "/tmp/safeanalyze-prompt-injection-scanner/tests/fixtures/vulnerable_workflow.yml"
+                },
+                "region": {
+                  "startLine": 1,
+                  "startColumn": 1,
+                  "snippet": {
+                    "text": "${{ github.event.pull_request.title }}"
+                  }
+                }
+              }
+            }
+          ],
+          "properties": {
+            "category": "prompt_injection",
+            "confidence": "deterministic",
+            "source": "prompt-injection-scanner"
+          }
+        },
+        {
+          "ruleId": "PI007",
+          "ruleIndex": 0,
+          "level": "error",
+          "message": {
+            "text": "The AI action `langchain-ai/langchain-github-action@v1` receives the GitHub event expression `${{ github.event.issue.body }}` via the `issue-body` input parameter. While this expression may not be the highest-risk source, it could still carry attacker-controlled content (e.g. via forked repositories, external contributors, or social engineering)."
+          },
+          "locations": [
+            {
+              "physicalLocation": {
+                "artifactLocation": {
+                  "uri": "/tmp/safeanalyze-prompt-injection-scanner/tests/fixtures/vulnerable_workflow.yml"
+                },
+                "region": {
+                  "startLine": 1,
+                  "startColumn": 1,
+                  "snippet": {
+                    "text": "${{ github.event.issue.body }}"
+                  }
+                }
+              }
+            }
+          ],
+          "properties": {
+            "category": "prompt_injection",
+            "confidence": "deterministic",
+            "source": "prompt-injection-scanner"
+          }
+        },
+        {
+          "ruleId": "PI007",
+          "ruleIndex": 0,
+          "level": "error",
+          "message": {
+            "text": "The AI action `langchain-ai/langchain-github-action@v1` receives the GitHub event expression `${{ github.event.comment.body }}` via the `comment-body` input parameter. While this expression may not be the highest-risk source, it could still carry attacker-controlled content (e.g. via forked repositories, external contributors, or social engineering)."
+          },
+          "locations": [
+            {
+              "physicalLocation": {
+                "artifactLocation": {
+                  "uri": "/tmp/safeanalyze-prompt-injection-scanner/tests/fixtures/vulnerable_workflow.yml"
+                },
+                "region": {
+                  "startLine": 1,
+                  "startColumn": 1,
+                  "snippet": {
+                    "text": "${{ github.event.comment.body }}"
+                  }
+                }
+              }
+            }
+          ],
+          "properties": {
+            "category": "prompt_injection",
+            "confidence": "deterministic",
+            "source": "prompt-injection-scanner"
+          }
+        },
+        {
+          "ruleId": "PI010",
+          "ruleIndex": 1,
+          "level": "error",
+          "message": {
+            "text": "The ``run`` step embeds `${{ github.event.issue.title }}`, which originates from user-submitted issue or comment content. Any GitHub user can craft issue bodies or comments containing prompt injection payloads to manipulate AI agents triggered by this workflow."
+          },
+          "locations": [
+            {
+              "physicalLocation": {
+                "artifactLocation": {
+                  "uri": "/tmp/safeanalyze-prompt-injection-scanner/tests/fixtures/vulnerable_workflow.yml"
+                },
+                "region": {
+                  "startLine": 1,
+                  "startColumn": 1,
+                  "snippet": {
+                    "text": "${{ github.event.issue.title }}"
+                  }
+                }
+              }
+            }
+          ],
+          "properties": {
+            "category": "prompt_injection",
+            "confidence": "deterministic",
+            "source": "prompt-injection-scanner"
+          }
+        },
+        {
+          "ruleId": "PI010",
+          "ruleIndex": 1,
+          "level": "error",
+          "message": {
+            "text": "The ``run`` step embeds `${{ github.event.comment.body }}`, which originates from user-submitted issue or comment content. Any GitHub user can craft issue bodies or comments containing prompt injection payloads to manipulate AI agents triggered by this workflow."
+          },
+          "locations": [
+            {
+              "physicalLocation": {
+                "artifactLocation": {
+                  "uri": "/tmp/safeanalyze-prompt-injection-scanner/tests/fixtures/vulnerable_workflow.yml"
+                },
+                "region": {
+                  "startLine": 1,
+                  "startColumn": 1,
+                  "snippet": {
+                    "text": "${{ github.event.comment.body }}"
+                  }
+                }
+              }
+            }
+          ],
+          "properties": {
+            "category": "prompt_injection",
+            "confidence": "deterministic",
+            "source": "prompt-injection-scanner"
+          }
+        },
+        {
+          "ruleId": "PI010",
+          "ruleIndex": 1,
+          "level": "error",
+          "message": {
+            "text": "The ``run`` step embeds `${{ github.event.issue.body }}`, which originates from user-submitted issue or comment content. Any GitHub user can craft issue bodies or comments containing prompt injection payloads to manipulate AI agents triggered by this workflow."
+          },
+          "locations": [
+            {
+              "physicalLocation": {
+                "artifactLocation": {
+                  "uri": "/tmp/safeanalyze-prompt-injection-scanner/tests/fixtures/vulnerable_workflow.yml"
+                },
+                "region": {
+                  "startLine": 1,
+                  "startColumn": 1,
+                  "snippet": {
+                    "text": "${{ github.event.issue.body }}"
+                  }
+                }
+              }
+            }
+          ],
+          "properties": {
+            "category": "prompt_injection",
+            "confidence": "deterministic",
+            "source": "prompt-injection-scanner"
+          }
+        },
+        {
+          "ruleId": "prompt_injection_comment",
+          "ruleIndex": 3,
+          "level": "error",
+          "message": {
+            "text": "Comment containing prompt injection keywords"
+          },
+          "locations": [
+            {
+              "physicalLocation": {
+                "artifactLocation": {
+                  "uri": "README.md"
+                },
+                "region": {
+                  "startLine": 404,
+                  "startColumn": 19,
+                  "snippet": {
+                    "text": "ignore previous instruction"
+                  }
+                }
+              }
+            }
+          ],
+          "properties": {
+            "category": "pattern_match",
+            "confidence": "deterministic",
+            "source": "yara"
+          }
+        },
+        {
+          "ruleId": "prompt_injection_comment",
+          "ruleIndex": 3,
+          "level": "error",
+          "message": {
+            "text": "Comment containing prompt injection keywords"
+          },
+          "locations": [
+            {
+              "physicalLocation": {
+                "artifactLocation": {
+                  "uri": "README.md"
+                },
+                "region": {
+                  "startLine": 405,
+                  "startColumn": 19,
+                  "snippet": {
+                    "text": "system prompt"
+                  }
+                }
+              }
+            }
+          ],
+          "properties": {
+            "category": "pattern_match",
+            "confidence": "deterministic",
+            "source": "yara"
+          }
+        },
+        {
+          "ruleId": "prompt_injection_comment",
+          "ruleIndex": 3,
+          "level": "error",
+          "message": {
+            "text": "Comment containing prompt injection keywords"
+          },
+          "locations": [
+            {
+              "physicalLocation": {
+                "artifactLocation": {
+                  "uri": "prompt_injection_scanner/rules.py"
+                },
+                "region": {
+                  "startLine": 997,
+                  "startColumn": 55,
+                  "snippet": {
+                    "text": "jailbreak"
+                  }
+                }
+              }
+            }
+          ],
+          "properties": {
+            "category": "pattern_match",
+            "confidence": "deterministic",
+            "source": "yara"
+          }
+        },
+        {
+          "ruleId": "obfuscated_javascript",
+          "ruleIndex": 2,
+          "level": "error",
+          "message": {
+            "text": "Obfuscated or packed JavaScript patterns"
+          },
+          "locations": [
+            {
+              "physicalLocation": {
+                "artifactLocation": {
+                  "uri": "tests/test_cli.py"
+                },
+                "region": {
+                  "startLine": 185,
+                  "startColumn": 17,
+                  "snippet": {
+                    "text": "\\x1b"
+                  }
+                }
+              }
+            }
+          ],
+          "properties": {
+            "category": "pattern_match",
+            "confidence": "deterministic",
+            "source": "yara"
+          }
+        },
+        {
+          "ruleId": "obfuscated_javascript",
+          "ruleIndex": 2,
+          "level": "error",
+          "message": {
+            "text": "Obfuscated or packed JavaScript patterns"
+          },
+          "locations": [
+            {
+              "physicalLocation": {
+                "artifactLocation": {
+                  "uri": "tests/test_reporter.py"
+                },
+                "region": {
+                  "startLine": 376,
+                  "startColumn": 17,
+                  "snippet": {
+                    "text": "\\x1b"
+                  }
+                }
+              }
+            }
+          ],
+          "properties": {
+            "category": "pattern_match",
+            "confidence": "deterministic",
+            "source": "yara"
+          }
+        }
+      ],
+      "invocations": [
+        {
+          "executionSuccessful": true,
+          "startTimeUtc": "2026-07-15T00:45:24.563Z",
+          "endTimeUtc": "2026-07-15T00:45:24.767Z"
+        }
+      ]
+    }
+  ]
+}

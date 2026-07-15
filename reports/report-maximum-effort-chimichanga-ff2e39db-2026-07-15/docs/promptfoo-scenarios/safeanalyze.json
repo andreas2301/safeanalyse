@@ -1,0 +1,79 @@
+{
+  "target": "/tmp/safeanalyze-doc-scenarios.html",
+  "started_at": "2026-07-15T00:45:34.345328148Z",
+  "duration_ms": 80,
+  "findings": [
+    {
+      "rule_id": "prompt_injection_comment",
+      "title": "prompt_injection_comment",
+      "description": "Comment containing prompt injection keywords",
+      "severity": "critical",
+      "category": "pattern_match",
+      "file": ".",
+      "line": 28,
+      "column": 3197,
+      "match": "jailbreak",
+      "message": "Comment containing prompt injection keywords",
+      "source": "yara",
+      "confidence": "deterministic"
+    },
+    {
+      "rule_id": "hidden_char_zero_width",
+      "title": "Hidden Unicode character: ZERO WIDTH SPACE",
+      "severity": "high",
+      "category": "hidden_char",
+      "file": ".",
+      "line": 31,
+      "column": 189,
+      "match": "U+200B",
+      "message": "ZERO WIDTH SPACE (zero_width) in .",
+      "source": "hiddenchars",
+      "confidence": "deterministic"
+    },
+    {
+      "rule_id": "hidden_char_zero_width",
+      "title": "Hidden Unicode character: ZERO WIDTH SPACE",
+      "severity": "high",
+      "category": "hidden_char",
+      "file": ".",
+      "line": 39,
+      "column": 219,
+      "match": "U+200B",
+      "message": "ZERO WIDTH SPACE (zero_width) in .",
+      "source": "hiddenchars",
+      "confidence": "deterministic"
+    },
+    {
+      "rule_id": "hidden_char_zero_width",
+      "title": "Hidden Unicode character: ZERO WIDTH SPACE",
+      "severity": "high",
+      "category": "hidden_char",
+      "file": ".",
+      "line": 50,
+      "column": 249,
+      "match": "U+200B",
+      "message": "ZERO WIDTH SPACE (zero_width) in .",
+      "source": "hiddenchars",
+      "confidence": "deterministic"
+    }
+  ],
+  "errors": [],
+  "summary": {
+    "files_scanned": 1,
+    "files_sanitized": 0,
+    "bytes_before": 0,
+    "bytes_after": 0,
+    "counts_by_severity": {
+      "critical": 1,
+      "high": 3
+    },
+    "counts_by_source": {
+      "hiddenchars": 3,
+      "yara": 1
+    }
+  },
+  "metadata": {
+    "safeanalyze_version": "0.2.7",
+    "scan_mode": "thorough"
+  }
+}
