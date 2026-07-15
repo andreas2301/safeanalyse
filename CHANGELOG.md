@@ -5,6 +5,16 @@ All notable functional and non-functional changes to `safeanalyze` are documente
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.2.6] — 2026-07-15
+
+### Functional
+
+- **Binary-file skipping:** The file walker used by YARA, entropy, hidden-char, and ML stages now skips binary files (by extension and by content heuristic). This eliminates thousands of false-positive hidden-char findings in images, PDFs, archives, and compiled artifacts.
+
+### Non-functional
+
+- Added unit tests for binary detection (`IsBinaryContent`) and binary skipping in `WalkDirSorted`.
+
 ## [0.2.5] — 2026-07-15
 
 ### Functional

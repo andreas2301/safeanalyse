@@ -276,8 +276,49 @@ func (s *Stage) Run(ctx context.Context, target string, input *report.Report) (*
 	return out, err
 }
 
+// binaryExtensions is a conservative set of file extensions that are treated
+// as binary without reading their content. This avoids wasting time and memory
+// on files that cannot contain meaningful prompt-injection payloads.
+var binaryExtensions = map[string]bool{
+	".gif": true, ".png": true, ".jpg": true, ".jpeg": true, ".bmp": true,
+	".ico": true, ".webp": true, ".tiff": true, ".tif": true, ".svgz": true,
+	".pdf": true, ".zip": true, ".tar": true, ".gz": true, ".bz2": true,
+	".xz": true, ".7z": true, ".rar": true, ".jar": true, ".war": true,
+	".exe": true, ".dll": true, ".so": true, ".dylib": true, ".bin": true,
+	".woff": true, ".woff2": true, ".ttf": true, ".otf": true, ".eot": true,
+	".mp3": true, ".mp4": true, ".avi": true, ".mov": true, ".mkv": true,
+	".wav": true, ".flac": true, ".ogg": true, ".webm": true,
+	".o": true, ".a": true, ".class": true, ".pyc": true, ".pyo": true,
+}
+
+// IsBinaryContent heuristically determines whether data is binary.
+// It samples up to 512 bytes and treats content as binary if it contains a
+// NUL byte or an unusually high ratio of non-printable control characters.
+func IsBinaryContent(data []byte) bool {
+	if len(data) == 0 {
+		return false
+	}
+	n := 512
+	if len(data) < n {
+		n = len(data)
+	}
+	nonPrintable := 0
+	for i := 0; i < n; i++ {
+		b := data[i]
+		if b == 0 {
+			return true
+		}
+		if b < 0x07 || (b > 0x0D && b < 0x20) || b == 0x7F {
+			nonPrintable++
+		}
+	}
+	return nonPrintable*100/n > 30
+}
+
 // WalkDirSorted walks a directory deterministically, skipping excluded paths,
 // and calls fn for each regular file with its content and relative path.
+// Binary files are skipped because they cannot contain prompt-injection
+// payloads in a form the text-based checks can reason about.
 func WalkDirSorted(root string, excludedPaths []string, fn func(path string, content []byte, rel string) error) error {
 	excluded := make(map[string]bool)
 	for _, p := range excludedPaths {
@@ -303,9 +344,15 @@ func WalkDirSorted(root string, excludedPaths []string, fn func(path string, con
 		if d.IsDir() {
 			return nil
 		}
+		if binaryExtensions[strings.ToLower(filepath.Ext(rel))] {
+			return nil
+		}
 		content, err := os.ReadFile(path)
 		if err != nil {
 			return err
+		}
+		if IsBinaryContent(content) {
+			return nil
 		}
 		return fn(path, content, rel)
 	})
