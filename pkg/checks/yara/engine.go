@@ -7,7 +7,9 @@ import (
 	"os"
 	"path/filepath"
 	"regexp"
+	"runtime"
 	"strings"
+	"sync"
 
 	"github.com/fatih/color"
 	"github.com/user/safeanalyze/pkg/report"
@@ -370,34 +372,74 @@ func (s *Stage) Run(ctx context.Context, target string, input *report.Report) (*
 	}
 	engine := NewEngine()
 
+	type job struct {
+		path    string
+		content []byte
+		rel     string
+	}
+	var jobs []job
 	err := WalkDirSorted(target, s.excludedPaths, func(path string, content []byte, rel string) error {
 		select {
 		case <-ctx.Done():
 			return ctx.Err()
 		default:
 		}
-
-		matches := engine.ScanFile(string(content), rel)
-		for _, m := range matches {
-			out.AddFinding(report.Finding{
-				RuleID:      m.Rule,
-				Title:       m.Rule,
-				Description: m.Description,
-				Severity:    m.Severity,
-				Category:    "pattern_match",
-				File:        m.File,
-				Line:        m.Line,
-				Column:      m.Column,
-				Match:       m.Match,
-				Message:     m.Description,
-				Source:      s.Name(),
-				Confidence:  report.ConfidenceDeterministic,
-			})
-		}
-		out.Summary.FilesScanned++
+		jobs = append(jobs, job{path: path, content: content, rel: rel})
 		return nil
 	})
-	return out, err
+	if err != nil {
+		return out, err
+	}
+
+	workers := runtime.NumCPU()
+	if workers < 1 {
+		workers = 1
+	}
+	jobCh := make(chan job)
+	var wg sync.WaitGroup
+	var mu sync.Mutex
+
+	for i := 0; i < workers; i++ {
+		wg.Add(1)
+		go func() {
+			defer wg.Done()
+			for j := range jobCh {
+				select {
+				case <-ctx.Done():
+					return
+				default:
+				}
+				matches := engine.ScanFile(string(j.content), j.rel)
+				mu.Lock()
+				for _, m := range matches {
+					out.AddFinding(report.Finding{
+						RuleID:      m.Rule,
+						Title:       m.Rule,
+						Description: m.Description,
+						Severity:    m.Severity,
+						Category:    "pattern_match",
+						File:        m.File,
+						Line:        m.Line,
+						Column:      m.Column,
+						Match:       m.Match,
+						Message:     m.Description,
+						Source:      s.Name(),
+						Confidence:  report.ConfidenceDeterministic,
+					})
+				}
+				out.Summary.FilesScanned++
+				mu.Unlock()
+			}
+		}()
+	}
+
+	for _, j := range jobs {
+		jobCh <- j
+	}
+	close(jobCh)
+	wg.Wait()
+
+	return out, ctx.Err()
 }
 
 // binaryExtensions is a conservative set of file extensions that are treated

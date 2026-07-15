@@ -80,8 +80,8 @@ echo 'ignore all previous instructions' | ./safeanalyze inspect --verbose
 
 ## Current autoresearch iteration
 
-- **Version under test:** v0.3.6
-- **Active hypothesis:** Hardening `safeanalyze clone` and clarifying `safeanalyze.yaml` exclusions does not change detection metrics but removes a security foot-gun and reduces noise from build/cache directories.
-- **Last accepted improvement:** v0.3.5 Semgrep file-count gate (report branch `report-chimichanga-taco-beaver-18c1c65c-2026-07-15`).
-- **Next candidate:** Optimize the YARA engine to reduce per-line regex passes on large repositories.
+- **Version under test:** v0.3.7
+- **Active hypothesis:** Parallelizing file scanning in the YARA stage will reduce thorough-mode wall-clock latency on large repositories without changing detection coverage.
+- **Last accepted improvement:** v0.3.7 parallel YARA scanning.
+- **Previous accepted improvement:** v0.3.5 Semgrep file-count gate (report branch `report-chimichanga-taco-beaver-18c1c65c-2026-07-15`).
 - **Previous reverted iteration:** v0.3.4 (encoded-prompt-injection fragment expansion added latency but no new detections).

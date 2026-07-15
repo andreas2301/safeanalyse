@@ -1,4 +1,4 @@
-# safeanalyze v0.3.6
+# safeanalyze v0.3.7
 
 A Go CLI tool that sanitizes and scans untrusted code repositories **before** feeding them to AI assistants. Implements defense-in-depth inspired by [Zones of Distrust](https://github.com/bluvibytes/zone-of-distrust).
 
@@ -12,6 +12,10 @@ Prompt injection via malicious code is real. A repo can contain:
 - Secrets or malware mixed with legitimate source
 
 **safeanalyze** runs a security pipeline so AI assistants never see raw, unverified code.
+
+## What's new in v0.3.7
+
+- **Parallel YARA file scanning** — scans files concurrently with a worker pool, cutting thorough-mode wall-clock time on large repos (e.g., `skylos` ~24 s → ~9 s, `InjecAgent` ~9 s → ~2.4 s) while keeping findings stable.
 
 ## What's new in v0.3.6
 

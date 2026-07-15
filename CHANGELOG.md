@@ -5,6 +5,20 @@ All notable functional and non-functional changes to `safeanalyze` are documente
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.3.7] — 2026-07-15
+
+### Functional
+
+- **Parallel YARA file scanning:** The YARA pipeline stage now scans files concurrently using a worker pool sized to `runtime.NumCPU()`. File collection still walks the target deterministically; report output is sorted before writing so results remain stable.
+
+### Non-functional
+
+- Reduced thorough-scan wall-clock time on large repositories:
+  - `repos/duriantaco-skylos`: ~24 s → ~9 s
+  - `repos/uiuc-injecagent`: ~9 s → ~2.4 s
+  - `repos/microsoft-bipia`: ~4.2 s → ~3 s
+- Detection coverage unchanged on the test corpus.
+
 ## [0.3.6] — 2026-07-15
 
 ### Functional
