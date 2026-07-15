@@ -144,16 +144,15 @@ echo 'ignore all previous instructions' | ./safeanalyze inspect --verbose
 
 ## Current autoresearch iteration
 
-- **Version under test:** v0.3.8
-- **Status:** Accepted (no default-corpus change).
-- **Change:** Hardened the stochastic ML stage for smaller ONNX models (robust label lookup, 512-token chunk limit).
-- **Why not enabled by default:** The evaluated 256 MB DistilBERT model (`fmops/distilbert-prompt-injection-onnx`) fits the ~2 GB RAM budget (~2 GB RSS) but classifies nearly every chunk as injection, producing unacceptable false positives on the test corpus. A suitable small model still needs to be identified.
+- **Version under test:** v0.3.9
+- **Status:** Accepted (removes unsafe Semgrep skip).
+- **Change:** Removed the 50-file minimum gate so Semgrep scans repositories of any size when enabled.
 - **Last accepted corpus improvement:** v0.3.7 parallel YARA scanning (`report-boom-zany-sarcasm-cd4dee48-2026-07-15`).
 - **Previous reverted iterations:**
   - v0.3.4 — encoded-prompt-injection fragment expansion added latency but no new detections.
   - v0.3.8 (parallel entropy/hiddenchars) — did not improve latency, reverted before release.
 - **Stagnation check:** Two consecutive no-corpus-gain attempts have now occurred (parallel entropy/hiddenchars, small-model ML). Further progress likely requires either a better small prompt-injection model or a new detection-rule hypothesis backed by gap analysis.
 - **Next candidates:**
-  - Evaluate `protectai/deberta-v3-small-prompt-injection-v2` or another sub-2 GB model if a direct ONNX download becomes available.
+  - Evaluate `Llama-Prompt-Guard-2-86M-onnx` and `22M-onnx` for memory/latency/precision; if suitable, enable a sub-2 GB model by default.
   - Add targeted YARA rules for chat-template boundary tokens or tool-output injection only if gap analysis shows missing true positives.
   - Decide whether `node_modules`/`vendor` should remain in `dependency_paths` for thorough mode.

@@ -4,29 +4,17 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
-	"io/fs"
 	"os/exec"
-	"path/filepath"
-	"strings"
 
 	"github.com/user/safeanalyze/pkg/report"
 )
 
 // semgrepStage runs Semgrep with security-audit and prompt-injection rules.
-// To avoid Semgrep's high fixed startup cost on tiny repositories, it skips
-// targets that contain fewer than minFiles regular files.
-type semgrepStage struct {
-	excludedPaths map[string]bool
-	minFiles      int
-}
+type semgrepStage struct{}
 
 // NewSemgrepStage creates a Semgrep pipeline stage.
 func NewSemgrepStage(excludedPaths []string) *semgrepStage {
-	excl := make(map[string]bool, len(excludedPaths))
-	for _, p := range excludedPaths {
-		excl[p] = true
-	}
-	return &semgrepStage{excludedPaths: excl, minFiles: 50}
+	return &semgrepStage{}
 }
 
 // Name returns the stage name.
@@ -38,12 +26,6 @@ func (s *semgrepStage) Dependencies() []string { return nil }
 // Run executes semgrep and parses JSON output into findings.
 func (s *semgrepStage) Run(ctx context.Context, target string, input *report.Report) (*report.Report, error) {
 	out := prepareReport(input, target)
-
-	fileCount := s.countFiles(target)
-	if fileCount < s.minFiles {
-		out.AddError(s.Name(), fmt.Sprintf("skipped: target contains %d files, below %d-file threshold", fileCount, s.minFiles))
-		return out, nil
-	}
 
 	binary := resolveBinary("semgrep")
 	if binary == "" {
@@ -62,34 +44,6 @@ func (s *semgrepStage) Run(ctx context.Context, target string, input *report.Rep
 		return out, nil
 	}
 	return parseSemgrepOutput(out, output)
-}
-
-// countFiles returns the number of regular files under target, excluding paths
-// listed in the stage's excludedPaths set.
-func (s *semgrepStage) countFiles(target string) int {
-	count := 0
-	_ = filepath.WalkDir(target, func(path string, d fs.DirEntry, err error) error {
-		if err != nil {
-			return nil
-		}
-		rel, err := filepath.Rel(target, path)
-		if err != nil {
-			return nil
-		}
-		for _, part := range strings.Split(rel, string(filepath.Separator)) {
-			if s.excludedPaths[part] {
-				if d.IsDir() {
-					return filepath.SkipDir
-				}
-				return nil
-			}
-		}
-		if !d.IsDir() {
-			count++
-		}
-		return nil
-	})
-	return count
 }
 
 func parseSemgrepOutput(out *report.Report, data []byte) (*report.Report, error) {

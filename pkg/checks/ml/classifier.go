@@ -269,22 +269,18 @@ func injectionProbability(outputs []pipelines.ClassificationOutput) float64 {
 		return 0
 	}
 	// Hugot may return labels in either order depending on the model config.
-	// Prefer the output whose label is "INJECTION", otherwise fall back to the
-	// first logit/score.
+	// Prefer the explicit injection/malicious label, then map known benign/safe
+	// labels, otherwise fall back to the first score.
 	for _, o := range outputs {
-		if strings.EqualFold(o.Label, "INJECTION") {
+		label := strings.ToUpper(strings.TrimSpace(o.Label))
+		switch label {
+		case "INJECTION", "MALICIOUS", "LABEL_1":
 			return float64(o.Score)
+		case "SAFE", "BENIGN", "LABEL_0":
+			return 1 - float64(o.Score)
 		}
 	}
-	o := outputs[0]
-	switch strings.ToUpper(o.Label) {
-	case "INJECTION":
-		return float64(o.Score)
-	case "SAFE":
-		return 1 - float64(o.Score)
-	default:
-		return float64(o.Score)
-	}
+	return float64(outputs[0].Score)
 }
 
 func defaultModelPath(path string) string {

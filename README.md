@@ -1,4 +1,4 @@
-# safeanalyze v0.3.8
+# safeanalyze v0.3.9
 
 A Go CLI tool that sanitizes and scans untrusted code repositories **before** feeding them to AI assistants. Implements defense-in-depth inspired by [Zones of Distrust](https://github.com/bluvibytes/zone-of-distrust).
 
@@ -12,6 +12,10 @@ Prompt injection via malicious code is real. A repo can contain:
 - Secrets or malware mixed with legitimate source
 
 **safeanalyze** runs a security pipeline so AI assistants never see raw, unverified code.
+
+## What's new in v0.3.9
+
+- **Semgrep now runs on repositories of any size** — the 50-file minimum introduced in v0.3.5 has been removed. A repository with only a few files can still be malicious, so Semgrep is invoked whenever it is enabled and installed.
 
 ## What's new in v0.3.8
 

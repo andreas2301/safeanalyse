@@ -5,6 +5,16 @@ All notable functional and non-functional changes to `safeanalyze` are documente
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.3.9] — 2026-07-15
+
+### Functional
+
+- **Semgrep runs on repositories of any size:** Removed the 50-file minimum gate so Semgrep is invoked on small repositories too. A target with only a handful of files can still contain malicious code, so skipping Semgrep based on file count was unsafe.
+
+### Non-functional
+
+- Simplified `pkg/checks/external/semgrep.go` by removing the now-unused file-count helper.
+
 ## [0.3.8] — 2026-07-15
 
 ### Functional
