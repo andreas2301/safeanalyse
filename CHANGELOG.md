@@ -5,6 +5,22 @@ All notable functional and non-functional changes to `safeanalyze` are documente
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.2.2] — 2026-07-15
+
+### Functional
+
+- **Severity-aware report capping:** When `output.max_findings` is exceeded, findings are now capped by severity (critical first) so high-priority signals are never dropped because of noisy low-severity output.
+- **Expanded prompt-injection rules:** Added detection for `strictly adhere to the following instruction`, `you are now`, `pretend you are`, `do not mention`, `I am the developer`, and the plural `ignore all previous instructions`.
+- **Version-pinned scanner installer:** External scanners are cloned at known-good tags or commits and installed concurrently. Pins: Semgrep `v1.169.0`, Bumblebee `v0.1.2`, prompt-injection-scanner `33dd171b`, Gitleaks `v8.25.0`, TruffleHog `v3.105.0`.
+- **Correct repository URLs:** Bumblebee now points to `perplexityai/bumblebee`; prompt-injection-scanner points to `alexh-scrt/prompt-injection-scanner`.
+- **Report duration in milliseconds:** Reports expose `duration_ms` instead of `completed_at` so sub-second scan times are visible.
+- **Dependency-path config in `safeanalyze.yaml`:** `node_modules` and `vendor` moved from `excluded_paths` to `dependency_paths`, matching the default behavior where they are skipped only in fast mode.
+
+### Non-functional
+
+- External scanner installation is now parallelized.
+- Deterministic report sorting is preserved after severity-priority capping.
+
 ## [0.2.1] — 2026-07-15
 
 ### Functional

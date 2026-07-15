@@ -6,6 +6,7 @@ import (
 	"os"
 	"path/filepath"
 	"sort"
+	"time"
 )
 
 // WriteSARIF writes the report as a SARIF v2.1.0 JSON file to path.
@@ -44,7 +45,7 @@ func WriteSARIF(report *Report, path string) error {
 					{
 						ExecutionSuccessful: true,
 						StartTimeUTC:        report.StartedAt.Format(timeRFC3339Millis),
-						EndTimeUTC:          report.CompletedAt.Format(timeRFC3339Millis),
+						EndTimeUTC:          report.StartedAt.Add(time.Duration(report.DurationMs) * time.Millisecond).Format(timeRFC3339Millis),
 					},
 				},
 			},

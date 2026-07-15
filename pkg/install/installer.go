@@ -11,6 +11,7 @@ import (
 	"path/filepath"
 	"runtime"
 	"strings"
+	"sync"
 )
 
 // ScannerMeta holds metadata for an installable scanner.
@@ -19,42 +20,45 @@ type ScannerMeta struct {
 	Repo     string
 	Language string // "go" or "python"
 	Binary   string // binary name after installation
+	Ref      string // tag, branch, or commit to pin
 }
 
 // KnownScanners is the registry of supported external scanners.
-// Repository URLs for bumblebee and prompt-injection-scanner are placeholders
-// pointing to the foundationmachines organization; update them when official
-// repositories are published.
 var KnownScanners = map[string]ScannerMeta{
 	"semgrep": {
 		Name:     "semgrep",
 		Repo:     "https://github.com/semgrep/semgrep.git",
 		Language: "python",
 		Binary:   "semgrep",
+		Ref:      "v1.169.0",
 	},
 	"bumblebee": {
 		Name:     "bumblebee",
-		Repo:     "https://github.com/foundationmachines/bumblebee.git",
+		Repo:     "https://github.com/perplexityai/bumblebee.git",
 		Language: "go",
 		Binary:   "bumblebee",
+		Ref:      "v0.1.2",
 	},
 	"prompt-injection-scanner": {
 		Name:     "prompt-injection-scanner",
-		Repo:     "https://github.com/foundationmachines/prompt-injection-scanner.git",
+		Repo:     "https://github.com/alexh-scrt/prompt-injection-scanner.git",
 		Language: "python",
 		Binary:   "prompt-injection-scanner",
+		Ref:      "33dd171bf0096e9782dfe971ea21c4795c8eb9a6",
 	},
 	"gitleaks": {
 		Name:     "gitleaks",
 		Repo:     "https://github.com/gitleaks/gitleaks.git",
 		Language: "go",
 		Binary:   "gitleaks",
+		Ref:      "v8.25.0",
 	},
 	"trufflehog": {
 		Name:     "trufflehog",
 		Repo:     "https://github.com/trufflesecurity/trufflehog.git",
 		Language: "go",
 		Binary:   "trufflehog",
+		Ref:      "v3.105.0",
 	},
 }
 
@@ -116,7 +120,7 @@ func Install(name string) error {
 	if err != nil {
 		return err
 	}
-	if err := gitClone(meta.Repo, toolPath); err != nil {
+	if err := gitClone(meta.Repo, toolPath, meta.Ref); err != nil {
 		return err
 	}
 	switch meta.Language {
@@ -129,12 +133,28 @@ func Install(name string) error {
 	}
 }
 
-// InstallAll installs all known scanners.
+// InstallAll installs all known scanners concurrently.
 func InstallAll() error {
+	var wg sync.WaitGroup
+	errCh := make(chan error, len(KnownScanners))
 	for name := range KnownScanners {
-		if err := Install(name); err != nil {
-			return err
-		}
+		wg.Add(1)
+		go func(n string) {
+			defer wg.Done()
+			if err := Install(n); err != nil {
+				errCh <- fmt.Errorf("installing %s: %w", n, err)
+			}
+		}(name)
+	}
+	wg.Wait()
+	close(errCh)
+
+	var errs []string
+	for err := range errCh {
+		errs = append(errs, err.Error())
+	}
+	if len(errs) > 0 {
+		return fmt.Errorf("one or more scanners failed:\n%s", strings.Join(errs, "\n"))
 	}
 	return nil
 }
@@ -227,15 +247,40 @@ func dirsForLang(lang string) ([]string, error) {
 	return dirs, nil
 }
 
-func gitClone(repo, dst string) error {
+func gitClone(repo, dst, ref string) error {
 	if _, err := os.Stat(dst); err == nil {
 		return fmt.Errorf("directory %s already exists; remove it to reinstall", dst)
 	}
-	cmd := exec.Command("git", "clone", "--depth", "1", repo, dst)
+
+	// Try a shallow clone of the requested ref first (works for branches and tags).
+	if ref != "" {
+		cmd := exec.Command("git", "clone", "--depth", "1", "--branch", ref, repo, dst)
+		cmd.Stdout = os.Stdout
+		cmd.Stderr = os.Stderr
+		if err := cmd.Run(); err == nil {
+			return nil
+		}
+		// Fall back to a full clone so arbitrary commits can be checked out.
+		if err := os.RemoveAll(dst); err != nil {
+			return fmt.Errorf("cleaning up failed shallow clone: %w", err)
+		}
+	}
+
+	cmd := exec.Command("git", "clone", repo, dst)
 	cmd.Stdout = os.Stdout
 	cmd.Stderr = os.Stderr
 	if err := cmd.Run(); err != nil {
 		return fmt.Errorf("cloning %s: %w", repo, err)
+	}
+
+	if ref != "" {
+		checkout := exec.Command("git", "checkout", ref)
+		checkout.Dir = dst
+		checkout.Stdout = os.Stdout
+		checkout.Stderr = os.Stderr
+		if err := checkout.Run(); err != nil {
+			return fmt.Errorf("checking out %s in %s: %w", ref, dst, err)
+		}
 	}
 	return nil
 }

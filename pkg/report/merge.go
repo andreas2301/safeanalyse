@@ -14,16 +14,13 @@ func Merge(target string, reports []*Report) *Report {
 		return merged
 	}
 
-	// Use the earliest start time and latest completion time.
+	// Use the earliest start time across all stage reports.
 	for _, r := range reports {
 		if r == nil {
 			continue
 		}
 		if r.StartedAt.Before(merged.StartedAt) {
 			merged.StartedAt = r.StartedAt
-		}
-		if r.CompletedAt.After(merged.CompletedAt) {
-			merged.CompletedAt = r.CompletedAt
 		}
 		for k, v := range r.Metadata {
 			if _, exists := merged.Metadata[k]; !exists {
@@ -44,6 +41,29 @@ func Merge(target string, reports []*Report) *Report {
 
 	SortFindings(merged.Findings)
 	return merged
+}
+
+// SortFindingsBySeverity sorts findings by severity (highest first) and then
+// by the standard deterministic tuple for stable output.
+func SortFindingsBySeverity(findings []Finding) {
+	slices.SortStableFunc(findings, func(a, b Finding) int {
+		if c := cmp.Compare(SeverityRank(b.Severity), SeverityRank(a.Severity)); c != 0 {
+			return c
+		}
+		if c := cmp.Compare(a.File, b.File); c != 0 {
+			return c
+		}
+		if c := cmp.Compare(a.Line, b.Line); c != 0 {
+			return c
+		}
+		if c := cmp.Compare(a.Column, b.Column); c != 0 {
+			return c
+		}
+		if c := cmp.Compare(a.RuleID, b.RuleID); c != 0 {
+			return c
+		}
+		return cmp.Compare(a.Source, b.Source)
+	})
 }
 
 // SortFindings sorts findings deterministically in place.

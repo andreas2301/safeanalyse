@@ -2,6 +2,7 @@ package report
 
 import (
 	"encoding/json"
+	"fmt"
 	"os"
 	"path/filepath"
 	"strings"
@@ -14,7 +15,7 @@ import (
 func sampleReport() *Report {
 	r := NewReport("test-target")
 	r.StartedAt = time.Date(2024, 1, 1, 0, 0, 0, 0, time.UTC)
-	r.CompletedAt = time.Date(2024, 1, 1, 0, 1, 0, 0, time.UTC)
+	r.DurationMs = 60000
 	r.Summary.FilesScanned = 10
 	r.Summary.FilesSanitized = 2
 	r.Summary.BytesBefore = 1024
@@ -174,5 +175,41 @@ func TestWriteAll_UnsupportedFormat(t *testing.T) {
 	}
 	if !strings.Contains(err.Error(), "unsupported output format") {
 		t.Errorf("unexpected error message: %v", err)
+	}
+}
+
+func TestWriteAll_CapPreservesSeverity(t *testing.T) {
+	dir := t.TempDir()
+	cfg := config.OutputConfig{Formats: []string{"json"}, OutDir: dir, MaxFindings: 3}
+
+	r := NewReport("cap-test")
+	for i := 0; i < 10; i++ {
+		r.AddFinding(Finding{RuleID: "low", Severity: SeverityLow, File: fmt.Sprintf("f%d", i), Line: i, Source: "test"})
+	}
+	r.AddFinding(Finding{RuleID: "critical", Severity: SeverityCritical, File: "critical.go", Line: 1, Source: "test"})
+
+	if err := WriteAll(r, cfg); err != nil {
+		t.Fatalf("WriteAll failed: %v", err)
+	}
+
+	data, _ := os.ReadFile(filepath.Join(dir, "safeanalyze.json"))
+	var parsed Report
+	if err := json.Unmarshal(data, &parsed); err != nil {
+		t.Fatalf("JSON unmarshal failed: %v", err)
+	}
+	if len(parsed.Findings) != 3 {
+		t.Fatalf("expected 3 capped findings, got %d", len(parsed.Findings))
+	}
+	seenCritical := false
+	for _, f := range parsed.Findings {
+		if f.RuleID == "critical" {
+			seenCritical = true
+		}
+		if f.Severity == SeverityLow && f.File == "f9" {
+			t.Errorf("low-severity finding should have been dropped in favor of higher severity")
+		}
+	}
+	if !seenCritical {
+		t.Errorf("critical finding was dropped by cap")
 	}
 }

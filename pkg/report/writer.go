@@ -29,8 +29,11 @@ func WriteAll(report *Report, cfg config.OutputConfig) error {
 	reportToWrite := report
 	if max := cfg.EffectiveMaxFindings(); max > 0 && len(report.Findings) > max {
 		capped := *report
-		capped.Findings = make([]Finding, max)
+		capped.Findings = make([]Finding, len(report.Findings))
 		copy(capped.Findings, report.Findings)
+		SortFindingsBySeverity(capped.Findings)
+		capped.Findings = capped.Findings[:max]
+		SortFindings(capped.Findings)
 		capped.Metadata["findings_capped"] = fmt.Sprintf("showing %d of %d", max, len(report.Findings))
 		reportToWrite = &capped
 	}

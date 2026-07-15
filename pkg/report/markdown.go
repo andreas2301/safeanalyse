@@ -34,7 +34,7 @@ func WriteMarkdown(report *Report, cfg config.OutputConfig, path string) error {
 func writeMDHeader(b *strings.Builder, report *Report) {
 	fmt.Fprintf(b, "# safeanalyze Report: %s\n\n", report.Target)
 	fmt.Fprintf(b, "- **Started:** %s\n", report.StartedAt.Format("2006-01-02 15:04:05 MST"))
-	fmt.Fprintf(b, "- **Completed:** %s\n", report.CompletedAt.Format("2006-01-02 15:04:05 MST"))
+	fmt.Fprintf(b, "- **Duration:** %d ms\n", report.DurationMs)
 	fmt.Fprintf(b, "- **Total findings:** %d\n\n", len(report.Findings))
 }
 

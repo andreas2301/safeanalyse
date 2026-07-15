@@ -46,8 +46,6 @@ sanitization:
     - .r
   excluded_paths:
     - .git
-    - node_modules
-    - vendor
     - target
     - build
     - dist
@@ -55,6 +53,9 @@ sanitization:
     - __pycache__
     - .idea
     - .vscode
+  dependency_paths:
+    - node_modules
+    - vendor
 
 hidden_chars:
   enabled: true

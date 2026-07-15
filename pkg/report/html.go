@@ -241,7 +241,7 @@ const htmlTemplate = `<!DOCTYPE html>
   <div class="container">
     <header>
       <h1>safeanalyze Dashboard</h1>
-      <p>Target: <strong>{{.Report.Target}}</strong> &middot; {{.Report.CompletedAt.Format "2006-01-02 15:04:05 MST"}}</p>
+      <p>Target: <strong>{{.Report.Target}}</strong> &middot; Duration: {{.Report.DurationMs}} ms</p>
     </header>
 
     <div class="note">

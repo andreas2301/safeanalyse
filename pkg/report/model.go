@@ -2,7 +2,10 @@
 // safeanalyze check and output writer.
 package report
 
-import "time"
+import (
+	"strings"
+	"time"
+)
 
 // Severity levels.
 const (
@@ -55,13 +58,13 @@ type Summary struct {
 
 // Report is the unified output of the safeanalyze pipeline.
 type Report struct {
-	Target      string            `json:"target"`
-	StartedAt   time.Time         `json:"started_at"`
-	CompletedAt time.Time         `json:"completed_at"`
-	Findings    []Finding         `json:"findings"`
-	Errors      []ErrorRecord     `json:"errors"`
-	Summary     Summary           `json:"summary"`
-	Metadata    map[string]string `json:"metadata,omitempty"`
+	Target     string            `json:"target"`
+	StartedAt  time.Time         `json:"started_at"`
+	DurationMs int64             `json:"duration_ms"`
+	Findings   []Finding         `json:"findings"`
+	Errors     []ErrorRecord     `json:"errors"`
+	Summary    Summary           `json:"summary"`
+	Metadata   map[string]string `json:"metadata,omitempty"`
 }
 
 // NewReport creates an empty report for a target.
@@ -76,6 +79,23 @@ func NewReport(target string) *Report {
 			CountsBySeverity: map[string]int{},
 			CountsBySource:   map[string]int{},
 		},
+	}
+}
+
+// SeverityRank returns a numeric ordering for severity levels. Higher values
+// represent more severe findings.
+func SeverityRank(sev string) int {
+	switch strings.ToLower(sev) {
+	case SeverityCritical:
+		return 4
+	case SeverityHigh:
+		return 3
+	case SeverityMedium:
+		return 2
+	case SeverityLow:
+		return 1
+	default:
+		return 0
 	}
 }
 
@@ -96,7 +116,7 @@ func (r *Report) HasSeverity(sev string) bool {
 	return r.Summary.CountsBySeverity[sev] > 0
 }
 
-// Finish sets the completed timestamp.
+// Finish records the total scan duration in milliseconds.
 func (r *Report) Finish() {
-	r.CompletedAt = time.Now().UTC()
+	r.DurationMs = time.Since(r.StartedAt).Milliseconds()
 }
