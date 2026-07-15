@@ -1,0 +1,4239 @@
+{
+  "version": "2.1.0",
+  "$schema": "https://raw.githubusercontent.com/oasis-tcs/sarif-spec/master/Schemata/sarif-schema-2.1.0.json",
+  "runs": [
+    {
+      "tool": {
+        "driver": {
+          "name": "safeanalyze",
+          "informationUri": "https://github.com/user/safeanalyze",
+          "rules": [
+            {
+              "id": "PI007",
+              "name": "GitHub Event Expression in AI Action Input",
+              "shortDescription": {
+                "text": "GitHub Event Expression in AI Action Input"
+              },
+              "fullDescription": {
+                "text": "The AI action `openai/openai-github-action@v1` receives the GitHub event expression `${{ github.event.pull_request.body }}` via the `prompt` input parameter. While this expression may not be the highest-risk source, it could still carry attacker-controlled content (e.g. via forked repositories, external contributors, or social engineering)."
+              },
+              "help": {
+                "text": ""
+              },
+              "properties": {
+                "category": "prompt_injection"
+              }
+            },
+            {
+              "id": "PI010",
+              "name": "Issue/Comment Body in run Step",
+              "shortDescription": {
+                "text": "Issue/Comment Body in run Step"
+              },
+              "fullDescription": {
+                "text": "The ``run`` step embeds `${{ github.event.issue.title }}`, which originates from user-submitted issue or comment content. Any GitHub user can craft issue bodies or comments containing prompt injection payloads to manipulate AI agents triggered by this workflow."
+              },
+              "help": {
+                "text": ""
+              },
+              "properties": {
+                "category": "prompt_injection"
+              }
+            },
+            {
+              "id": "indirect_prompt_injection",
+              "name": "indirect_prompt_injection",
+              "shortDescription": {
+                "text": "indirect_prompt_injection"
+              },
+              "fullDescription": {
+                "text": "Content that may carry an indirect prompt-injection payload (user comment, email, web content, tool input delimiter)"
+              },
+              "help": {
+                "text": ""
+              },
+              "properties": {
+                "category": "pattern_match"
+              }
+            },
+            {
+              "id": "obfuscated_javascript",
+              "name": "obfuscated_javascript",
+              "shortDescription": {
+                "text": "obfuscated_javascript"
+              },
+              "fullDescription": {
+                "text": "Obfuscated or packed JavaScript patterns"
+              },
+              "help": {
+                "text": ""
+              },
+              "properties": {
+                "category": "pattern_match"
+              }
+            },
+            {
+              "id": "prompt_injection_comment",
+              "name": "prompt_injection_comment",
+              "shortDescription": {
+                "text": "prompt_injection_comment"
+              },
+              "fullDescription": {
+                "text": "Comment containing prompt injection keywords"
+              },
+              "help": {
+                "text": ""
+              },
+              "properties": {
+                "category": "pattern_match"
+              }
+            },
+            {
+              "id": "template_injection",
+              "name": "template_injection",
+              "shortDescription": {
+                "text": "template_injection"
+              },
+              "fullDescription": {
+                "text": "Handlebars/Mustache/Jinja or GitHub Actions template interpolation that may inject instructions into a prompt"
+              },
+              "help": {
+                "text": ""
+              },
+              "properties": {
+                "category": "pattern_match"
+              }
+            }
+          ]
+        }
+      },
+      "results": [
+        {
+          "ruleId": "PI007",
+          "ruleIndex": 0,
+          "level": "error",
+          "message": {
+            "text": "The AI action `openai/openai-github-action@v1` receives the GitHub event expression `${{ github.event.pull_request.body }}` via the `prompt` input parameter. While this expression may not be the highest-risk source, it could still carry attacker-controlled content (e.g. via forked repositories, external contributors, or social engineering)."
+          },
+          "locations": [
+            {
+              "physicalLocation": {
+                "artifactLocation": {
+                  "uri": "/tmp/safeanalyze-prompt-injection-scanner/tests/fixtures/vulnerable_workflow.yml"
+                },
+                "region": {
+                  "startLine": 1,
+                  "startColumn": 1,
+                  "snippet": {
+                    "text": "${{ github.event.pull_request.body }}"
+                  }
+                }
+              }
+            }
+          ],
+          "properties": {
+            "category": "prompt_injection",
+            "confidence": "deterministic",
+            "source": "prompt-injection-scanner"
+          }
+        },
+        {
+          "ruleId": "PI007",
+          "ruleIndex": 0,
+          "level": "error",
+          "message": {
+            "text": "The AI action `anthropic-ai/claude-action@v2` receives the GitHub event expression `${{ github.event.pull_request.title }}` via the `prompt` input parameter. While this expression may not be the highest-risk source, it could still carry attacker-controlled content (e.g. via forked repositories, external contributors, or social engineering)."
+          },
+          "locations": [
+            {
+              "physicalLocation": {
+                "artifactLocation": {
+                  "uri": "/tmp/safeanalyze-prompt-injection-scanner/tests/fixtures/vulnerable_workflow.yml"
+                },
+                "region": {
+                  "startLine": 1,
+                  "startColumn": 1,
+                  "snippet": {
+                    "text": "${{ github.event.pull_request.title }}"
+                  }
+                }
+              }
+            }
+          ],
+          "properties": {
+            "category": "prompt_injection",
+            "confidence": "deterministic",
+            "source": "prompt-injection-scanner"
+          }
+        },
+        {
+          "ruleId": "PI007",
+          "ruleIndex": 0,
+          "level": "error",
+          "message": {
+            "text": "The AI action `langchain-ai/langchain-github-action@v1` receives the GitHub event expression `${{ github.event.issue.body }}` via the `issue-body` input parameter. While this expression may not be the highest-risk source, it could still carry attacker-controlled content (e.g. via forked repositories, external contributors, or social engineering)."
+          },
+          "locations": [
+            {
+              "physicalLocation": {
+                "artifactLocation": {
+                  "uri": "/tmp/safeanalyze-prompt-injection-scanner/tests/fixtures/vulnerable_workflow.yml"
+                },
+                "region": {
+                  "startLine": 1,
+                  "startColumn": 1,
+                  "snippet": {
+                    "text": "${{ github.event.issue.body }}"
+                  }
+                }
+              }
+            }
+          ],
+          "properties": {
+            "category": "prompt_injection",
+            "confidence": "deterministic",
+            "source": "prompt-injection-scanner"
+          }
+        },
+        {
+          "ruleId": "PI007",
+          "ruleIndex": 0,
+          "level": "error",
+          "message": {
+            "text": "The AI action `langchain-ai/langchain-github-action@v1` receives the GitHub event expression `${{ github.event.comment.body }}` via the `comment-body` input parameter. While this expression may not be the highest-risk source, it could still carry attacker-controlled content (e.g. via forked repositories, external contributors, or social engineering)."
+          },
+          "locations": [
+            {
+              "physicalLocation": {
+                "artifactLocation": {
+                  "uri": "/tmp/safeanalyze-prompt-injection-scanner/tests/fixtures/vulnerable_workflow.yml"
+                },
+                "region": {
+                  "startLine": 1,
+                  "startColumn": 1,
+                  "snippet": {
+                    "text": "${{ github.event.comment.body }}"
+                  }
+                }
+              }
+            }
+          ],
+          "properties": {
+            "category": "prompt_injection",
+            "confidence": "deterministic",
+            "source": "prompt-injection-scanner"
+          }
+        },
+        {
+          "ruleId": "PI010",
+          "ruleIndex": 1,
+          "level": "error",
+          "message": {
+            "text": "The ``run`` step embeds `${{ github.event.issue.title }}`, which originates from user-submitted issue or comment content. Any GitHub user can craft issue bodies or comments containing prompt injection payloads to manipulate AI agents triggered by this workflow."
+          },
+          "locations": [
+            {
+              "physicalLocation": {
+                "artifactLocation": {
+                  "uri": "/tmp/safeanalyze-prompt-injection-scanner/tests/fixtures/vulnerable_workflow.yml"
+                },
+                "region": {
+                  "startLine": 1,
+                  "startColumn": 1,
+                  "snippet": {
+                    "text": "${{ github.event.issue.title }}"
+                  }
+                }
+              }
+            }
+          ],
+          "properties": {
+            "category": "prompt_injection",
+            "confidence": "deterministic",
+            "source": "prompt-injection-scanner"
+          }
+        },
+        {
+          "ruleId": "PI010",
+          "ruleIndex": 1,
+          "level": "error",
+          "message": {
+            "text": "The ``run`` step embeds `${{ github.event.comment.body }}`, which originates from user-submitted issue or comment content. Any GitHub user can craft issue bodies or comments containing prompt injection payloads to manipulate AI agents triggered by this workflow."
+          },
+          "locations": [
+            {
+              "physicalLocation": {
+                "artifactLocation": {
+                  "uri": "/tmp/safeanalyze-prompt-injection-scanner/tests/fixtures/vulnerable_workflow.yml"
+                },
+                "region": {
+                  "startLine": 1,
+                  "startColumn": 1,
+                  "snippet": {
+                    "text": "${{ github.event.comment.body }}"
+                  }
+                }
+              }
+            }
+          ],
+          "properties": {
+            "category": "prompt_injection",
+            "confidence": "deterministic",
+            "source": "prompt-injection-scanner"
+          }
+        },
+        {
+          "ruleId": "PI010",
+          "ruleIndex": 1,
+          "level": "error",
+          "message": {
+            "text": "The ``run`` step embeds `${{ github.event.issue.body }}`, which originates from user-submitted issue or comment content. Any GitHub user can craft issue bodies or comments containing prompt injection payloads to manipulate AI agents triggered by this workflow."
+          },
+          "locations": [
+            {
+              "physicalLocation": {
+                "artifactLocation": {
+                  "uri": "/tmp/safeanalyze-prompt-injection-scanner/tests/fixtures/vulnerable_workflow.yml"
+                },
+                "region": {
+                  "startLine": 1,
+                  "startColumn": 1,
+                  "snippet": {
+                    "text": "${{ github.event.issue.body }}"
+                  }
+                }
+              }
+            }
+          ],
+          "properties": {
+            "category": "prompt_injection",
+            "confidence": "deterministic",
+            "source": "prompt-injection-scanner"
+          }
+        },
+        {
+          "ruleId": "template_injection",
+          "ruleIndex": 5,
+          "level": "warning",
+          "message": {
+            "text": "Handlebars/Mustache/Jinja or GitHub Actions template interpolation that may inject instructions into a prompt"
+          },
+          "locations": [
+            {
+              "physicalLocation": {
+                "artifactLocation": {
+                  "uri": "README.md"
+                },
+                "region": {
+                  "startLine": 152,
+                  "startColumn": 51,
+                  "snippet": {
+                    "text": "{{ ...}}"
+                  }
+                }
+              }
+            }
+          ],
+          "properties": {
+            "category": "pattern_match",
+            "confidence": "deterministic",
+            "source": "yara"
+          }
+        },
+        {
+          "ruleId": "template_injection",
+          "ruleIndex": 5,
+          "level": "warning",
+          "message": {
+            "text": "Handlebars/Mustache/Jinja or GitHub Actions template interpolation that may inject instructions into a prompt"
+          },
+          "locations": [
+            {
+              "physicalLocation": {
+                "artifactLocation": {
+                  "uri": "README.md"
+                },
+                "region": {
+                  "startLine": 179,
+                  "startColumn": 14,
+                  "snippet": {
+                    "text": "{{ github.event.pull_request.body }}"
+                  }
+                }
+              }
+            }
+          ],
+          "properties": {
+            "category": "pattern_match",
+            "confidence": "deterministic",
+            "source": "yara"
+          }
+        },
+        {
+          "ruleId": "template_injection",
+          "ruleIndex": 5,
+          "level": "warning",
+          "message": {
+            "text": "Handlebars/Mustache/Jinja or GitHub Actions template interpolation that may inject instructions into a prompt"
+          },
+          "locations": [
+            {
+              "physicalLocation": {
+                "artifactLocation": {
+                  "uri": "README.md"
+                },
+                "region": {
+                  "startLine": 214,
+                  "startColumn": 31,
+                  "snippet": {
+                    "text": "{{ github.event.pull_request.body }}"
+                  }
+                }
+              }
+            }
+          ],
+          "properties": {
+            "category": "pattern_match",
+            "confidence": "deterministic",
+            "source": "yara"
+          }
+        },
+        {
+          "ruleId": "template_injection",
+          "ruleIndex": 5,
+          "level": "warning",
+          "message": {
+            "text": "Handlebars/Mustache/Jinja or GitHub Actions template interpolation that may inject instructions into a prompt"
+          },
+          "locations": [
+            {
+              "physicalLocation": {
+                "artifactLocation": {
+                  "uri": "README.md"
+                },
+                "region": {
+                  "startLine": 270,
+                  "startColumn": 64,
+                  "snippet": {
+                    "text": "{{ }}"
+                  }
+                }
+              }
+            }
+          ],
+          "properties": {
+            "category": "pattern_match",
+            "confidence": "deterministic",
+            "source": "yara"
+          }
+        },
+        {
+          "ruleId": "template_injection",
+          "ruleIndex": 5,
+          "level": "warning",
+          "message": {
+            "text": "Handlebars/Mustache/Jinja or GitHub Actions template interpolation that may inject instructions into a prompt"
+          },
+          "locations": [
+            {
+              "physicalLocation": {
+                "artifactLocation": {
+                  "uri": "README.md"
+                },
+                "region": {
+                  "startLine": 371,
+                  "startColumn": 34,
+                  "snippet": {
+                    "text": "{{ github.event.issue.body }}"
+                  }
+                }
+              }
+            }
+          ],
+          "properties": {
+            "category": "pattern_match",
+            "confidence": "deterministic",
+            "source": "yara"
+          }
+        },
+        {
+          "ruleId": "template_injection",
+          "ruleIndex": 5,
+          "level": "warning",
+          "message": {
+            "text": "Handlebars/Mustache/Jinja or GitHub Actions template interpolation that may inject instructions into a prompt"
+          },
+          "locations": [
+            {
+              "physicalLocation": {
+                "artifactLocation": {
+                  "uri": "README.md"
+                },
+                "region": {
+                  "startLine": 378,
+                  "startColumn": 18,
+                  "snippet": {
+                    "text": "{{ github.event.issue.body }}"
+                  }
+                }
+              }
+            }
+          ],
+          "properties": {
+            "category": "pattern_match",
+            "confidence": "deterministic",
+            "source": "yara"
+          }
+        },
+        {
+          "ruleId": "template_injection",
+          "ruleIndex": 5,
+          "level": "warning",
+          "message": {
+            "text": "Handlebars/Mustache/Jinja or GitHub Actions template interpolation that may inject instructions into a prompt"
+          },
+          "locations": [
+            {
+              "physicalLocation": {
+                "artifactLocation": {
+                  "uri": "README.md"
+                },
+                "region": {
+                  "startLine": 392,
+                  "startColumn": 14,
+                  "snippet": {
+                    "text": "{{ github.event.pull_request.body }}"
+                  }
+                }
+              }
+            }
+          ],
+          "properties": {
+            "category": "pattern_match",
+            "confidence": "deterministic",
+            "source": "yara"
+          }
+        },
+        {
+          "ruleId": "template_injection",
+          "ruleIndex": 5,
+          "level": "warning",
+          "message": {
+            "text": "Handlebars/Mustache/Jinja or GitHub Actions template interpolation that may inject instructions into a prompt"
+          },
+          "locations": [
+            {
+              "physicalLocation": {
+                "artifactLocation": {
+                  "uri": "README.md"
+                },
+                "region": {
+                  "startLine": 400,
+                  "startColumn": 15,
+                  "snippet": {
+                    "text": "{{ github.event.pull_request.body }}"
+                  }
+                }
+              }
+            }
+          ],
+          "properties": {
+            "category": "pattern_match",
+            "confidence": "deterministic",
+            "source": "yara"
+          }
+        },
+        {
+          "ruleId": "prompt_injection_comment",
+          "ruleIndex": 4,
+          "level": "error",
+          "message": {
+            "text": "Comment containing prompt injection keywords"
+          },
+          "locations": [
+            {
+              "physicalLocation": {
+                "artifactLocation": {
+                  "uri": "README.md"
+                },
+                "region": {
+                  "startLine": 404,
+                  "startColumn": 19,
+                  "snippet": {
+                    "text": "ignore previous instructions"
+                  }
+                }
+              }
+            }
+          ],
+          "properties": {
+            "category": "pattern_match",
+            "confidence": "deterministic",
+            "source": "yara"
+          }
+        },
+        {
+          "ruleId": "prompt_injection_comment",
+          "ruleIndex": 4,
+          "level": "error",
+          "message": {
+            "text": "Comment containing prompt injection keywords"
+          },
+          "locations": [
+            {
+              "physicalLocation": {
+                "artifactLocation": {
+                  "uri": "README.md"
+                },
+                "region": {
+                  "startLine": 405,
+                  "startColumn": 19,
+                  "snippet": {
+                    "text": "system prompt"
+                  }
+                }
+              }
+            }
+          ],
+          "properties": {
+            "category": "pattern_match",
+            "confidence": "deterministic",
+            "source": "yara"
+          }
+        },
+        {
+          "ruleId": "template_injection",
+          "ruleIndex": 5,
+          "level": "warning",
+          "message": {
+            "text": "Handlebars/Mustache/Jinja or GitHub Actions template interpolation that may inject instructions into a prompt"
+          },
+          "locations": [
+            {
+              "physicalLocation": {
+                "artifactLocation": {
+                  "uri": "README.md"
+                },
+                "region": {
+                  "startLine": 411,
+                  "startColumn": 14,
+                  "snippet": {
+                    "text": "{{ steps.sanitize.outputs.safe_body }}"
+                  }
+                }
+              }
+            }
+          ],
+          "properties": {
+            "category": "pattern_match",
+            "confidence": "deterministic",
+            "source": "yara"
+          }
+        },
+        {
+          "ruleId": "template_injection",
+          "ruleIndex": 5,
+          "level": "warning",
+          "message": {
+            "text": "Handlebars/Mustache/Jinja or GitHub Actions template interpolation that may inject instructions into a prompt"
+          },
+          "locations": [
+            {
+              "physicalLocation": {
+                "artifactLocation": {
+                  "uri": "prompt_injection_scanner/rules.py"
+                },
+                "region": {
+                  "startLine": 64,
+                  "startColumn": 36,
+                  "snippet": {
+                    "text": "{{ \u003cuntrusted_expr\u003e }}"
+                  }
+                }
+              }
+            }
+          ],
+          "properties": {
+            "category": "pattern_match",
+            "confidence": "deterministic",
+            "source": "yara"
+          }
+        },
+        {
+          "ruleId": "template_injection",
+          "ruleIndex": 5,
+          "level": "warning",
+          "message": {
+            "text": "Handlebars/Mustache/Jinja or GitHub Actions template interpolation that may inject instructions into a prompt"
+          },
+          "locations": [
+            {
+              "physicalLocation": {
+                "artifactLocation": {
+                  "uri": "prompt_injection_scanner/rules.py"
+                },
+                "region": {
+                  "startLine": 224,
+                  "startColumn": 59,
+                  "snippet": {
+                    "text": "{{ ... }}"
+                  }
+                }
+              }
+            }
+          ],
+          "properties": {
+            "category": "pattern_match",
+            "confidence": "deterministic",
+            "source": "yara"
+          }
+        },
+        {
+          "ruleId": "template_injection",
+          "ruleIndex": 5,
+          "level": "warning",
+          "message": {
+            "text": "Handlebars/Mustache/Jinja or GitHub Actions template interpolation that may inject instructions into a prompt"
+          },
+          "locations": [
+            {
+              "physicalLocation": {
+                "artifactLocation": {
+                  "uri": "prompt_injection_scanner/rules.py"
+                },
+                "region": {
+                  "startLine": 321,
+                  "startColumn": 37,
+                  "snippet": {
+                    "text": "{{ github.event.* }}"
+                  }
+                }
+              }
+            }
+          ],
+          "properties": {
+            "category": "pattern_match",
+            "confidence": "deterministic",
+            "source": "yara"
+          }
+        },
+        {
+          "ruleId": "indirect_prompt_injection",
+          "ruleIndex": 2,
+          "level": "error",
+          "message": {
+            "text": "Content that may carry an indirect prompt-injection payload (user comment, email, web content, tool input delimiter)"
+          },
+          "locations": [
+            {
+              "physicalLocation": {
+                "artifactLocation": {
+                  "uri": "prompt_injection_scanner/rules.py"
+                },
+                "region": {
+                  "startLine": 359,
+                  "startColumn": 26,
+                  "snippet": {
+                    "text": "USER_INPUT:"
+                  }
+                }
+              }
+            }
+          ],
+          "properties": {
+            "category": "pattern_match",
+            "confidence": "deterministic",
+            "source": "yara"
+          }
+        },
+        {
+          "ruleId": "template_injection",
+          "ruleIndex": 5,
+          "level": "warning",
+          "message": {
+            "text": "Handlebars/Mustache/Jinja or GitHub Actions template interpolation that may inject instructions into a prompt"
+          },
+          "locations": [
+            {
+              "physicalLocation": {
+                "artifactLocation": {
+                  "uri": "prompt_injection_scanner/rules.py"
+                },
+                "region": {
+                  "startLine": 359,
+                  "startColumn": 39,
+                  "snippet": {
+                    "text": "{{ github.event.issue.body }}"
+                  }
+                }
+              }
+            }
+          ],
+          "properties": {
+            "category": "pattern_match",
+            "confidence": "deterministic",
+            "source": "yara"
+          }
+        },
+        {
+          "ruleId": "indirect_prompt_injection",
+          "ruleIndex": 2,
+          "level": "error",
+          "message": {
+            "text": "Content that may carry an indirect prompt-injection payload (user comment, email, web content, tool input delimiter)"
+          },
+          "locations": [
+            {
+              "physicalLocation": {
+                "artifactLocation": {
+                  "uri": "prompt_injection_scanner/rules.py"
+                },
+                "region": {
+                  "startLine": 614,
+                  "startColumn": 26,
+                  "snippet": {
+                    "text": "USER_INPUT:"
+                  }
+                }
+              }
+            }
+          ],
+          "properties": {
+            "category": "pattern_match",
+            "confidence": "deterministic",
+            "source": "yara"
+          }
+        },
+        {
+          "ruleId": "template_injection",
+          "ruleIndex": 5,
+          "level": "warning",
+          "message": {
+            "text": "Handlebars/Mustache/Jinja or GitHub Actions template interpolation that may inject instructions into a prompt"
+          },
+          "locations": [
+            {
+              "physicalLocation": {
+                "artifactLocation": {
+                  "uri": "prompt_injection_scanner/rules.py"
+                },
+                "region": {
+                  "startLine": 614,
+                  "startColumn": 39,
+                  "snippet": {
+                    "text": "{{ github.event.issue.body }}"
+                  }
+                }
+              }
+            }
+          ],
+          "properties": {
+            "category": "pattern_match",
+            "confidence": "deterministic",
+            "source": "yara"
+          }
+        },
+        {
+          "ruleId": "template_injection",
+          "ruleIndex": 5,
+          "level": "warning",
+          "message": {
+            "text": "Handlebars/Mustache/Jinja or GitHub Actions template interpolation that may inject instructions into a prompt"
+          },
+          "locations": [
+            {
+              "physicalLocation": {
+                "artifactLocation": {
+                  "uri": "prompt_injection_scanner/rules.py"
+                },
+                "region": {
+                  "startLine": 703,
+                  "startColumn": 35,
+                  "snippet": {
+                    "text": "{{ github.event.* }}"
+                  }
+                }
+              }
+            }
+          ],
+          "properties": {
+            "category": "pattern_match",
+            "confidence": "deterministic",
+            "source": "yara"
+          }
+        },
+        {
+          "ruleId": "template_injection",
+          "ruleIndex": 5,
+          "level": "warning",
+          "message": {
+            "text": "Handlebars/Mustache/Jinja or GitHub Actions template interpolation that may inject instructions into a prompt"
+          },
+          "locations": [
+            {
+              "physicalLocation": {
+                "artifactLocation": {
+                  "uri": "prompt_injection_scanner/rules.py"
+                },
+                "region": {
+                  "startLine": 903,
+                  "startColumn": 23,
+                  "snippet": {
+                    "text": "{{ github.event.pull_request.body }}"
+                  }
+                }
+              }
+            }
+          ],
+          "properties": {
+            "category": "pattern_match",
+            "confidence": "deterministic",
+            "source": "yara"
+          }
+        },
+        {
+          "ruleId": "prompt_injection_comment",
+          "ruleIndex": 4,
+          "level": "error",
+          "message": {
+            "text": "Comment containing prompt injection keywords"
+          },
+          "locations": [
+            {
+              "physicalLocation": {
+                "artifactLocation": {
+                  "uri": "prompt_injection_scanner/rules.py"
+                },
+                "region": {
+                  "startLine": 997,
+                  "startColumn": 55,
+                  "snippet": {
+                    "text": "jailbreak"
+                  }
+                }
+              }
+            }
+          ],
+          "properties": {
+            "category": "pattern_match",
+            "confidence": "deterministic",
+            "source": "yara"
+          }
+        },
+        {
+          "ruleId": "template_injection",
+          "ruleIndex": 5,
+          "level": "warning",
+          "message": {
+            "text": "Handlebars/Mustache/Jinja or GitHub Actions template interpolation that may inject instructions into a prompt"
+          },
+          "locations": [
+            {
+              "physicalLocation": {
+                "artifactLocation": {
+                  "uri": "prompt_injection_scanner/rules.py"
+                },
+                "region": {
+                  "startLine": 1015,
+                  "startColumn": 13,
+                  "snippet": {
+                    "text": "{{\\s*(github\\.actor|github\\.event\\.sender\\.login)\\s*}}"
+                  }
+                }
+              }
+            }
+          ],
+          "properties": {
+            "category": "pattern_match",
+            "confidence": "deterministic",
+            "source": "yara"
+          }
+        },
+        {
+          "ruleId": "template_injection",
+          "ruleIndex": 5,
+          "level": "warning",
+          "message": {
+            "text": "Handlebars/Mustache/Jinja or GitHub Actions template interpolation that may inject instructions into a prompt"
+          },
+          "locations": [
+            {
+              "physicalLocation": {
+                "artifactLocation": {
+                  "uri": "tests/fixtures/safe_workflow.yml"
+                },
+                "region": {
+                  "startLine": 86,
+                  "startColumn": 22,
+                  "snippet": {
+                    "text": "{{ secrets.PYPI_TOKEN }}"
+                  }
+                }
+              }
+            }
+          ],
+          "properties": {
+            "category": "pattern_match",
+            "confidence": "deterministic",
+            "source": "yara"
+          }
+        },
+        {
+          "ruleId": "template_injection",
+          "ruleIndex": 5,
+          "level": "warning",
+          "message": {
+            "text": "Handlebars/Mustache/Jinja or GitHub Actions template interpolation that may inject instructions into a prompt"
+          },
+          "locations": [
+            {
+              "physicalLocation": {
+                "artifactLocation": {
+                  "uri": "tests/fixtures/vulnerable_workflow.yml"
+                },
+                "region": {
+                  "startLine": 32,
+                  "startColumn": 28,
+                  "snippet": {
+                    "text": "{{ secrets.OPENAI_API_KEY }}"
+                  }
+                }
+              }
+            }
+          ],
+          "properties": {
+            "category": "pattern_match",
+            "confidence": "deterministic",
+            "source": "yara"
+          }
+        },
+        {
+          "ruleId": "template_injection",
+          "ruleIndex": 5,
+          "level": "warning",
+          "message": {
+            "text": "Handlebars/Mustache/Jinja or GitHub Actions template interpolation that may inject instructions into a prompt"
+          },
+          "locations": [
+            {
+              "physicalLocation": {
+                "artifactLocation": {
+                  "uri": "tests/fixtures/vulnerable_workflow.yml"
+                },
+                "region": {
+                  "startLine": 33,
+                  "startColumn": 24,
+                  "snippet": {
+                    "text": "{{ github.event.issue.body }}"
+                  }
+                }
+              }
+            }
+          ],
+          "properties": {
+            "category": "pattern_match",
+            "confidence": "deterministic",
+            "source": "yara"
+          }
+        },
+        {
+          "ruleId": "template_injection",
+          "ruleIndex": 5,
+          "level": "warning",
+          "message": {
+            "text": "Handlebars/Mustache/Jinja or GitHub Actions template interpolation that may inject instructions into a prompt"
+          },
+          "locations": [
+            {
+              "physicalLocation": {
+                "artifactLocation": {
+                  "uri": "tests/fixtures/vulnerable_workflow.yml"
+                },
+                "region": {
+                  "startLine": 50,
+                  "startColumn": 48,
+                  "snippet": {
+                    "text": "{{ github.event.issue.title }}"
+                  }
+                }
+              }
+            }
+          ],
+          "properties": {
+            "category": "pattern_match",
+            "confidence": "deterministic",
+            "source": "yara"
+          }
+        },
+        {
+          "ruleId": "template_injection",
+          "ruleIndex": 5,
+          "level": "warning",
+          "message": {
+            "text": "Handlebars/Mustache/Jinja or GitHub Actions template interpolation that may inject instructions into a prompt"
+          },
+          "locations": [
+            {
+              "physicalLocation": {
+                "artifactLocation": {
+                  "uri": "tests/fixtures/vulnerable_workflow.yml"
+                },
+                "region": {
+                  "startLine": 56,
+                  "startColumn": 18,
+                  "snippet": {
+                    "text": "{{ github.event.comment.body }}"
+                  }
+                }
+              }
+            }
+          ],
+          "properties": {
+            "category": "pattern_match",
+            "confidence": "deterministic",
+            "source": "yara"
+          }
+        },
+        {
+          "ruleId": "template_injection",
+          "ruleIndex": 5,
+          "level": "warning",
+          "message": {
+            "text": "Handlebars/Mustache/Jinja or GitHub Actions template interpolation that may inject instructions into a prompt"
+          },
+          "locations": [
+            {
+              "physicalLocation": {
+                "artifactLocation": {
+                  "uri": "tests/fixtures/vulnerable_workflow.yml"
+                },
+                "region": {
+                  "startLine": 70,
+                  "startColumn": 21,
+                  "snippet": {
+                    "text": "{{ secrets.OPENAI_API_KEY }}"
+                  }
+                }
+              }
+            }
+          ],
+          "properties": {
+            "category": "pattern_match",
+            "confidence": "deterministic",
+            "source": "yara"
+          }
+        },
+        {
+          "ruleId": "template_injection",
+          "ruleIndex": 5,
+          "level": "warning",
+          "message": {
+            "text": "Handlebars/Mustache/Jinja or GitHub Actions template interpolation that may inject instructions into a prompt"
+          },
+          "locations": [
+            {
+              "physicalLocation": {
+                "artifactLocation": {
+                  "uri": "tests/fixtures/vulnerable_workflow.yml"
+                },
+                "region": {
+                  "startLine": 71,
+                  "startColumn": 20,
+                  "snippet": {
+                    "text": "{{ github.event.pull_request.body }}"
+                  }
+                }
+              }
+            }
+          ],
+          "properties": {
+            "category": "pattern_match",
+            "confidence": "deterministic",
+            "source": "yara"
+          }
+        },
+        {
+          "ruleId": "template_injection",
+          "ruleIndex": 5,
+          "level": "warning",
+          "message": {
+            "text": "Handlebars/Mustache/Jinja or GitHub Actions template interpolation that may inject instructions into a prompt"
+          },
+          "locations": [
+            {
+              "physicalLocation": {
+                "artifactLocation": {
+                  "uri": "tests/fixtures/vulnerable_workflow.yml"
+                },
+                "region": {
+                  "startLine": 79,
+                  "startColumn": 21,
+                  "snippet": {
+                    "text": "{{ secrets.ANTHROPIC_API_KEY }}"
+                  }
+                }
+              }
+            }
+          ],
+          "properties": {
+            "category": "pattern_match",
+            "confidence": "deterministic",
+            "source": "yara"
+          }
+        },
+        {
+          "ruleId": "template_injection",
+          "ruleIndex": 5,
+          "level": "warning",
+          "message": {
+            "text": "Handlebars/Mustache/Jinja or GitHub Actions template interpolation that may inject instructions into a prompt"
+          },
+          "locations": [
+            {
+              "physicalLocation": {
+                "artifactLocation": {
+                  "uri": "tests/fixtures/vulnerable_workflow.yml"
+                },
+                "region": {
+                  "startLine": 80,
+                  "startColumn": 20,
+                  "snippet": {
+                    "text": "{{ github.event.pull_request.title }}"
+                  }
+                }
+              }
+            }
+          ],
+          "properties": {
+            "category": "pattern_match",
+            "confidence": "deterministic",
+            "source": "yara"
+          }
+        },
+        {
+          "ruleId": "template_injection",
+          "ruleIndex": 5,
+          "level": "warning",
+          "message": {
+            "text": "Handlebars/Mustache/Jinja or GitHub Actions template interpolation that may inject instructions into a prompt"
+          },
+          "locations": [
+            {
+              "physicalLocation": {
+                "artifactLocation": {
+                  "uri": "tests/fixtures/vulnerable_workflow.yml"
+                },
+                "region": {
+                  "startLine": 86,
+                  "startColumn": 28,
+                  "snippet": {
+                    "text": "{{ github.event.review.body }}"
+                  }
+                }
+              }
+            }
+          ],
+          "properties": {
+            "category": "pattern_match",
+            "confidence": "deterministic",
+            "source": "yara"
+          }
+        },
+        {
+          "ruleId": "template_injection",
+          "ruleIndex": 5,
+          "level": "warning",
+          "message": {
+            "text": "Handlebars/Mustache/Jinja or GitHub Actions template interpolation that may inject instructions into a prompt"
+          },
+          "locations": [
+            {
+              "physicalLocation": {
+                "artifactLocation": {
+                  "uri": "tests/fixtures/vulnerable_workflow.yml"
+                },
+                "region": {
+                  "startLine": 87,
+                  "startColumn": 28,
+                  "snippet": {
+                    "text": "{{ github.event.pull_request.body }}"
+                  }
+                }
+              }
+            }
+          ],
+          "properties": {
+            "category": "pattern_match",
+            "confidence": "deterministic",
+            "source": "yara"
+          }
+        },
+        {
+          "ruleId": "template_injection",
+          "ruleIndex": 5,
+          "level": "warning",
+          "message": {
+            "text": "Handlebars/Mustache/Jinja or GitHub Actions template interpolation that may inject instructions into a prompt"
+          },
+          "locations": [
+            {
+              "physicalLocation": {
+                "artifactLocation": {
+                  "uri": "tests/fixtures/vulnerable_workflow.yml"
+                },
+                "region": {
+                  "startLine": 95,
+                  "startColumn": 23,
+                  "snippet": {
+                    "text": "{{ github.event.pull_request.head.sha }}"
+                  }
+                }
+              }
+            }
+          ],
+          "properties": {
+            "category": "pattern_match",
+            "confidence": "deterministic",
+            "source": "yara"
+          }
+        },
+        {
+          "ruleId": "template_injection",
+          "ruleIndex": 5,
+          "level": "warning",
+          "message": {
+            "text": "Handlebars/Mustache/Jinja or GitHub Actions template interpolation that may inject instructions into a prompt"
+          },
+          "locations": [
+            {
+              "physicalLocation": {
+                "artifactLocation": {
+                  "uri": "tests/fixtures/vulnerable_workflow.yml"
+                },
+                "region": {
+                  "startLine": 96,
+                  "startColumn": 25,
+                  "snippet": {
+                    "text": "{{ github.event.commits[0].message }}"
+                  }
+                }
+              }
+            }
+          ],
+          "properties": {
+            "category": "pattern_match",
+            "confidence": "deterministic",
+            "source": "yara"
+          }
+        },
+        {
+          "ruleId": "template_injection",
+          "ruleIndex": 5,
+          "level": "warning",
+          "message": {
+            "text": "Handlebars/Mustache/Jinja or GitHub Actions template interpolation that may inject instructions into a prompt"
+          },
+          "locations": [
+            {
+              "physicalLocation": {
+                "artifactLocation": {
+                  "uri": "tests/fixtures/vulnerable_workflow.yml"
+                },
+                "region": {
+                  "startLine": 110,
+                  "startColumn": 28,
+                  "snippet": {
+                    "text": "{{ secrets.OPENAI_API_KEY }}"
+                  }
+                }
+              }
+            }
+          ],
+          "properties": {
+            "category": "pattern_match",
+            "confidence": "deterministic",
+            "source": "yara"
+          }
+        },
+        {
+          "ruleId": "template_injection",
+          "ruleIndex": 5,
+          "level": "warning",
+          "message": {
+            "text": "Handlebars/Mustache/Jinja or GitHub Actions template interpolation that may inject instructions into a prompt"
+          },
+          "locations": [
+            {
+              "physicalLocation": {
+                "artifactLocation": {
+                  "uri": "tests/fixtures/vulnerable_workflow.yml"
+                },
+                "region": {
+                  "startLine": 111,
+                  "startColumn": 24,
+                  "snippet": {
+                    "text": "{{ github.event.issue.body }}"
+                  }
+                }
+              }
+            }
+          ],
+          "properties": {
+            "category": "pattern_match",
+            "confidence": "deterministic",
+            "source": "yara"
+          }
+        },
+        {
+          "ruleId": "template_injection",
+          "ruleIndex": 5,
+          "level": "warning",
+          "message": {
+            "text": "Handlebars/Mustache/Jinja or GitHub Actions template interpolation that may inject instructions into a prompt"
+          },
+          "locations": [
+            {
+              "physicalLocation": {
+                "artifactLocation": {
+                  "uri": "tests/fixtures/vulnerable_workflow.yml"
+                },
+                "region": {
+                  "startLine": 112,
+                  "startColumn": 26,
+                  "snippet": {
+                    "text": "{{ github.event.comment.body }}"
+                  }
+                }
+              }
+            }
+          ],
+          "properties": {
+            "category": "pattern_match",
+            "confidence": "deterministic",
+            "source": "yara"
+          }
+        },
+        {
+          "ruleId": "template_injection",
+          "ruleIndex": 5,
+          "level": "warning",
+          "message": {
+            "text": "Handlebars/Mustache/Jinja or GitHub Actions template interpolation that may inject instructions into a prompt"
+          },
+          "locations": [
+            {
+              "physicalLocation": {
+                "artifactLocation": {
+                  "uri": "tests/fixtures/vulnerable_workflow.yml"
+                },
+                "region": {
+                  "startLine": 119,
+                  "startColumn": 34,
+                  "snippet": {
+                    "text": "{{ github.event.sender.login }}"
+                  }
+                }
+              }
+            }
+          ],
+          "properties": {
+            "category": "pattern_match",
+            "confidence": "deterministic",
+            "source": "yara"
+          }
+        },
+        {
+          "ruleId": "template_injection",
+          "ruleIndex": 5,
+          "level": "warning",
+          "message": {
+            "text": "Handlebars/Mustache/Jinja or GitHub Actions template interpolation that may inject instructions into a prompt"
+          },
+          "locations": [
+            {
+              "physicalLocation": {
+                "artifactLocation": {
+                  "uri": "tests/fixtures/vulnerable_workflow.yml"
+                },
+                "region": {
+                  "startLine": 119,
+                  "startColumn": 85,
+                  "snippet": {
+                    "text": "{{ github.event.issue.body }}"
+                  }
+                }
+              }
+            }
+          ],
+          "properties": {
+            "category": "pattern_match",
+            "confidence": "deterministic",
+            "source": "yara"
+          }
+        },
+        {
+          "ruleId": "template_injection",
+          "ruleIndex": 5,
+          "level": "warning",
+          "message": {
+            "text": "Handlebars/Mustache/Jinja or GitHub Actions template interpolation that may inject instructions into a prompt"
+          },
+          "locations": [
+            {
+              "physicalLocation": {
+                "artifactLocation": {
+                  "uri": "tests/test_cli.py"
+                },
+                "region": {
+                  "startLine": 70,
+                  "startColumn": 25,
+                  "snippet": {
+                    "text": "{{ secrets.OPENAI_API_KEY }}"
+                  }
+                }
+              }
+            }
+          ],
+          "properties": {
+            "category": "pattern_match",
+            "confidence": "deterministic",
+            "source": "yara"
+          }
+        },
+        {
+          "ruleId": "template_injection",
+          "ruleIndex": 5,
+          "level": "warning",
+          "message": {
+            "text": "Handlebars/Mustache/Jinja or GitHub Actions template interpolation that may inject instructions into a prompt"
+          },
+          "locations": [
+            {
+              "physicalLocation": {
+                "artifactLocation": {
+                  "uri": "tests/test_cli.py"
+                },
+                "region": {
+                  "startLine": 71,
+                  "startColumn": 24,
+                  "snippet": {
+                    "text": "{{ github.event.issue.body }}"
+                  }
+                }
+              }
+            }
+          ],
+          "properties": {
+            "category": "pattern_match",
+            "confidence": "deterministic",
+            "source": "yara"
+          }
+        },
+        {
+          "ruleId": "obfuscated_javascript",
+          "ruleIndex": 3,
+          "level": "error",
+          "message": {
+            "text": "Obfuscated or packed JavaScript patterns"
+          },
+          "locations": [
+            {
+              "physicalLocation": {
+                "artifactLocation": {
+                  "uri": "tests/test_cli.py"
+                },
+                "region": {
+                  "startLine": 185,
+                  "startColumn": 17,
+                  "snippet": {
+                    "text": "\\x1b"
+                  }
+                }
+              }
+            }
+          ],
+          "properties": {
+            "category": "pattern_match",
+            "confidence": "deterministic",
+            "source": "yara"
+          }
+        },
+        {
+          "ruleId": "template_injection",
+          "ruleIndex": 5,
+          "level": "warning",
+          "message": {
+            "text": "Handlebars/Mustache/Jinja or GitHub Actions template interpolation that may inject instructions into a prompt"
+          },
+          "locations": [
+            {
+              "physicalLocation": {
+                "artifactLocation": {
+                  "uri": "tests/test_cli.py"
+                },
+                "region": {
+                  "startLine": 267,
+                  "startColumn": 33,
+                  "snippet": {
+                    "text": "{{ github.event.issue.body }}"
+                  }
+                }
+              }
+            }
+          ],
+          "properties": {
+            "category": "pattern_match",
+            "confidence": "deterministic",
+            "source": "yara"
+          }
+        },
+        {
+          "ruleId": "template_injection",
+          "ruleIndex": 5,
+          "level": "warning",
+          "message": {
+            "text": "Handlebars/Mustache/Jinja or GitHub Actions template interpolation that may inject instructions into a prompt"
+          },
+          "locations": [
+            {
+              "physicalLocation": {
+                "artifactLocation": {
+                  "uri": "tests/test_models.py"
+                },
+                "region": {
+                  "startLine": 38,
+                  "startColumn": 33,
+                  "snippet": {
+                    "text": "{{ github.event.issue.body }}"
+                  }
+                }
+              }
+            }
+          ],
+          "properties": {
+            "category": "pattern_match",
+            "confidence": "deterministic",
+            "source": "yara"
+          }
+        },
+        {
+          "ruleId": "template_injection",
+          "ruleIndex": 5,
+          "level": "warning",
+          "message": {
+            "text": "Handlebars/Mustache/Jinja or GitHub Actions template interpolation that may inject instructions into a prompt"
+          },
+          "locations": [
+            {
+              "physicalLocation": {
+                "artifactLocation": {
+                  "uri": "tests/test_models.py"
+                },
+                "region": {
+                  "startLine": 124,
+                  "startColumn": 29,
+                  "snippet": {
+                    "text": "{{ github.event.issue.body }}"
+                  }
+                }
+              }
+            }
+          ],
+          "properties": {
+            "category": "pattern_match",
+            "confidence": "deterministic",
+            "source": "yara"
+          }
+        },
+        {
+          "ruleId": "template_injection",
+          "ruleIndex": 5,
+          "level": "warning",
+          "message": {
+            "text": "Handlebars/Mustache/Jinja or GitHub Actions template interpolation that may inject instructions into a prompt"
+          },
+          "locations": [
+            {
+              "physicalLocation": {
+                "artifactLocation": {
+                  "uri": "tests/test_models.py"
+                },
+                "region": {
+                  "startLine": 128,
+                  "startColumn": 38,
+                  "snippet": {
+                    "text": "{{ github.event.issue.body }}"
+                  }
+                }
+              }
+            }
+          ],
+          "properties": {
+            "category": "pattern_match",
+            "confidence": "deterministic",
+            "source": "yara"
+          }
+        },
+        {
+          "ruleId": "template_injection",
+          "ruleIndex": 5,
+          "level": "warning",
+          "message": {
+            "text": "Handlebars/Mustache/Jinja or GitHub Actions template interpolation that may inject instructions into a prompt"
+          },
+          "locations": [
+            {
+              "physicalLocation": {
+                "artifactLocation": {
+                  "uri": "tests/test_models.py"
+                },
+                "region": {
+                  "startLine": 137,
+                  "startColumn": 33,
+                  "snippet": {
+                    "text": "{{ expr }}"
+                  }
+                }
+              }
+            }
+          ],
+          "properties": {
+            "category": "pattern_match",
+            "confidence": "deterministic",
+            "source": "yara"
+          }
+        },
+        {
+          "ruleId": "template_injection",
+          "ruleIndex": 5,
+          "level": "warning",
+          "message": {
+            "text": "Handlebars/Mustache/Jinja or GitHub Actions template interpolation that may inject instructions into a prompt"
+          },
+          "locations": [
+            {
+              "physicalLocation": {
+                "artifactLocation": {
+                  "uri": "tests/test_models.py"
+                },
+                "region": {
+                  "startLine": 139,
+                  "startColumn": 42,
+                  "snippet": {
+                    "text": "{{ expr }}"
+                  }
+                }
+              }
+            }
+          ],
+          "properties": {
+            "category": "pattern_match",
+            "confidence": "deterministic",
+            "source": "yara"
+          }
+        },
+        {
+          "ruleId": "template_injection",
+          "ruleIndex": 5,
+          "level": "warning",
+          "message": {
+            "text": "Handlebars/Mustache/Jinja or GitHub Actions template interpolation that may inject instructions into a prompt"
+          },
+          "locations": [
+            {
+              "physicalLocation": {
+                "artifactLocation": {
+                  "uri": "tests/test_reporter.py"
+                },
+                "region": {
+                  "startLine": 41,
+                  "startColumn": 33,
+                  "snippet": {
+                    "text": "{{ github.event.issue.body }}"
+                  }
+                }
+              }
+            }
+          ],
+          "properties": {
+            "category": "pattern_match",
+            "confidence": "deterministic",
+            "source": "yara"
+          }
+        },
+        {
+          "ruleId": "template_injection",
+          "ruleIndex": 5,
+          "level": "warning",
+          "message": {
+            "text": "Handlebars/Mustache/Jinja or GitHub Actions template interpolation that may inject instructions into a prompt"
+          },
+          "locations": [
+            {
+              "physicalLocation": {
+                "artifactLocation": {
+                  "uri": "tests/test_reporter.py"
+                },
+                "region": {
+                  "startLine": 327,
+                  "startColumn": 57,
+                  "snippet": {
+                    "text": "{{ github.event.issue.body }}"
+                  }
+                }
+              }
+            }
+          ],
+          "properties": {
+            "category": "pattern_match",
+            "confidence": "deterministic",
+            "source": "yara"
+          }
+        },
+        {
+          "ruleId": "obfuscated_javascript",
+          "ruleIndex": 3,
+          "level": "error",
+          "message": {
+            "text": "Obfuscated or packed JavaScript patterns"
+          },
+          "locations": [
+            {
+              "physicalLocation": {
+                "artifactLocation": {
+                  "uri": "tests/test_reporter.py"
+                },
+                "region": {
+                  "startLine": 376,
+                  "startColumn": 17,
+                  "snippet": {
+                    "text": "\\x1b"
+                  }
+                }
+              }
+            }
+          ],
+          "properties": {
+            "category": "pattern_match",
+            "confidence": "deterministic",
+            "source": "yara"
+          }
+        },
+        {
+          "ruleId": "template_injection",
+          "ruleIndex": 5,
+          "level": "warning",
+          "message": {
+            "text": "Handlebars/Mustache/Jinja or GitHub Actions template interpolation that may inject instructions into a prompt"
+          },
+          "locations": [
+            {
+              "physicalLocation": {
+                "artifactLocation": {
+                  "uri": "tests/test_reporter.py"
+                },
+                "region": {
+                  "startLine": 434,
+                  "startColumn": 57,
+                  "snippet": {
+                    "text": "{{ github.actor }}"
+                  }
+                }
+              }
+            }
+          ],
+          "properties": {
+            "category": "pattern_match",
+            "confidence": "deterministic",
+            "source": "yara"
+          }
+        },
+        {
+          "ruleId": "template_injection",
+          "ruleIndex": 5,
+          "level": "warning",
+          "message": {
+            "text": "Handlebars/Mustache/Jinja or GitHub Actions template interpolation that may inject instructions into a prompt"
+          },
+          "locations": [
+            {
+              "physicalLocation": {
+                "artifactLocation": {
+                  "uri": "tests/test_rules.py"
+                },
+                "region": {
+                  "startLine": 99,
+                  "startColumn": 29,
+                  "snippet": {
+                    "text": "{{ github.event.issue.body }}"
+                  }
+                }
+              }
+            }
+          ],
+          "properties": {
+            "category": "pattern_match",
+            "confidence": "deterministic",
+            "source": "yara"
+          }
+        },
+        {
+          "ruleId": "template_injection",
+          "ruleIndex": 5,
+          "level": "warning",
+          "message": {
+            "text": "Handlebars/Mustache/Jinja or GitHub Actions template interpolation that may inject instructions into a prompt"
+          },
+          "locations": [
+            {
+              "physicalLocation": {
+                "artifactLocation": {
+                  "uri": "tests/test_rules.py"
+                },
+                "region": {
+                  "startLine": 105,
+                  "startColumn": 26,
+                  "snippet": {
+                    "text": "{{ github.event.pull_request.title }}"
+                  }
+                }
+              }
+            }
+          ],
+          "properties": {
+            "category": "pattern_match",
+            "confidence": "deterministic",
+            "source": "yara"
+          }
+        },
+        {
+          "ruleId": "template_injection",
+          "ruleIndex": 5,
+          "level": "warning",
+          "message": {
+            "text": "Handlebars/Mustache/Jinja or GitHub Actions template interpolation that may inject instructions into a prompt"
+          },
+          "locations": [
+            {
+              "physicalLocation": {
+                "artifactLocation": {
+                  "uri": "tests/test_rules.py"
+                },
+                "region": {
+                  "startLine": 111,
+                  "startColumn": 25,
+                  "snippet": {
+                    "text": "{{ github.event.comment.body }}"
+                  }
+                }
+              }
+            }
+          ],
+          "properties": {
+            "category": "pattern_match",
+            "confidence": "deterministic",
+            "source": "yara"
+          }
+        },
+        {
+          "ruleId": "template_injection",
+          "ruleIndex": 5,
+          "level": "warning",
+          "message": {
+            "text": "Handlebars/Mustache/Jinja or GitHub Actions template interpolation that may inject instructions into a prompt"
+          },
+          "locations": [
+            {
+              "physicalLocation": {
+                "artifactLocation": {
+                  "uri": "tests/test_rules.py"
+                },
+                "region": {
+                  "startLine": 117,
+                  "startColumn": 21,
+                  "snippet": {
+                    "text": "{{ github.event.issue.body }}"
+                  }
+                }
+              }
+            }
+          ],
+          "properties": {
+            "category": "pattern_match",
+            "confidence": "deterministic",
+            "source": "yara"
+          }
+        },
+        {
+          "ruleId": "template_injection",
+          "ruleIndex": 5,
+          "level": "warning",
+          "message": {
+            "text": "Handlebars/Mustache/Jinja or GitHub Actions template interpolation that may inject instructions into a prompt"
+          },
+          "locations": [
+            {
+              "physicalLocation": {
+                "artifactLocation": {
+                  "uri": "tests/test_rules.py"
+                },
+                "region": {
+                  "startLine": 118,
+                  "startColumn": 16,
+                  "snippet": {
+                    "text": "{{ github.event.pull_request.title }}"
+                  }
+                }
+              }
+            }
+          ],
+          "properties": {
+            "category": "pattern_match",
+            "confidence": "deterministic",
+            "source": "yara"
+          }
+        },
+        {
+          "ruleId": "template_injection",
+          "ruleIndex": 5,
+          "level": "warning",
+          "message": {
+            "text": "Handlebars/Mustache/Jinja or GitHub Actions template interpolation that may inject instructions into a prompt"
+          },
+          "locations": [
+            {
+              "physicalLocation": {
+                "artifactLocation": {
+                  "uri": "tests/test_rules.py"
+                },
+                "region": {
+                  "startLine": 124,
+                  "startColumn": 28,
+                  "snippet": {
+                    "text": "{{ secrets.MY_SECRET }}"
+                  }
+                }
+              }
+            }
+          ],
+          "properties": {
+            "category": "pattern_match",
+            "confidence": "deterministic",
+            "source": "yara"
+          }
+        },
+        {
+          "ruleId": "template_injection",
+          "ruleIndex": 5,
+          "level": "warning",
+          "message": {
+            "text": "Handlebars/Mustache/Jinja or GitHub Actions template interpolation that may inject instructions into a prompt"
+          },
+          "locations": [
+            {
+              "physicalLocation": {
+                "artifactLocation": {
+                  "uri": "tests/test_rules.py"
+                },
+                "region": {
+                  "startLine": 129,
+                  "startColumn": 28,
+                  "snippet": {
+                    "text": "{{ github.sha }}"
+                  }
+                }
+              }
+            }
+          ],
+          "properties": {
+            "category": "pattern_match",
+            "confidence": "deterministic",
+            "source": "yara"
+          }
+        },
+        {
+          "ruleId": "template_injection",
+          "ruleIndex": 5,
+          "level": "warning",
+          "message": {
+            "text": "Handlebars/Mustache/Jinja or GitHub Actions template interpolation that may inject instructions into a prompt"
+          },
+          "locations": [
+            {
+              "physicalLocation": {
+                "artifactLocation": {
+                  "uri": "tests/test_rules.py"
+                },
+                "region": {
+                  "startLine": 134,
+                  "startColumn": 26,
+                  "snippet": {
+                    "text": "{{  github.event.issue.body  }}"
+                  }
+                }
+              }
+            }
+          ],
+          "properties": {
+            "category": "pattern_match",
+            "confidence": "deterministic",
+            "source": "yara"
+          }
+        },
+        {
+          "ruleId": "template_injection",
+          "ruleIndex": 5,
+          "level": "warning",
+          "message": {
+            "text": "Handlebars/Mustache/Jinja or GitHub Actions template interpolation that may inject instructions into a prompt"
+          },
+          "locations": [
+            {
+              "physicalLocation": {
+                "artifactLocation": {
+                  "uri": "tests/test_rules.py"
+                },
+                "region": {
+                  "startLine": 142,
+                  "startColumn": 24,
+                  "snippet": {
+                    "text": "{{ github.actor }}"
+                  }
+                }
+              }
+            }
+          ],
+          "properties": {
+            "category": "pattern_match",
+            "confidence": "deterministic",
+            "source": "yara"
+          }
+        },
+        {
+          "ruleId": "template_injection",
+          "ruleIndex": 5,
+          "level": "warning",
+          "message": {
+            "text": "Handlebars/Mustache/Jinja or GitHub Actions template interpolation that may inject instructions into a prompt"
+          },
+          "locations": [
+            {
+              "physicalLocation": {
+                "artifactLocation": {
+                  "uri": "tests/test_rules.py"
+                },
+                "region": {
+                  "startLine": 147,
+                  "startColumn": 23,
+                  "snippet": {
+                    "text": "{{ github.event.head_commit.message }}"
+                  }
+                }
+              }
+            }
+          ],
+          "properties": {
+            "category": "pattern_match",
+            "confidence": "deterministic",
+            "source": "yara"
+          }
+        },
+        {
+          "ruleId": "template_injection",
+          "ruleIndex": 5,
+          "level": "warning",
+          "message": {
+            "text": "Handlebars/Mustache/Jinja or GitHub Actions template interpolation that may inject instructions into a prompt"
+          },
+          "locations": [
+            {
+              "physicalLocation": {
+                "artifactLocation": {
+                  "uri": "tests/test_rules.py"
+                },
+                "region": {
+                  "startLine": 229,
+                  "startColumn": 32,
+                  "snippet": {
+                    "text": "{{ github.event.issue.body }}"
+                  }
+                }
+              }
+            }
+          ],
+          "properties": {
+            "category": "pattern_match",
+            "confidence": "deterministic",
+            "source": "yara"
+          }
+        },
+        {
+          "ruleId": "template_injection",
+          "ruleIndex": 5,
+          "level": "warning",
+          "message": {
+            "text": "Handlebars/Mustache/Jinja or GitHub Actions template interpolation that may inject instructions into a prompt"
+          },
+          "locations": [
+            {
+              "physicalLocation": {
+                "artifactLocation": {
+                  "uri": "tests/test_rules.py"
+                },
+                "region": {
+                  "startLine": 237,
+                  "startColumn": 52,
+                  "snippet": {
+                    "text": "{{ github.event.pull_request.title }}"
+                  }
+                }
+              }
+            }
+          ],
+          "properties": {
+            "category": "pattern_match",
+            "confidence": "deterministic",
+            "source": "yara"
+          }
+        },
+        {
+          "ruleId": "template_injection",
+          "ruleIndex": 5,
+          "level": "warning",
+          "message": {
+            "text": "Handlebars/Mustache/Jinja or GitHub Actions template interpolation that may inject instructions into a prompt"
+          },
+          "locations": [
+            {
+              "physicalLocation": {
+                "artifactLocation": {
+                  "uri": "tests/test_rules.py"
+                },
+                "region": {
+                  "startLine": 252,
+                  "startColumn": 25,
+                  "snippet": {
+                    "text": "{{ github.event.issue.body }}"
+                  }
+                }
+              }
+            }
+          ],
+          "properties": {
+            "category": "pattern_match",
+            "confidence": "deterministic",
+            "source": "yara"
+          }
+        },
+        {
+          "ruleId": "template_injection",
+          "ruleIndex": 5,
+          "level": "warning",
+          "message": {
+            "text": "Handlebars/Mustache/Jinja or GitHub Actions template interpolation that may inject instructions into a prompt"
+          },
+          "locations": [
+            {
+              "physicalLocation": {
+                "artifactLocation": {
+                  "uri": "tests/test_rules.py"
+                },
+                "region": {
+                  "startLine": 253,
+                  "startColumn": 20,
+                  "snippet": {
+                    "text": "{{ github.event.pull_request.title }}"
+                  }
+                }
+              }
+            }
+          ],
+          "properties": {
+            "category": "pattern_match",
+            "confidence": "deterministic",
+            "source": "yara"
+          }
+        },
+        {
+          "ruleId": "template_injection",
+          "ruleIndex": 5,
+          "level": "warning",
+          "message": {
+            "text": "Handlebars/Mustache/Jinja or GitHub Actions template interpolation that may inject instructions into a prompt"
+          },
+          "locations": [
+            {
+              "physicalLocation": {
+                "artifactLocation": {
+                  "uri": "tests/test_rules.py"
+                },
+                "region": {
+                  "startLine": 267,
+                  "startColumn": 26,
+                  "snippet": {
+                    "text": "{{ github.event.issue.body }}"
+                  }
+                }
+              }
+            }
+          ],
+          "properties": {
+            "category": "pattern_match",
+            "confidence": "deterministic",
+            "source": "yara"
+          }
+        },
+        {
+          "ruleId": "template_injection",
+          "ruleIndex": 5,
+          "level": "warning",
+          "message": {
+            "text": "Handlebars/Mustache/Jinja or GitHub Actions template interpolation that may inject instructions into a prompt"
+          },
+          "locations": [
+            {
+              "physicalLocation": {
+                "artifactLocation": {
+                  "uri": "tests/test_rules.py"
+                },
+                "region": {
+                  "startLine": 273,
+                  "startColumn": 45,
+                  "snippet": {
+                    "text": "{{ github.event.issue.body }}"
+                  }
+                }
+              }
+            }
+          ],
+          "properties": {
+            "category": "pattern_match",
+            "confidence": "deterministic",
+            "source": "yara"
+          }
+        },
+        {
+          "ruleId": "template_injection",
+          "ruleIndex": 5,
+          "level": "warning",
+          "message": {
+            "text": "Handlebars/Mustache/Jinja or GitHub Actions template interpolation that may inject instructions into a prompt"
+          },
+          "locations": [
+            {
+              "physicalLocation": {
+                "artifactLocation": {
+                  "uri": "tests/test_rules.py"
+                },
+                "region": {
+                  "startLine": 283,
+                  "startColumn": 25,
+                  "snippet": {
+                    "text": "{{ github.event.issue.body }}"
+                  }
+                }
+              }
+            }
+          ],
+          "properties": {
+            "category": "pattern_match",
+            "confidence": "deterministic",
+            "source": "yara"
+          }
+        },
+        {
+          "ruleId": "template_injection",
+          "ruleIndex": 5,
+          "level": "warning",
+          "message": {
+            "text": "Handlebars/Mustache/Jinja or GitHub Actions template interpolation that may inject instructions into a prompt"
+          },
+          "locations": [
+            {
+              "physicalLocation": {
+                "artifactLocation": {
+                  "uri": "tests/test_rules.py"
+                },
+                "region": {
+                  "startLine": 284,
+                  "startColumn": 25,
+                  "snippet": {
+                    "text": "{{ github.event.issue.body }}"
+                  }
+                }
+              }
+            }
+          ],
+          "properties": {
+            "category": "pattern_match",
+            "confidence": "deterministic",
+            "source": "yara"
+          }
+        },
+        {
+          "ruleId": "template_injection",
+          "ruleIndex": 5,
+          "level": "warning",
+          "message": {
+            "text": "Handlebars/Mustache/Jinja or GitHub Actions template interpolation that may inject instructions into a prompt"
+          },
+          "locations": [
+            {
+              "physicalLocation": {
+                "artifactLocation": {
+                  "uri": "tests/test_rules.py"
+                },
+                "region": {
+                  "startLine": 292,
+                  "startColumn": 37,
+                  "snippet": {
+                    "text": "{{ github.actor }}"
+                  }
+                }
+              }
+            }
+          ],
+          "properties": {
+            "category": "pattern_match",
+            "confidence": "deterministic",
+            "source": "yara"
+          }
+        },
+        {
+          "ruleId": "template_injection",
+          "ruleIndex": 5,
+          "level": "warning",
+          "message": {
+            "text": "Handlebars/Mustache/Jinja or GitHub Actions template interpolation that may inject instructions into a prompt"
+          },
+          "locations": [
+            {
+              "physicalLocation": {
+                "artifactLocation": {
+                  "uri": "tests/test_rules.py"
+                },
+                "region": {
+                  "startLine": 298,
+                  "startColumn": 32,
+                  "snippet": {
+                    "text": "{{ github.event.comment.body }}"
+                  }
+                }
+              }
+            }
+          ],
+          "properties": {
+            "category": "pattern_match",
+            "confidence": "deterministic",
+            "source": "yara"
+          }
+        },
+        {
+          "ruleId": "template_injection",
+          "ruleIndex": 5,
+          "level": "warning",
+          "message": {
+            "text": "Handlebars/Mustache/Jinja or GitHub Actions template interpolation that may inject instructions into a prompt"
+          },
+          "locations": [
+            {
+              "physicalLocation": {
+                "artifactLocation": {
+                  "uri": "tests/test_rules.py"
+                },
+                "region": {
+                  "startLine": 315,
+                  "startColumn": 34,
+                  "snippet": {
+                    "text": "{{ github.event.pull_request.body }}"
+                  }
+                }
+              }
+            }
+          ],
+          "properties": {
+            "category": "pattern_match",
+            "confidence": "deterministic",
+            "source": "yara"
+          }
+        },
+        {
+          "ruleId": "template_injection",
+          "ruleIndex": 5,
+          "level": "warning",
+          "message": {
+            "text": "Handlebars/Mustache/Jinja or GitHub Actions template interpolation that may inject instructions into a prompt"
+          },
+          "locations": [
+            {
+              "physicalLocation": {
+                "artifactLocation": {
+                  "uri": "tests/test_rules.py"
+                },
+                "region": {
+                  "startLine": 326,
+                  "startColumn": 34,
+                  "snippet": {
+                    "text": "{{ github.event.issue.body }}"
+                  }
+                }
+              }
+            }
+          ],
+          "properties": {
+            "category": "pattern_match",
+            "confidence": "deterministic",
+            "source": "yara"
+          }
+        },
+        {
+          "ruleId": "template_injection",
+          "ruleIndex": 5,
+          "level": "warning",
+          "message": {
+            "text": "Handlebars/Mustache/Jinja or GitHub Actions template interpolation that may inject instructions into a prompt"
+          },
+          "locations": [
+            {
+              "physicalLocation": {
+                "artifactLocation": {
+                  "uri": "tests/test_rules.py"
+                },
+                "region": {
+                  "startLine": 336,
+                  "startColumn": 31,
+                  "snippet": {
+                    "text": "{{ github.event.pull_request.head.ref }}"
+                  }
+                }
+              }
+            }
+          ],
+          "properties": {
+            "category": "pattern_match",
+            "confidence": "deterministic",
+            "source": "yara"
+          }
+        },
+        {
+          "ruleId": "template_injection",
+          "ruleIndex": 5,
+          "level": "warning",
+          "message": {
+            "text": "Handlebars/Mustache/Jinja or GitHub Actions template interpolation that may inject instructions into a prompt"
+          },
+          "locations": [
+            {
+              "physicalLocation": {
+                "artifactLocation": {
+                  "uri": "tests/test_rules.py"
+                },
+                "region": {
+                  "startLine": 347,
+                  "startColumn": 30,
+                  "snippet": {
+                    "text": "{{ secrets.OPENAI_API_KEY }}"
+                  }
+                }
+              }
+            }
+          ],
+          "properties": {
+            "category": "pattern_match",
+            "confidence": "deterministic",
+            "source": "yara"
+          }
+        },
+        {
+          "ruleId": "template_injection",
+          "ruleIndex": 5,
+          "level": "warning",
+          "message": {
+            "text": "Handlebars/Mustache/Jinja or GitHub Actions template interpolation that may inject instructions into a prompt"
+          },
+          "locations": [
+            {
+              "physicalLocation": {
+                "artifactLocation": {
+                  "uri": "tests/test_rules.py"
+                },
+                "region": {
+                  "startLine": 358,
+                  "startColumn": 33,
+                  "snippet": {
+                    "text": "{{ github.event.issue.body }}"
+                  }
+                }
+              }
+            }
+          ],
+          "properties": {
+            "category": "pattern_match",
+            "confidence": "deterministic",
+            "source": "yara"
+          }
+        },
+        {
+          "ruleId": "template_injection",
+          "ruleIndex": 5,
+          "level": "warning",
+          "message": {
+            "text": "Handlebars/Mustache/Jinja or GitHub Actions template interpolation that may inject instructions into a prompt"
+          },
+          "locations": [
+            {
+              "physicalLocation": {
+                "artifactLocation": {
+                  "uri": "tests/test_rules.py"
+                },
+                "region": {
+                  "startLine": 359,
+                  "startColumn": 35,
+                  "snippet": {
+                    "text": "{{ github.event.comment.body }}"
+                  }
+                }
+              }
+            }
+          ],
+          "properties": {
+            "category": "pattern_match",
+            "confidence": "deterministic",
+            "source": "yara"
+          }
+        },
+        {
+          "ruleId": "template_injection",
+          "ruleIndex": 5,
+          "level": "warning",
+          "message": {
+            "text": "Handlebars/Mustache/Jinja or GitHub Actions template interpolation that may inject instructions into a prompt"
+          },
+          "locations": [
+            {
+              "physicalLocation": {
+                "artifactLocation": {
+                  "uri": "tests/test_rules.py"
+                },
+                "region": {
+                  "startLine": 377,
+                  "startColumn": 34,
+                  "snippet": {
+                    "text": "{{ github.event.issue.body }}"
+                  }
+                }
+              }
+            }
+          ],
+          "properties": {
+            "category": "pattern_match",
+            "confidence": "deterministic",
+            "source": "yara"
+          }
+        },
+        {
+          "ruleId": "template_injection",
+          "ruleIndex": 5,
+          "level": "warning",
+          "message": {
+            "text": "Handlebars/Mustache/Jinja or GitHub Actions template interpolation that may inject instructions into a prompt"
+          },
+          "locations": [
+            {
+              "physicalLocation": {
+                "artifactLocation": {
+                  "uri": "tests/test_rules.py"
+                },
+                "region": {
+                  "startLine": 395,
+                  "startColumn": 31,
+                  "snippet": {
+                    "text": "{{ github.event.issue.body }}"
+                  }
+                }
+              }
+            }
+          ],
+          "properties": {
+            "category": "pattern_match",
+            "confidence": "deterministic",
+            "source": "yara"
+          }
+        },
+        {
+          "ruleId": "template_injection",
+          "ruleIndex": 5,
+          "level": "warning",
+          "message": {
+            "text": "Handlebars/Mustache/Jinja or GitHub Actions template interpolation that may inject instructions into a prompt"
+          },
+          "locations": [
+            {
+              "physicalLocation": {
+                "artifactLocation": {
+                  "uri": "tests/test_rules.py"
+                },
+                "region": {
+                  "startLine": 406,
+                  "startColumn": 31,
+                  "snippet": {
+                    "text": "{{ github.event.issue.body }}"
+                  }
+                }
+              }
+            }
+          ],
+          "properties": {
+            "category": "pattern_match",
+            "confidence": "deterministic",
+            "source": "yara"
+          }
+        },
+        {
+          "ruleId": "template_injection",
+          "ruleIndex": 5,
+          "level": "warning",
+          "message": {
+            "text": "Handlebars/Mustache/Jinja or GitHub Actions template interpolation that may inject instructions into a prompt"
+          },
+          "locations": [
+            {
+              "physicalLocation": {
+                "artifactLocation": {
+                  "uri": "tests/test_rules.py"
+                },
+                "region": {
+                  "startLine": 415,
+                  "startColumn": 34,
+                  "snippet": {
+                    "text": "{{ secrets.OPENAI_API_KEY }}"
+                  }
+                }
+              }
+            }
+          ],
+          "properties": {
+            "category": "pattern_match",
+            "confidence": "deterministic",
+            "source": "yara"
+          }
+        },
+        {
+          "ruleId": "template_injection",
+          "ruleIndex": 5,
+          "level": "warning",
+          "message": {
+            "text": "Handlebars/Mustache/Jinja or GitHub Actions template interpolation that may inject instructions into a prompt"
+          },
+          "locations": [
+            {
+              "physicalLocation": {
+                "artifactLocation": {
+                  "uri": "tests/test_rules.py"
+                },
+                "region": {
+                  "startLine": 424,
+                  "startColumn": 34,
+                  "snippet": {
+                    "text": "{{ github.event.comment.body }}"
+                  }
+                }
+              }
+            }
+          ],
+          "properties": {
+            "category": "pattern_match",
+            "confidence": "deterministic",
+            "source": "yara"
+          }
+        },
+        {
+          "ruleId": "template_injection",
+          "ruleIndex": 5,
+          "level": "warning",
+          "message": {
+            "text": "Handlebars/Mustache/Jinja or GitHub Actions template interpolation that may inject instructions into a prompt"
+          },
+          "locations": [
+            {
+              "physicalLocation": {
+                "artifactLocation": {
+                  "uri": "tests/test_rules.py"
+                },
+                "region": {
+                  "startLine": 444,
+                  "startColumn": 41,
+                  "snippet": {
+                    "text": "{{ github.event.review.body }}"
+                  }
+                }
+              }
+            }
+          ],
+          "properties": {
+            "category": "pattern_match",
+            "confidence": "deterministic",
+            "source": "yara"
+          }
+        },
+        {
+          "ruleId": "template_injection",
+          "ruleIndex": 5,
+          "level": "warning",
+          "message": {
+            "text": "Handlebars/Mustache/Jinja or GitHub Actions template interpolation that may inject instructions into a prompt"
+          },
+          "locations": [
+            {
+              "physicalLocation": {
+                "artifactLocation": {
+                  "uri": "tests/test_rules.py"
+                },
+                "region": {
+                  "startLine": 456,
+                  "startColumn": 31,
+                  "snippet": {
+                    "text": "{{ github.event.issue.body }}"
+                  }
+                }
+              }
+            }
+          ],
+          "properties": {
+            "category": "pattern_match",
+            "confidence": "deterministic",
+            "source": "yara"
+          }
+        },
+        {
+          "ruleId": "template_injection",
+          "ruleIndex": 5,
+          "level": "warning",
+          "message": {
+            "text": "Handlebars/Mustache/Jinja or GitHub Actions template interpolation that may inject instructions into a prompt"
+          },
+          "locations": [
+            {
+              "physicalLocation": {
+                "artifactLocation": {
+                  "uri": "tests/test_rules.py"
+                },
+                "region": {
+                  "startLine": 465,
+                  "startColumn": 32,
+                  "snippet": {
+                    "text": "{{ secrets.MY_TOKEN }}"
+                  }
+                }
+              }
+            }
+          ],
+          "properties": {
+            "category": "pattern_match",
+            "confidence": "deterministic",
+            "source": "yara"
+          }
+        },
+        {
+          "ruleId": "template_injection",
+          "ruleIndex": 5,
+          "level": "warning",
+          "message": {
+            "text": "Handlebars/Mustache/Jinja or GitHub Actions template interpolation that may inject instructions into a prompt"
+          },
+          "locations": [
+            {
+              "physicalLocation": {
+                "artifactLocation": {
+                  "uri": "tests/test_rules.py"
+                },
+                "region": {
+                  "startLine": 475,
+                  "startColumn": 33,
+                  "snippet": {
+                    "text": "{{ github.event.issue.body }}"
+                  }
+                }
+              }
+            }
+          ],
+          "properties": {
+            "category": "pattern_match",
+            "confidence": "deterministic",
+            "source": "yara"
+          }
+        },
+        {
+          "ruleId": "template_injection",
+          "ruleIndex": 5,
+          "level": "warning",
+          "message": {
+            "text": "Handlebars/Mustache/Jinja or GitHub Actions template interpolation that may inject instructions into a prompt"
+          },
+          "locations": [
+            {
+              "physicalLocation": {
+                "artifactLocation": {
+                  "uri": "tests/test_rules.py"
+                },
+                "region": {
+                  "startLine": 476,
+                  "startColumn": 31,
+                  "snippet": {
+                    "text": "{{ github.event.pull_request.title }}"
+                  }
+                }
+              }
+            }
+          ],
+          "properties": {
+            "category": "pattern_match",
+            "confidence": "deterministic",
+            "source": "yara"
+          }
+        },
+        {
+          "ruleId": "template_injection",
+          "ruleIndex": 5,
+          "level": "warning",
+          "message": {
+            "text": "Handlebars/Mustache/Jinja or GitHub Actions template interpolation that may inject instructions into a prompt"
+          },
+          "locations": [
+            {
+              "physicalLocation": {
+                "artifactLocation": {
+                  "uri": "tests/test_rules.py"
+                },
+                "region": {
+                  "startLine": 494,
+                  "startColumn": 51,
+                  "snippet": {
+                    "text": "{{ github.event.issue.body }}"
+                  }
+                }
+              }
+            }
+          ],
+          "properties": {
+            "category": "pattern_match",
+            "confidence": "deterministic",
+            "source": "yara"
+          }
+        },
+        {
+          "ruleId": "template_injection",
+          "ruleIndex": 5,
+          "level": "warning",
+          "message": {
+            "text": "Handlebars/Mustache/Jinja or GitHub Actions template interpolation that may inject instructions into a prompt"
+          },
+          "locations": [
+            {
+              "physicalLocation": {
+                "artifactLocation": {
+                  "uri": "tests/test_rules.py"
+                },
+                "region": {
+                  "startLine": 504,
+                  "startColumn": 58,
+                  "snippet": {
+                    "text": "{{ github.event.pull_request.title }}"
+                  }
+                }
+              }
+            }
+          ],
+          "properties": {
+            "category": "pattern_match",
+            "confidence": "deterministic",
+            "source": "yara"
+          }
+        },
+        {
+          "ruleId": "template_injection",
+          "ruleIndex": 5,
+          "level": "warning",
+          "message": {
+            "text": "Handlebars/Mustache/Jinja or GitHub Actions template interpolation that may inject instructions into a prompt"
+          },
+          "locations": [
+            {
+              "physicalLocation": {
+                "artifactLocation": {
+                  "uri": "tests/test_rules.py"
+                },
+                "region": {
+                  "startLine": 511,
+                  "startColumn": 55,
+                  "snippet": {
+                    "text": "{{ github.event.issue.body }}"
+                  }
+                }
+              }
+            }
+          ],
+          "properties": {
+            "category": "pattern_match",
+            "confidence": "deterministic",
+            "source": "yara"
+          }
+        },
+        {
+          "ruleId": "template_injection",
+          "ruleIndex": 5,
+          "level": "warning",
+          "message": {
+            "text": "Handlebars/Mustache/Jinja or GitHub Actions template interpolation that may inject instructions into a prompt"
+          },
+          "locations": [
+            {
+              "physicalLocation": {
+                "artifactLocation": {
+                  "uri": "tests/test_rules.py"
+                },
+                "region": {
+                  "startLine": 521,
+                  "startColumn": 28,
+                  "snippet": {
+                    "text": "{{ github.event.issue.body }}"
+                  }
+                }
+              }
+            }
+          ],
+          "properties": {
+            "category": "pattern_match",
+            "confidence": "deterministic",
+            "source": "yara"
+          }
+        },
+        {
+          "ruleId": "template_injection",
+          "ruleIndex": 5,
+          "level": "warning",
+          "message": {
+            "text": "Handlebars/Mustache/Jinja or GitHub Actions template interpolation that may inject instructions into a prompt"
+          },
+          "locations": [
+            {
+              "physicalLocation": {
+                "artifactLocation": {
+                  "uri": "tests/test_rules.py"
+                },
+                "region": {
+                  "startLine": 541,
+                  "startColumn": 37,
+                  "snippet": {
+                    "text": "{{ github.event.issue.body }}"
+                  }
+                }
+              }
+            }
+          ],
+          "properties": {
+            "category": "pattern_match",
+            "confidence": "deterministic",
+            "source": "yara"
+          }
+        },
+        {
+          "ruleId": "template_injection",
+          "ruleIndex": 5,
+          "level": "warning",
+          "message": {
+            "text": "Handlebars/Mustache/Jinja or GitHub Actions template interpolation that may inject instructions into a prompt"
+          },
+          "locations": [
+            {
+              "physicalLocation": {
+                "artifactLocation": {
+                  "uri": "tests/test_rules.py"
+                },
+                "region": {
+                  "startLine": 552,
+                  "startColumn": 37,
+                  "snippet": {
+                    "text": "{{ github.event.issue.body }}"
+                  }
+                }
+              }
+            }
+          ],
+          "properties": {
+            "category": "pattern_match",
+            "confidence": "deterministic",
+            "source": "yara"
+          }
+        },
+        {
+          "ruleId": "template_injection",
+          "ruleIndex": 5,
+          "level": "warning",
+          "message": {
+            "text": "Handlebars/Mustache/Jinja or GitHub Actions template interpolation that may inject instructions into a prompt"
+          },
+          "locations": [
+            {
+              "physicalLocation": {
+                "artifactLocation": {
+                  "uri": "tests/test_rules.py"
+                },
+                "region": {
+                  "startLine": 575,
+                  "startColumn": 33,
+                  "snippet": {
+                    "text": "{{ github.event.issue.body }}"
+                  }
+                }
+              }
+            }
+          ],
+          "properties": {
+            "category": "pattern_match",
+            "confidence": "deterministic",
+            "source": "yara"
+          }
+        },
+        {
+          "ruleId": "template_injection",
+          "ruleIndex": 5,
+          "level": "warning",
+          "message": {
+            "text": "Handlebars/Mustache/Jinja or GitHub Actions template interpolation that may inject instructions into a prompt"
+          },
+          "locations": [
+            {
+              "physicalLocation": {
+                "artifactLocation": {
+                  "uri": "tests/test_rules.py"
+                },
+                "region": {
+                  "startLine": 576,
+                  "startColumn": 31,
+                  "snippet": {
+                    "text": "{{ github.event.pull_request.title }}"
+                  }
+                }
+              }
+            }
+          ],
+          "properties": {
+            "category": "pattern_match",
+            "confidence": "deterministic",
+            "source": "yara"
+          }
+        },
+        {
+          "ruleId": "template_injection",
+          "ruleIndex": 5,
+          "level": "warning",
+          "message": {
+            "text": "Handlebars/Mustache/Jinja or GitHub Actions template interpolation that may inject instructions into a prompt"
+          },
+          "locations": [
+            {
+              "physicalLocation": {
+                "artifactLocation": {
+                  "uri": "tests/test_rules.py"
+                },
+                "region": {
+                  "startLine": 595,
+                  "startColumn": 35,
+                  "snippet": {
+                    "text": "{{ github.event.release.body }}"
+                  }
+                }
+              }
+            }
+          ],
+          "properties": {
+            "category": "pattern_match",
+            "confidence": "deterministic",
+            "source": "yara"
+          }
+        },
+        {
+          "ruleId": "template_injection",
+          "ruleIndex": 5,
+          "level": "warning",
+          "message": {
+            "text": "Handlebars/Mustache/Jinja or GitHub Actions template interpolation that may inject instructions into a prompt"
+          },
+          "locations": [
+            {
+              "physicalLocation": {
+                "artifactLocation": {
+                  "uri": "tests/test_rules.py"
+                },
+                "region": {
+                  "startLine": 608,
+                  "startColumn": 31,
+                  "snippet": {
+                    "text": "{{ github.event.custom.value }}"
+                  }
+                }
+              }
+            }
+          ],
+          "properties": {
+            "category": "pattern_match",
+            "confidence": "deterministic",
+            "source": "yara"
+          }
+        },
+        {
+          "ruleId": "template_injection",
+          "ruleIndex": 5,
+          "level": "warning",
+          "message": {
+            "text": "Handlebars/Mustache/Jinja or GitHub Actions template interpolation that may inject instructions into a prompt"
+          },
+          "locations": [
+            {
+              "physicalLocation": {
+                "artifactLocation": {
+                  "uri": "tests/test_rules.py"
+                },
+                "region": {
+                  "startLine": 617,
+                  "startColumn": 33,
+                  "snippet": {
+                    "text": "{{ github.event.workflow_dispatch.inputs.topic }}"
+                  }
+                }
+              }
+            }
+          ],
+          "properties": {
+            "category": "pattern_match",
+            "confidence": "deterministic",
+            "source": "yara"
+          }
+        },
+        {
+          "ruleId": "template_injection",
+          "ruleIndex": 5,
+          "level": "warning",
+          "message": {
+            "text": "Handlebars/Mustache/Jinja or GitHub Actions template interpolation that may inject instructions into a prompt"
+          },
+          "locations": [
+            {
+              "physicalLocation": {
+                "artifactLocation": {
+                  "uri": "tests/test_rules.py"
+                },
+                "region": {
+                  "startLine": 635,
+                  "startColumn": 45,
+                  "snippet": {
+                    "text": "{{ github.event.issue.body }}"
+                  }
+                }
+              }
+            }
+          ],
+          "properties": {
+            "category": "pattern_match",
+            "confidence": "deterministic",
+            "source": "yara"
+          }
+        },
+        {
+          "ruleId": "template_injection",
+          "ruleIndex": 5,
+          "level": "warning",
+          "message": {
+            "text": "Handlebars/Mustache/Jinja or GitHub Actions template interpolation that may inject instructions into a prompt"
+          },
+          "locations": [
+            {
+              "physicalLocation": {
+                "artifactLocation": {
+                  "uri": "tests/test_rules.py"
+                },
+                "region": {
+                  "startLine": 648,
+                  "startColumn": 45,
+                  "snippet": {
+                    "text": "{{ github.event.issue.body }}"
+                  }
+                }
+              }
+            }
+          ],
+          "properties": {
+            "category": "pattern_match",
+            "confidence": "deterministic",
+            "source": "yara"
+          }
+        },
+        {
+          "ruleId": "template_injection",
+          "ruleIndex": 5,
+          "level": "warning",
+          "message": {
+            "text": "Handlebars/Mustache/Jinja or GitHub Actions template interpolation that may inject instructions into a prompt"
+          },
+          "locations": [
+            {
+              "physicalLocation": {
+                "artifactLocation": {
+                  "uri": "tests/test_rules.py"
+                },
+                "region": {
+                  "startLine": 660,
+                  "startColumn": 45,
+                  "snippet": {
+                    "text": "{{ github.event.issue.body }}"
+                  }
+                }
+              }
+            }
+          ],
+          "properties": {
+            "category": "pattern_match",
+            "confidence": "deterministic",
+            "source": "yara"
+          }
+        },
+        {
+          "ruleId": "template_injection",
+          "ruleIndex": 5,
+          "level": "warning",
+          "message": {
+            "text": "Handlebars/Mustache/Jinja or GitHub Actions template interpolation that may inject instructions into a prompt"
+          },
+          "locations": [
+            {
+              "physicalLocation": {
+                "artifactLocation": {
+                  "uri": "tests/test_rules.py"
+                },
+                "region": {
+                  "startLine": 689,
+                  "startColumn": 51,
+                  "snippet": {
+                    "text": "{{ github.event.pull_request.body }}"
+                  }
+                }
+              }
+            }
+          ],
+          "properties": {
+            "category": "pattern_match",
+            "confidence": "deterministic",
+            "source": "yara"
+          }
+        },
+        {
+          "ruleId": "template_injection",
+          "ruleIndex": 5,
+          "level": "warning",
+          "message": {
+            "text": "Handlebars/Mustache/Jinja or GitHub Actions template interpolation that may inject instructions into a prompt"
+          },
+          "locations": [
+            {
+              "physicalLocation": {
+                "artifactLocation": {
+                  "uri": "tests/test_rules.py"
+                },
+                "region": {
+                  "startLine": 699,
+                  "startColumn": 29,
+                  "snippet": {
+                    "text": "{{ github.event.pull_request.body }}"
+                  }
+                }
+              }
+            }
+          ],
+          "properties": {
+            "category": "pattern_match",
+            "confidence": "deterministic",
+            "source": "yara"
+          }
+        },
+        {
+          "ruleId": "template_injection",
+          "ruleIndex": 5,
+          "level": "warning",
+          "message": {
+            "text": "Handlebars/Mustache/Jinja or GitHub Actions template interpolation that may inject instructions into a prompt"
+          },
+          "locations": [
+            {
+              "physicalLocation": {
+                "artifactLocation": {
+                  "uri": "tests/test_rules.py"
+                },
+                "region": {
+                  "startLine": 708,
+                  "startColumn": 32,
+                  "snippet": {
+                    "text": "{{ github.event.pull_request.title }}"
+                  }
+                }
+              }
+            }
+          ],
+          "properties": {
+            "category": "pattern_match",
+            "confidence": "deterministic",
+            "source": "yara"
+          }
+        },
+        {
+          "ruleId": "template_injection",
+          "ruleIndex": 5,
+          "level": "warning",
+          "message": {
+            "text": "Handlebars/Mustache/Jinja or GitHub Actions template interpolation that may inject instructions into a prompt"
+          },
+          "locations": [
+            {
+              "physicalLocation": {
+                "artifactLocation": {
+                  "uri": "tests/test_rules.py"
+                },
+                "region": {
+                  "startLine": 714,
+                  "startColumn": 32,
+                  "snippet": {
+                    "text": "{{ github.event.issue.body }}"
+                  }
+                }
+              }
+            }
+          ],
+          "properties": {
+            "category": "pattern_match",
+            "confidence": "deterministic",
+            "source": "yara"
+          }
+        },
+        {
+          "ruleId": "template_injection",
+          "ruleIndex": 5,
+          "level": "warning",
+          "message": {
+            "text": "Handlebars/Mustache/Jinja or GitHub Actions template interpolation that may inject instructions into a prompt"
+          },
+          "locations": [
+            {
+              "physicalLocation": {
+                "artifactLocation": {
+                  "uri": "tests/test_rules.py"
+                },
+                "region": {
+                  "startLine": 735,
+                  "startColumn": 32,
+                  "snippet": {
+                    "text": "{{ github.event.issue.body }}"
+                  }
+                }
+              }
+            }
+          ],
+          "properties": {
+            "category": "pattern_match",
+            "confidence": "deterministic",
+            "source": "yara"
+          }
+        },
+        {
+          "ruleId": "template_injection",
+          "ruleIndex": 5,
+          "level": "warning",
+          "message": {
+            "text": "Handlebars/Mustache/Jinja or GitHub Actions template interpolation that may inject instructions into a prompt"
+          },
+          "locations": [
+            {
+              "physicalLocation": {
+                "artifactLocation": {
+                  "uri": "tests/test_rules.py"
+                },
+                "region": {
+                  "startLine": 743,
+                  "startColumn": 28,
+                  "snippet": {
+                    "text": "{{ github.event.comment.body }}"
+                  }
+                }
+              }
+            }
+          ],
+          "properties": {
+            "category": "pattern_match",
+            "confidence": "deterministic",
+            "source": "yara"
+          }
+        },
+        {
+          "ruleId": "template_injection",
+          "ruleIndex": 5,
+          "level": "warning",
+          "message": {
+            "text": "Handlebars/Mustache/Jinja or GitHub Actions template interpolation that may inject instructions into a prompt"
+          },
+          "locations": [
+            {
+              "physicalLocation": {
+                "artifactLocation": {
+                  "uri": "tests/test_rules.py"
+                },
+                "region": {
+                  "startLine": 751,
+                  "startColumn": 32,
+                  "snippet": {
+                    "text": "{{ github.event.pull_request.body }}"
+                  }
+                }
+              }
+            }
+          ],
+          "properties": {
+            "category": "pattern_match",
+            "confidence": "deterministic",
+            "source": "yara"
+          }
+        },
+        {
+          "ruleId": "template_injection",
+          "ruleIndex": 5,
+          "level": "warning",
+          "message": {
+            "text": "Handlebars/Mustache/Jinja or GitHub Actions template interpolation that may inject instructions into a prompt"
+          },
+          "locations": [
+            {
+              "physicalLocation": {
+                "artifactLocation": {
+                  "uri": "tests/test_rules.py"
+                },
+                "region": {
+                  "startLine": 757,
+                  "startColumn": 32,
+                  "snippet": {
+                    "text": "{{ github.event.issue.title }}"
+                  }
+                }
+              }
+            }
+          ],
+          "properties": {
+            "category": "pattern_match",
+            "confidence": "deterministic",
+            "source": "yara"
+          }
+        },
+        {
+          "ruleId": "template_injection",
+          "ruleIndex": 5,
+          "level": "warning",
+          "message": {
+            "text": "Handlebars/Mustache/Jinja or GitHub Actions template interpolation that may inject instructions into a prompt"
+          },
+          "locations": [
+            {
+              "physicalLocation": {
+                "artifactLocation": {
+                  "uri": "tests/test_rules.py"
+                },
+                "region": {
+                  "startLine": 779,
+                  "startColumn": 44,
+                  "snippet": {
+                    "text": "{{ github.actor }}"
+                  }
+                }
+              }
+            }
+          ],
+          "properties": {
+            "category": "pattern_match",
+            "confidence": "deterministic",
+            "source": "yara"
+          }
+        },
+        {
+          "ruleId": "template_injection",
+          "ruleIndex": 5,
+          "level": "warning",
+          "message": {
+            "text": "Handlebars/Mustache/Jinja or GitHub Actions template interpolation that may inject instructions into a prompt"
+          },
+          "locations": [
+            {
+              "physicalLocation": {
+                "artifactLocation": {
+                  "uri": "tests/test_rules.py"
+                },
+                "region": {
+                  "startLine": 791,
+                  "startColumn": 35,
+                  "snippet": {
+                    "text": "{{ github.event.sender.login }}"
+                  }
+                }
+              }
+            }
+          ],
+          "properties": {
+            "category": "pattern_match",
+            "confidence": "deterministic",
+            "source": "yara"
+          }
+        },
+        {
+          "ruleId": "template_injection",
+          "ruleIndex": 5,
+          "level": "warning",
+          "message": {
+            "text": "Handlebars/Mustache/Jinja or GitHub Actions template interpolation that may inject instructions into a prompt"
+          },
+          "locations": [
+            {
+              "physicalLocation": {
+                "artifactLocation": {
+                  "uri": "tests/test_rules.py"
+                },
+                "region": {
+                  "startLine": 799,
+                  "startColumn": 38,
+                  "snippet": {
+                    "text": "{{ github.actor }}"
+                  }
+                }
+              }
+            }
+          ],
+          "properties": {
+            "category": "pattern_match",
+            "confidence": "deterministic",
+            "source": "yara"
+          }
+        },
+        {
+          "ruleId": "template_injection",
+          "ruleIndex": 5,
+          "level": "warning",
+          "message": {
+            "text": "Handlebars/Mustache/Jinja or GitHub Actions template interpolation that may inject instructions into a prompt"
+          },
+          "locations": [
+            {
+              "physicalLocation": {
+                "artifactLocation": {
+                  "uri": "tests/test_rules.py"
+                },
+                "region": {
+                  "startLine": 823,
+                  "startColumn": 30,
+                  "snippet": {
+                    "text": "{{ github.event.head_commit.message }}"
+                  }
+                }
+              }
+            }
+          ],
+          "properties": {
+            "category": "pattern_match",
+            "confidence": "deterministic",
+            "source": "yara"
+          }
+        },
+        {
+          "ruleId": "template_injection",
+          "ruleIndex": 5,
+          "level": "warning",
+          "message": {
+            "text": "Handlebars/Mustache/Jinja or GitHub Actions template interpolation that may inject instructions into a prompt"
+          },
+          "locations": [
+            {
+              "physicalLocation": {
+                "artifactLocation": {
+                  "uri": "tests/test_rules.py"
+                },
+                "region": {
+                  "startLine": 836,
+                  "startColumn": 30,
+                  "snippet": {
+                    "text": "{{ github.event.commits[0].message }}"
+                  }
+                }
+              }
+            }
+          ],
+          "properties": {
+            "category": "pattern_match",
+            "confidence": "deterministic",
+            "source": "yara"
+          }
+        },
+        {
+          "ruleId": "template_injection",
+          "ruleIndex": 5,
+          "level": "warning",
+          "message": {
+            "text": "Handlebars/Mustache/Jinja or GitHub Actions template interpolation that may inject instructions into a prompt"
+          },
+          "locations": [
+            {
+              "physicalLocation": {
+                "artifactLocation": {
+                  "uri": "tests/test_rules.py"
+                },
+                "region": {
+                  "startLine": 845,
+                  "startColumn": 36,
+                  "snippet": {
+                    "text": "{{ github.event.head_commit.message }}"
+                  }
+                }
+              }
+            }
+          ],
+          "properties": {
+            "category": "pattern_match",
+            "confidence": "deterministic",
+            "source": "yara"
+          }
+        },
+        {
+          "ruleId": "template_injection",
+          "ruleIndex": 5,
+          "level": "warning",
+          "message": {
+            "text": "Handlebars/Mustache/Jinja or GitHub Actions template interpolation that may inject instructions into a prompt"
+          },
+          "locations": [
+            {
+              "physicalLocation": {
+                "artifactLocation": {
+                  "uri": "tests/test_rules.py"
+                },
+                "region": {
+                  "startLine": 855,
+                  "startColumn": 38,
+                  "snippet": {
+                    "text": "{{ github.event.head_commit.message }}"
+                  }
+                }
+              }
+            }
+          ],
+          "properties": {
+            "category": "pattern_match",
+            "confidence": "deterministic",
+            "source": "yara"
+          }
+        },
+        {
+          "ruleId": "template_injection",
+          "ruleIndex": 5,
+          "level": "warning",
+          "message": {
+            "text": "Handlebars/Mustache/Jinja or GitHub Actions template interpolation that may inject instructions into a prompt"
+          },
+          "locations": [
+            {
+              "physicalLocation": {
+                "artifactLocation": {
+                  "uri": "tests/test_rules.py"
+                },
+                "region": {
+                  "startLine": 875,
+                  "startColumn": 20,
+                  "snippet": {
+                    "text": "{{ github.event.issue.body }}"
+                  }
+                }
+              }
+            }
+          ],
+          "properties": {
+            "category": "pattern_match",
+            "confidence": "deterministic",
+            "source": "yara"
+          }
+        },
+        {
+          "ruleId": "template_injection",
+          "ruleIndex": 5,
+          "level": "warning",
+          "message": {
+            "text": "Handlebars/Mustache/Jinja or GitHub Actions template interpolation that may inject instructions into a prompt"
+          },
+          "locations": [
+            {
+              "physicalLocation": {
+                "artifactLocation": {
+                  "uri": "tests/test_rules.py"
+                },
+                "region": {
+                  "startLine": 886,
+                  "startColumn": 32,
+                  "snippet": {
+                    "text": "{{ github.event.issue.body }}"
+                  }
+                }
+              }
+            }
+          ],
+          "properties": {
+            "category": "pattern_match",
+            "confidence": "deterministic",
+            "source": "yara"
+          }
+        },
+        {
+          "ruleId": "template_injection",
+          "ruleIndex": 5,
+          "level": "warning",
+          "message": {
+            "text": "Handlebars/Mustache/Jinja or GitHub Actions template interpolation that may inject instructions into a prompt"
+          },
+          "locations": [
+            {
+              "physicalLocation": {
+                "artifactLocation": {
+                  "uri": "tests/test_rules.py"
+                },
+                "region": {
+                  "startLine": 894,
+                  "startColumn": 31,
+                  "snippet": {
+                    "text": "{{ github.event.issue.body }}"
+                  }
+                }
+              }
+            }
+          ],
+          "properties": {
+            "category": "pattern_match",
+            "confidence": "deterministic",
+            "source": "yara"
+          }
+        },
+        {
+          "ruleId": "template_injection",
+          "ruleIndex": 5,
+          "level": "warning",
+          "message": {
+            "text": "Handlebars/Mustache/Jinja or GitHub Actions template interpolation that may inject instructions into a prompt"
+          },
+          "locations": [
+            {
+              "physicalLocation": {
+                "artifactLocation": {
+                  "uri": "tests/test_rules.py"
+                },
+                "region": {
+                  "startLine": 903,
+                  "startColumn": 34,
+                  "snippet": {
+                    "text": "{{ github.event.issue.body }}"
+                  }
+                }
+              }
+            }
+          ],
+          "properties": {
+            "category": "pattern_match",
+            "confidence": "deterministic",
+            "source": "yara"
+          }
+        },
+        {
+          "ruleId": "template_injection",
+          "ruleIndex": 5,
+          "level": "warning",
+          "message": {
+            "text": "Handlebars/Mustache/Jinja or GitHub Actions template interpolation that may inject instructions into a prompt"
+          },
+          "locations": [
+            {
+              "physicalLocation": {
+                "artifactLocation": {
+                  "uri": "tests/test_rules.py"
+                },
+                "region": {
+                  "startLine": 963,
+                  "startColumn": 34,
+                  "snippet": {
+                    "text": "{{ github.event.issue.body }}"
+                  }
+                }
+              }
+            }
+          ],
+          "properties": {
+            "category": "pattern_match",
+            "confidence": "deterministic",
+            "source": "yara"
+          }
+        },
+        {
+          "ruleId": "template_injection",
+          "ruleIndex": 5,
+          "level": "warning",
+          "message": {
+            "text": "Handlebars/Mustache/Jinja or GitHub Actions template interpolation that may inject instructions into a prompt"
+          },
+          "locations": [
+            {
+              "physicalLocation": {
+                "artifactLocation": {
+                  "uri": "tests/test_rules.py"
+                },
+                "region": {
+                  "startLine": 972,
+                  "startColumn": 34,
+                  "snippet": {
+                    "text": "{{ github.event.issue.body }}"
+                  }
+                }
+              }
+            }
+          ],
+          "properties": {
+            "category": "pattern_match",
+            "confidence": "deterministic",
+            "source": "yara"
+          }
+        },
+        {
+          "ruleId": "template_injection",
+          "ruleIndex": 5,
+          "level": "warning",
+          "message": {
+            "text": "Handlebars/Mustache/Jinja or GitHub Actions template interpolation that may inject instructions into a prompt"
+          },
+          "locations": [
+            {
+              "physicalLocation": {
+                "artifactLocation": {
+                  "uri": "tests/test_rules.py"
+                },
+                "region": {
+                  "startLine": 982,
+                  "startColumn": 28,
+                  "snippet": {
+                    "text": "{{ github.event.issue.body }}"
+                  }
+                }
+              }
+            }
+          ],
+          "properties": {
+            "category": "pattern_match",
+            "confidence": "deterministic",
+            "source": "yara"
+          }
+        },
+        {
+          "ruleId": "template_injection",
+          "ruleIndex": 5,
+          "level": "warning",
+          "message": {
+            "text": "Handlebars/Mustache/Jinja or GitHub Actions template interpolation that may inject instructions into a prompt"
+          },
+          "locations": [
+            {
+              "physicalLocation": {
+                "artifactLocation": {
+                  "uri": "tests/test_rules.py"
+                },
+                "region": {
+                  "startLine": 1013,
+                  "startColumn": 34,
+                  "snippet": {
+                    "text": "{{ github.event.pull_request.body }}"
+                  }
+                }
+              }
+            }
+          ],
+          "properties": {
+            "category": "pattern_match",
+            "confidence": "deterministic",
+            "source": "yara"
+          }
+        },
+        {
+          "ruleId": "template_injection",
+          "ruleIndex": 5,
+          "level": "warning",
+          "message": {
+            "text": "Handlebars/Mustache/Jinja or GitHub Actions template interpolation that may inject instructions into a prompt"
+          },
+          "locations": [
+            {
+              "physicalLocation": {
+                "artifactLocation": {
+                  "uri": "tests/test_scanner.py"
+                },
+                "region": {
+                  "startLine": 70,
+                  "startColumn": 25,
+                  "snippet": {
+                    "text": "{{ github.event.issue.body }}"
+                  }
+                }
+              }
+            }
+          ],
+          "properties": {
+            "category": "pattern_match",
+            "confidence": "deterministic",
+            "source": "yara"
+          }
+        },
+        {
+          "ruleId": "template_injection",
+          "ruleIndex": 5,
+          "level": "warning",
+          "message": {
+            "text": "Handlebars/Mustache/Jinja or GitHub Actions template interpolation that may inject instructions into a prompt"
+          },
+          "locations": [
+            {
+              "physicalLocation": {
+                "artifactLocation": {
+                  "uri": "tests/test_scanner.py"
+                },
+                "region": {
+                  "startLine": 86,
+                  "startColumn": 25,
+                  "snippet": {
+                    "text": "{{ secrets.OPENAI_API_KEY }}"
+                  }
+                }
+              }
+            }
+          ],
+          "properties": {
+            "category": "pattern_match",
+            "confidence": "deterministic",
+            "source": "yara"
+          }
+        },
+        {
+          "ruleId": "template_injection",
+          "ruleIndex": 5,
+          "level": "warning",
+          "message": {
+            "text": "Handlebars/Mustache/Jinja or GitHub Actions template interpolation that may inject instructions into a prompt"
+          },
+          "locations": [
+            {
+              "physicalLocation": {
+                "artifactLocation": {
+                  "uri": "tests/test_scanner.py"
+                },
+                "region": {
+                  "startLine": 87,
+                  "startColumn": 24,
+                  "snippet": {
+                    "text": "{{ github.event.pull_request.body }}"
+                  }
+                }
+              }
+            }
+          ],
+          "properties": {
+            "category": "pattern_match",
+            "confidence": "deterministic",
+            "source": "yara"
+          }
+        },
+        {
+          "ruleId": "template_injection",
+          "ruleIndex": 5,
+          "level": "warning",
+          "message": {
+            "text": "Handlebars/Mustache/Jinja or GitHub Actions template interpolation that may inject instructions into a prompt"
+          },
+          "locations": [
+            {
+              "physicalLocation": {
+                "artifactLocation": {
+                  "uri": "tests/test_scanner.py"
+                },
+                "region": {
+                  "startLine": 102,
+                  "startColumn": 22,
+                  "snippet": {
+                    "text": "{{ github.event.issue.body }}"
+                  }
+                }
+              }
+            }
+          ],
+          "properties": {
+            "category": "pattern_match",
+            "confidence": "deterministic",
+            "source": "yara"
+          }
+        },
+        {
+          "ruleId": "template_injection",
+          "ruleIndex": 5,
+          "level": "warning",
+          "message": {
+            "text": "Handlebars/Mustache/Jinja or GitHub Actions template interpolation that may inject instructions into a prompt"
+          },
+          "locations": [
+            {
+              "physicalLocation": {
+                "artifactLocation": {
+                  "uri": "tests/test_scanner.py"
+                },
+                "region": {
+                  "startLine": 109,
+                  "startColumn": 24,
+                  "snippet": {
+                    "text": "{{ github.event.pull_request.title }}"
+                  }
+                }
+              }
+            }
+          ],
+          "properties": {
+            "category": "pattern_match",
+            "confidence": "deterministic",
+            "source": "yara"
+          }
+        },
+        {
+          "ruleId": "template_injection",
+          "ruleIndex": 5,
+          "level": "warning",
+          "message": {
+            "text": "Handlebars/Mustache/Jinja or GitHub Actions template interpolation that may inject instructions into a prompt"
+          },
+          "locations": [
+            {
+              "physicalLocation": {
+                "artifactLocation": {
+                  "uri": "tests/test_scanner.py"
+                },
+                "region": {
+                  "startLine": 317,
+                  "startColumn": 32,
+                  "snippet": {
+                    "text": "{{ github.event.issue.body }}"
+                  }
+                }
+              }
+            }
+          ],
+          "properties": {
+            "category": "pattern_match",
+            "confidence": "deterministic",
+            "source": "yara"
+          }
+        },
+        {
+          "ruleId": "template_injection",
+          "ruleIndex": 5,
+          "level": "warning",
+          "message": {
+            "text": "Handlebars/Mustache/Jinja or GitHub Actions template interpolation that may inject instructions into a prompt"
+          },
+          "locations": [
+            {
+              "physicalLocation": {
+                "artifactLocation": {
+                  "uri": "tests/test_scanner.py"
+                },
+                "region": {
+                  "startLine": 321,
+                  "startColumn": 30,
+                  "snippet": {
+                    "text": "{{ github.event.issue.body }}"
+                  }
+                }
+              }
+            }
+          ],
+          "properties": {
+            "category": "pattern_match",
+            "confidence": "deterministic",
+            "source": "yara"
+          }
+        },
+        {
+          "ruleId": "template_injection",
+          "ruleIndex": 5,
+          "level": "warning",
+          "message": {
+            "text": "Handlebars/Mustache/Jinja or GitHub Actions template interpolation that may inject instructions into a prompt"
+          },
+          "locations": [
+            {
+              "physicalLocation": {
+                "artifactLocation": {
+                  "uri": "tests/test_scanner.py"
+                },
+                "region": {
+                  "startLine": 400,
+                  "startColumn": 33,
+                  "snippet": {
+                    "text": "{{ github.event.issue.body }}"
+                  }
+                }
+              }
+            }
+          ],
+          "properties": {
+            "category": "pattern_match",
+            "confidence": "deterministic",
+            "source": "yara"
+          }
+        },
+        {
+          "ruleId": "template_injection",
+          "ruleIndex": 5,
+          "level": "warning",
+          "message": {
+            "text": "Handlebars/Mustache/Jinja or GitHub Actions template interpolation that may inject instructions into a prompt"
+          },
+          "locations": [
+            {
+              "physicalLocation": {
+                "artifactLocation": {
+                  "uri": "tests/test_scanner.py"
+                },
+                "region": {
+                  "startLine": 404,
+                  "startColumn": 32,
+                  "snippet": {
+                    "text": "{{ github.event.pull_request.body }}"
+                  }
+                }
+              }
+            }
+          ],
+          "properties": {
+            "category": "pattern_match",
+            "confidence": "deterministic",
+            "source": "yara"
+          }
+        }
+      ],
+      "invocations": [
+        {
+          "executionSuccessful": true,
+          "startTimeUtc": "2026-07-15T01:45:44.141Z",
+          "endTimeUtc": "2026-07-15T01:45:47.000Z"
+        }
+      ]
+    }
+  ]
+}

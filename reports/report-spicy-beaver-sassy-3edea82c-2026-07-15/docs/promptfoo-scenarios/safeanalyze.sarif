@@ -1,0 +1,392 @@
+{
+  "version": "2.1.0",
+  "$schema": "https://raw.githubusercontent.com/oasis-tcs/sarif-spec/master/Schemata/sarif-schema-2.1.0.json",
+  "runs": [
+    {
+      "tool": {
+        "driver": {
+          "name": "safeanalyze",
+          "informationUri": "https://github.com/user/safeanalyze",
+          "rules": [
+            {
+              "id": "hidden_char_zero_width",
+              "name": "Hidden Unicode character: ZERO WIDTH SPACE",
+              "shortDescription": {
+                "text": "Hidden Unicode character: ZERO WIDTH SPACE"
+              },
+              "fullDescription": {
+                "text": ""
+              },
+              "help": {
+                "text": ""
+              },
+              "properties": {
+                "category": "hidden_char"
+              }
+            },
+            {
+              "id": "prompt_injection_comment",
+              "name": "prompt_injection_comment",
+              "shortDescription": {
+                "text": "prompt_injection_comment"
+              },
+              "fullDescription": {
+                "text": "Comment containing prompt injection keywords"
+              },
+              "help": {
+                "text": ""
+              },
+              "properties": {
+                "category": "pattern_match"
+              }
+            },
+            {
+              "id": "template_injection",
+              "name": "template_injection",
+              "shortDescription": {
+                "text": "template_injection"
+              },
+              "fullDescription": {
+                "text": "Handlebars/Mustache/Jinja or GitHub Actions template interpolation that may inject instructions into a prompt"
+              },
+              "help": {
+                "text": ""
+              },
+              "properties": {
+                "category": "pattern_match"
+              }
+            }
+          ]
+        }
+      },
+      "results": [
+        {
+          "ruleId": "prompt_injection_comment",
+          "ruleIndex": 1,
+          "level": "error",
+          "message": {
+            "text": "Comment containing prompt injection keywords"
+          },
+          "locations": [
+            {
+              "physicalLocation": {
+                "artifactLocation": {
+                  "uri": "."
+                },
+                "region": {
+                  "startLine": 28,
+                  "startColumn": 3197,
+                  "snippet": {
+                    "text": "jailbreak"
+                  }
+                }
+              }
+            }
+          ],
+          "properties": {
+            "category": "pattern_match",
+            "confidence": "deterministic",
+            "source": "yara"
+          }
+        },
+        {
+          "ruleId": "hidden_char_zero_width",
+          "ruleIndex": 0,
+          "level": "error",
+          "message": {
+            "text": "ZERO WIDTH SPACE (zero_width) in ."
+          },
+          "locations": [
+            {
+              "physicalLocation": {
+                "artifactLocation": {
+                  "uri": "."
+                },
+                "region": {
+                  "startLine": 31,
+                  "startColumn": 189,
+                  "snippet": {
+                    "text": "U+200B"
+                  }
+                }
+              }
+            }
+          ],
+          "properties": {
+            "category": "hidden_char",
+            "confidence": "deterministic",
+            "source": "hiddenchars"
+          }
+        },
+        {
+          "ruleId": "template_injection",
+          "ruleIndex": 2,
+          "level": "warning",
+          "message": {
+            "text": "Handlebars/Mustache/Jinja or GitHub Actions template interpolation that may inject instructions into a prompt"
+          },
+          "locations": [
+            {
+              "physicalLocation": {
+                "artifactLocation": {
+                  "uri": "."
+                },
+                "region": {
+                  "startLine": 33,
+                  "startColumn": 497,
+                  "snippet": {
+                    "text": "{{language}}"
+                  }
+                }
+              }
+            }
+          ],
+          "properties": {
+            "category": "pattern_match",
+            "confidence": "deterministic",
+            "source": "yara"
+          }
+        },
+        {
+          "ruleId": "template_injection",
+          "ruleIndex": 2,
+          "level": "warning",
+          "message": {
+            "text": "Handlebars/Mustache/Jinja or GitHub Actions template interpolation that may inject instructions into a prompt"
+          },
+          "locations": [
+            {
+              "physicalLocation": {
+                "artifactLocation": {
+                  "uri": "."
+                },
+                "region": {
+                  "startLine": 33,
+                  "startColumn": 511,
+                  "snippet": {
+                    "text": "{{input}}"
+                  }
+                }
+              }
+            }
+          ],
+          "properties": {
+            "category": "pattern_match",
+            "confidence": "deterministic",
+            "source": "yara"
+          }
+        },
+        {
+          "ruleId": "template_injection",
+          "ruleIndex": 2,
+          "level": "warning",
+          "message": {
+            "text": "Handlebars/Mustache/Jinja or GitHub Actions template interpolation that may inject instructions into a prompt"
+          },
+          "locations": [
+            {
+              "physicalLocation": {
+                "artifactLocation": {
+                  "uri": "."
+                },
+                "region": {
+                  "startLine": 33,
+                  "startColumn": 710,
+                  "snippet": {
+                    "text": "{{language}}"
+                  }
+                }
+              }
+            }
+          ],
+          "properties": {
+            "category": "pattern_match",
+            "confidence": "deterministic",
+            "source": "yara"
+          }
+        },
+        {
+          "ruleId": "template_injection",
+          "ruleIndex": 2,
+          "level": "warning",
+          "message": {
+            "text": "Handlebars/Mustache/Jinja or GitHub Actions template interpolation that may inject instructions into a prompt"
+          },
+          "locations": [
+            {
+              "physicalLocation": {
+                "artifactLocation": {
+                  "uri": "."
+                },
+                "region": {
+                  "startLine": 33,
+                  "startColumn": 724,
+                  "snippet": {
+                    "text": "{{input}}"
+                  }
+                }
+              }
+            }
+          ],
+          "properties": {
+            "category": "pattern_match",
+            "confidence": "deterministic",
+            "source": "yara"
+          }
+        },
+        {
+          "ruleId": "template_injection",
+          "ruleIndex": 2,
+          "level": "warning",
+          "message": {
+            "text": "Handlebars/Mustache/Jinja or GitHub Actions template interpolation that may inject instructions into a prompt"
+          },
+          "locations": [
+            {
+              "physicalLocation": {
+                "artifactLocation": {
+                  "uri": "."
+                },
+                "region": {
+                  "startLine": 36,
+                  "startColumn": 8481,
+                  "snippet": {
+                    "text": "{{expectedHelloWorld}}"
+                  }
+                }
+              }
+            }
+          ],
+          "properties": {
+            "category": "pattern_match",
+            "confidence": "deterministic",
+            "source": "yara"
+          }
+        },
+        {
+          "ruleId": "template_injection",
+          "ruleIndex": 2,
+          "level": "warning",
+          "message": {
+            "text": "Handlebars/Mustache/Jinja or GitHub Actions template interpolation that may inject instructions into a prompt"
+          },
+          "locations": [
+            {
+              "physicalLocation": {
+                "artifactLocation": {
+                  "uri": "."
+                },
+                "region": {
+                  "startLine": 36,
+                  "startColumn": 10855,
+                  "snippet": {
+                    "text": "{{expectedGoodMorning}}"
+                  }
+                }
+              }
+            }
+          ],
+          "properties": {
+            "category": "pattern_match",
+            "confidence": "deterministic",
+            "source": "yara"
+          }
+        },
+        {
+          "ruleId": "template_injection",
+          "ruleIndex": 2,
+          "level": "warning",
+          "message": {
+            "text": "Handlebars/Mustache/Jinja or GitHub Actions template interpolation that may inject instructions into a prompt"
+          },
+          "locations": [
+            {
+              "physicalLocation": {
+                "artifactLocation": {
+                  "uri": "."
+                },
+                "region": {
+                  "startLine": 36,
+                  "startColumn": 13324,
+                  "snippet": {
+                    "text": "{{expectedHowAreYou}}"
+                  }
+                }
+              }
+            }
+          ],
+          "properties": {
+            "category": "pattern_match",
+            "confidence": "deterministic",
+            "source": "yara"
+          }
+        },
+        {
+          "ruleId": "hidden_char_zero_width",
+          "ruleIndex": 0,
+          "level": "error",
+          "message": {
+            "text": "ZERO WIDTH SPACE (zero_width) in ."
+          },
+          "locations": [
+            {
+              "physicalLocation": {
+                "artifactLocation": {
+                  "uri": "."
+                },
+                "region": {
+                  "startLine": 39,
+                  "startColumn": 219,
+                  "snippet": {
+                    "text": "U+200B"
+                  }
+                }
+              }
+            }
+          ],
+          "properties": {
+            "category": "hidden_char",
+            "confidence": "deterministic",
+            "source": "hiddenchars"
+          }
+        },
+        {
+          "ruleId": "hidden_char_zero_width",
+          "ruleIndex": 0,
+          "level": "error",
+          "message": {
+            "text": "ZERO WIDTH SPACE (zero_width) in ."
+          },
+          "locations": [
+            {
+              "physicalLocation": {
+                "artifactLocation": {
+                  "uri": "."
+                },
+                "region": {
+                  "startLine": 50,
+                  "startColumn": 249,
+                  "snippet": {
+                    "text": "U+200B"
+                  }
+                }
+              }
+            }
+          ],
+          "properties": {
+            "category": "hidden_char",
+            "confidence": "deterministic",
+            "source": "hiddenchars"
+          }
+        }
+      ],
+      "invocations": [
+        {
+          "executionSuccessful": true,
+          "startTimeUtc": "2026-07-15T01:46:14.578Z",
+          "endTimeUtc": "2026-07-15T01:46:17.394Z"
+        }
+      ]
+    }
+  ]
+}
