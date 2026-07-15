@@ -5,6 +5,23 @@ All notable functional and non-functional changes to `safeanalyze` are documente
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.3.2] — 2026-07-15
+
+### Functional
+
+- **Expanded prompt-injection YARA rules:** Added deterministic detection for social-engineering exfiltration, account access, output constraints, system-boundary markers, and template/variable interpolation:
+  - `data_exfiltration_email` flags requests to retrieve data and email it to an address (e.g., InjecAgent attacker instructions).
+  - `account_access_request` flags requests to access user accounts, payment methods, histories, etc.
+  - `output_constraint` flags instructions that suppress warnings, disclaimers, or constrain output format.
+  - `system_boundary` flags `<system>`, `[system]`, `system_instruction`, and similar system-prompt boundary markers.
+  - `template_injection` flags `{{...}}`, `${...}`, `<%...%>`, `#{...}`, and `${jndi:` interpolations that may inject instructions.
+  - `prompt_injection_comment` extended with privilege-escalation patterns: "override your safety", "disable filters", "bypass guidelines", "you are in admin mode".
+
+### Non-functional
+
+- Updated unit tests for the expanded YARA rule set.
+- Verified fast-mode latency remains within the sub-100 ms budget.
+
 ## [0.3.1] — 2026-07-15
 
 ### Functional

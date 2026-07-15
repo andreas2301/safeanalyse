@@ -1,4 +1,4 @@
-# safeanalyze v0.3.1
+# safeanalyze v0.3.2
 
 A Go CLI tool that sanitizes and scans untrusted code repositories **before** feeding them to AI assistants. Implements defense-in-depth inspired by [Zones of Distrust](https://github.com/bluvibytes/zone-of-distrust).
 
@@ -12,6 +12,10 @@ Prompt injection via malicious code is real. A repo can contain:
 - Secrets or malware mixed with legitimate source
 
 **safeanalyze** runs a security pipeline so AI assistants never see raw, unverified code.
+
+## What's new in v0.3.2
+
+- **Expanded prompt-injection YARA rules** — detect social-engineering exfiltration ("retrieve ... and email"), account-access requests, output constraints, system-boundary markers, and template/variable interpolation.
 
 ## What's new in v0.3.1
 
@@ -162,12 +166,19 @@ Pure-Go regex rule engine with embedded detection patterns:
 
 | Rule | Severity | Detects |
 |------|----------|---------|
-| `prompt_injection_comment` | critical | "ignore previous instructions", "strictly adhere to...", "system prompt", "DAN mode", "jailbreak" |
+| `prompt_injection_comment` | critical | "ignore previous instructions", "system prompt", "DAN mode", "jailbreak", "override your safety" |
 | `obfuscated_javascript` | high | eval(Function(...)), String.fromCharCode, atob, hex escapes |
 | `suspicious_shell` | high | curl \| bash, wget \| bash, netcat reverse shells |
 | `credential_hardcode` | medium | password=, api_key=, secret=, AWS keys |
 | `suspicious_imports` | medium | subprocess, child_process, urllib requests |
 | `data_exfiltration` | high | fetch to external URLs, axios post, XMLHttpRequest |
+| `data_exfiltration_email` | high | "retrieve ... and email to ...", exfiltration via email |
+| `account_access_request` | medium | "access my account", "retrieve my payment history" |
+| `output_constraint` | medium | "output only", "do not mention warnings", "no disclaimer" |
+| `system_boundary` | critical | `<system>`, `[system]`, `system_instruction` markers |
+| `template_injection` | medium | `{{...}}`, `${...}`, `<%...%>`, `#{...}`, `${jndi:` |
+| `indirect_prompt_injection` | high | user-comment/email/web-content injections, delimiter breakouts |
+| `encoded_prompt_injection` | high | base64/hex/URL-encoded injection keywords |
 | `backdoor_indicator` | critical | reverse_shell, bind_shell, keylogger, rootkit |
 
 ### 2. Entropy Analysis

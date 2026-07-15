@@ -107,6 +107,10 @@ func (e *Engine) LoadBuiltins() {
 				`(?i)DAN\s*mode`,
 				`(?i)jailbreak`,
 				`(?i)developer\s+mode`,
+				`(?i)you\s+are\s+(now\s+)?in\s+(developer|admin|root)\s+mode`,
+				`(?i)override\s+(your\s+)?(safety|guidelines|filters|rules|instructions)`,
+				`(?i)disable\s+(your\s+)?(safety|filters|content\s+filter)`,
+				`(?i)bypass\s+(your\s+)?(safety|guidelines|filters|rules)`,
 			},
 		},
 		{
@@ -228,6 +232,63 @@ func (e *Engine) LoadBuiltins() {
 				`(?i)ignore%20all%20previous%20instruction`,
 				`(?i)ignore\+all\+previous\+instruction`,
 				`\\x69\\x67\\x6e\\x6f\\x72\\x65`, // hex-encoded "ignore"
+			},
+		},
+		{
+			Name:        "data_exfiltration_email",
+			Description: "Natural-language request to retrieve data and send it to an email address",
+			Severity:    report.SeverityHigh,
+			Patterns: []string{
+				`(?i)\b(retrieve|get|fetch|extract|download|access|view|check)\b.{0,60}\b(email|send|forward|mail)\b`,
+				`(?i)\bemail\b.{0,40}\b(to|at)\b.{0,30}\b[a-z0-9._%+-]+@[a-z0-9.-]+\.[a-z]{2,}\b`,
+				`(?i)\bsend\b.{0,40}\b(to|at)\b.{0,30}\b[a-z0-9._%+-]+@[a-z0-9.-]+\.[a-z]{2,}\b`,
+				`(?i)\balternate\s+(email|e-mail)\b`,
+				`(?i)\b(retrieve|get|fetch|extract)\b.{0,80}\b(address(es)?|payment|history|balance|messages|contacts|files)\b`,
+			},
+		},
+		{
+			Name:        "account_access_request",
+			Description: "Natural-language request to access a user account or service",
+			Severity:    report.SeverityMedium,
+			Patterns: []string{
+				`(?i)\b(retrieve|get|fetch|extract|access|view|check)\b.{0,40}\b(my|the|your)\b.{0,20}\b(account|history|addresses|payment|balance|messages|contacts|files)\b`,
+				`(?i)\bfrom\s+(my|the)\s+(amazon|gmail|bank|paypal|apple|google|facebook|netflix|spotify)\b.{0,30}\baccount\b`,
+				`(?i)\blog\s*(in|into)\s+(my|the|your)\b.{0,30}\baccount\b`,
+			},
+		},
+		{
+			Name:        "output_constraint",
+			Description: "Instruction that constrains or suppresses the model's normal output",
+			Severity:    report.SeverityMedium,
+			Patterns: []string{
+				`(?i)\b(output|respond|reply)\b.{0,30}\b(only|just|solely)\b`,
+				`(?i)\bdo\s+not\s+(mention|include|add|say|write|display|show)\b.{0,30}\b(warning|disclaimer|note|caveat|apology)\b`,
+				`(?i)\bno\s+(warning|disclaimer|apology|explanation|preamble|introduction)\b`,
+				`(?i)\b(start|begin)\s+(your\s+)?(response|answer|reply)\s+(with|by)\b`,
+			},
+		},
+		{
+			Name:        "system_boundary",
+			Description: "System prompt boundary marker or system instruction override",
+			Severity:    report.SeverityCritical,
+			Patterns: []string{
+				`(?i)<\s*/?\s*system\s*>`,
+				`(?i)\[\s*system\s*\]`,
+				`(?i)system[_-]?instruction`,
+				`(?i)system\s+prompt\s*[:=]`,
+				`(?i)\bsystem\s*:\s*.{0,60}\b(you\s+are|ignore|disregard)\b`,
+			},
+		},
+		{
+			Name:        "template_injection",
+			Description: "Template or variable interpolation that may inject instructions into a prompt",
+			Severity:    report.SeverityMedium,
+			Patterns: []string{
+				`\{\{[^}]{0,60}\}\}`,
+				`\$\{[a-zA-Z_][a-zA-Z0-9_]*\}`,
+				`<%\s*=?\s*[^%]{0,60}\s*%>`,
+				`\#\{[a-zA-Z_][a-zA-Z0-9_]*\}`,
+				`\$\{jndi:`,
 			},
 		},
 		{
