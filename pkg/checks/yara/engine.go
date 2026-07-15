@@ -241,6 +241,16 @@ func (e *Engine) LoadBuiltins() {
 				`(?i)<!--\s*system\s+prompt`,
 			},
 		},
+		{
+			Name:        "instruction_to_include_code",
+			Description: "Natural-language instruction telling the model to include, merge, or execute a code snippet",
+			Severity:    report.SeverityHigh,
+			Patterns: []string{
+				`(?i)(include|incorporate|integrate|insert|add|merge|utilize|use)\s+(the\s+)?(following|subsequent|provided|given|below|above)\s+(code|snippet|block|section|excerpt)`,
+				`(?i)(ensure|make\s+sure)\s+.{0,40}(code|snippet|block|section)\s+.{0,40}(is\s+)?(included|present|added|utilized)`,
+				`(?i)(don't|do\s+not)\s+(hesitate|forget)\s+.{0,40}(to\s+include|to\s+use|to\s+execute|to\s+run)`,
+			},
+		},
 	}
 
 	for _, r := range builtins {

@@ -1,4 +1,4 @@
-# safeanalyze v0.2.9
+# safeanalyze v0.3.0
 
 A Go CLI tool that sanitizes and scans untrusted code repositories **before** feeding them to AI assistants. Implements defense-in-depth inspired by [Zones of Distrust](https://github.com/bluvibytes/zone-of-distrust).
 
@@ -13,12 +13,11 @@ Prompt injection via malicious code is real. A repo can contain:
 
 **safeanalyze** runs a security pipeline so AI assistants never see raw, unverified code.
 
+## What's new in v0.3.0
+
+- **Instruction-to-include-code detection** — flags natural-language directives telling an LLM to include or execute a provided code snippet, catching indirect injections like BIPIA's `code_attack` samples.
+
 ## What's new in v0.2.9
-
-- **Encoded injection detection** — catches base64, hex, URL-encoded, and Unicode-escape variants of prompt-injection keywords.
-- **Markdown/HTML injection detection** — flags links, images, and comments that may carry injected instructions.
-
-## What's new in v0.2.8
 
 - **ML stage guardrails** — configurable file-size and timeout limits prevent the stochastic stage from hanging on oversized inputs.
 - **Indirect prompt-injection rules** — detect user-comment/email/web-content injections, tool/function-call payloads, and delimiter breakouts.

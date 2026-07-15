@@ -5,6 +5,16 @@ All notable functional and non-functional changes to `safeanalyze` are documente
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.3.0] — 2026-07-15
+
+### Functional
+
+- **Instruction-to-include-code detection:** New YARA rule `instruction_to_include_code` flags natural-language directives telling an LLM to include, merge, or execute a provided code snippet. This catches the BIPIA `code_attack` indirect-injection pattern without hard-coding dataset phrases.
+
+### Non-functional
+
+- Red-team payload set expanded to include a delimiter-breakout and a code-snippet-instruction example.
+
 ## [0.2.9] — 2026-07-15
 
 ### Functional
