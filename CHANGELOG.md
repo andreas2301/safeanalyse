@@ -5,6 +5,17 @@ All notable functional and non-functional changes to `safeanalyze` are documente
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.3.6] — 2026-07-15
+
+### Functional
+
+- **Hardened `safeanalyze clone` against option injection:** The directory argument is now validated (no leading `-`, no shell/control characters) and `git clone` is invoked with a `--` separator so the URL and directory are always treated as positional arguments.
+- **Expanded default `excluded_paths`:** Added common Python cache/build directories (`.tox`, `.pytest_cache`, `.mypy_cache`) to the default exclusion list and clarified that `dependency_paths` are scanned only in thorough mode.
+
+### Non-functional
+
+- Added unit tests for `validateCloneDir` and the hardened `git clone` invocation.
+
 ## [0.3.5] — 2026-07-15
 
 ### Functional

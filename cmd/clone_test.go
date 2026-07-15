@@ -31,3 +31,18 @@ func TestValidateGitURL(t *testing.T) {
 		}
 	}
 }
+
+func TestValidateCloneDir(t *testing.T) {
+	valid := []string{"repo", "./repo", "tmp/repo-1", "/tmp/repo"}
+	for _, d := range valid {
+		if err := validateCloneDir(d); err != nil {
+			t.Errorf("expected %q to be valid, got: %v", d, err)
+		}
+	}
+	invalid := []string{"", "--option", "-u/tmp/pwn", "repo;rm -rf /", "repo\nBAD"}
+	for _, d := range invalid {
+		if err := validateCloneDir(d); err == nil {
+			t.Errorf("expected %q to be invalid", d)
+		}
+	}
+}

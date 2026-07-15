@@ -65,6 +65,11 @@ sanitization:
     - __pycache__
     - .idea
     - .vscode
+    - .tox
+    - .pytest_cache
+    - .mypy_cache
+  # Dependency paths are skipped in fast mode but scanned in thorough mode.
+  # Move an entry here to excluded_paths if it should never be scanned.
   dependency_paths:
     - node_modules
     - vendor

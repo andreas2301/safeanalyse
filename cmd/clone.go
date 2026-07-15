@@ -36,6 +36,9 @@ Examples:
 		var cloneDir string
 		if len(args) > 1 {
 			cloneDir = args[1]
+			if err := validateCloneDir(cloneDir); err != nil {
+				return fmt.Errorf("invalid clone directory: %w", err)
+			}
 		} else {
 			// Derive name from URL
 			base := filepath.Base(url)
@@ -49,8 +52,9 @@ Examples:
 
 		color.Cyan("\n[CLONE] %s -> %s\n", url, cloneDir)
 
-		// Run git clone
-		gitCmd := exec.Command("git", "clone", "--depth", "1", url, cloneDir)
+		// Run git clone. The '--' separator ensures the URL and directory are
+		// treated as positional arguments even if they start with '-'.
+		gitCmd := exec.Command("git", "clone", "--depth", "1", "--", url, cloneDir)
 		gitCmd.Stdout = os.Stdout
 		gitCmd.Stderr = os.Stderr
 		if err := gitCmd.Run(); err != nil {
@@ -100,6 +104,24 @@ Examples:
 func init() {
 	cloneCmd.Flags().Bool("keep-raw", false, "keep the raw cloned repository after analysis")
 	cloneCmd.Flags().Bool("ingest", true, "automatically run ingest after clone")
+}
+
+// validateCloneDir rejects directory arguments that could be parsed as git
+// options or that contain shell/control characters.
+func validateCloneDir(dir string) error {
+	if dir == "" {
+		return fmt.Errorf("directory is empty")
+	}
+	if strings.HasPrefix(dir, "-") {
+		return fmt.Errorf("directory must not start with '-'")
+	}
+	forbidden := []string{"\n", "\r", "\t", ";", "|", "&", "$", "`", "\\", "<", ">"}
+	for _, c := range forbidden {
+		if strings.Contains(dir, c) {
+			return fmt.Errorf("directory contains forbidden character %q", c)
+		}
+	}
+	return nil
 }
 
 // validateGitURL rejects URLs that could be interpreted as git options or

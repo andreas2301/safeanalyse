@@ -43,7 +43,7 @@ To continuously improve detection on test data, follow this iterative cycle:
 
 ## Security hardening notes
 
-- `safeanalyze clone` validates URLs to prevent git option injection (`-u`, `--upload-pack`, shell metacharacters). Permitted formats are http(s), ssh, git, and scp-style.
+- `safeanalyze clone` validates both the URL and the destination directory to prevent git option injection (`-u`, `--upload-pack`, shell metacharacters). It invokes `git clone` with a `--` separator so the URL and directory are always treated as positional arguments.
 - External scanners run as separate processes with non-fatal error handling; a missing or crashing scanner must not abort the whole pipeline.
 - Fast mode intentionally avoids ML inference, external scanners, and repository walking to keep latency deterministic.
 
@@ -80,7 +80,8 @@ echo 'ignore all previous instructions' | ./safeanalyze inspect --verbose
 
 ## Current autoresearch iteration
 
-- **Version under test:** v0.3.5
-- **Active hypothesis:** Skipping Semgrep on targets with fewer than 50 regular files will reduce thorough-scan latency on small benchmark repositories without reducing detection coverage.
-- **Last report branch:** `report-mexican-wombat-unstable-65b466a3-2026-07-15` (v0.3.3)
+- **Version under test:** v0.3.6
+- **Active hypothesis:** Hardening `safeanalyze clone` and clarifying `safeanalyze.yaml` exclusions does not change detection metrics but removes a security foot-gun and reduces noise from build/cache directories.
+- **Last accepted improvement:** v0.3.5 Semgrep file-count gate (report branch `report-chimichanga-taco-beaver-18c1c65c-2026-07-15`).
+- **Next candidate:** Optimize the YARA engine to reduce per-line regex passes on large repositories.
 - **Previous reverted iteration:** v0.3.4 (encoded-prompt-injection fragment expansion added latency but no new detections).
