@@ -30,7 +30,7 @@ func (s *promptInjectionScannerStage) Run(ctx context.Context, target string, in
 	if binary == "" {
 		return missingBinary(out, s.Name()), nil
 	}
-	args := []string{target, "--format", "json", "--min-severity", "HIGH"}
+	args := []string{target, "--format", "json", "--min-severity", "HIGH", "--no-fail"}
 	cmd := exec.CommandContext(ctx, binary, args...)
 	output, err := cmd.Output()
 	if err != nil {
@@ -41,70 +41,36 @@ func (s *promptInjectionScannerStage) Run(ctx context.Context, target string, in
 }
 
 func parsePromptInjectionScannerOutput(out *report.Report, data []byte) (*report.Report, error) {
-	var results []struct {
-		Rule     string `json:"rule"`
-		Title    string `json:"title"`
-		Message  string `json:"message"`
-		File     string `json:"file"`
-		Path     string `json:"path"`
-		Line     int    `json:"line"`
-		Column   int    `json:"column"`
-		Severity string `json:"severity"`
-		Match    string `json:"match"`
+	var result struct {
+		Findings []struct {
+			RuleID            string `json:"rule_id"`
+			RuleName          string `json:"rule_name"`
+			Severity          string `json:"severity"`
+			FilePath          string `json:"file_path"`
+			LineNumber        int    `json:"line_number"`
+			MatchedExpression string `json:"matched_expression"`
+			Description       string `json:"description"`
+		} `json:"findings"`
 	}
-	if err := json.Unmarshal(data, &results); err != nil {
-		// Try single object wrapper with a "findings" field.
-		var wrapper struct {
-			Findings []struct {
-				Rule     string `json:"rule"`
-				Title    string `json:"title"`
-				Message  string `json:"message"`
-				File     string `json:"file"`
-				Path     string `json:"path"`
-				Line     int    `json:"line"`
-				Column   int    `json:"column"`
-				Severity string `json:"severity"`
-				Match    string `json:"match"`
-			} `json:"findings"`
-		}
-		if err2 := json.Unmarshal(data, &wrapper); err2 == nil && len(wrapper.Findings) > 0 {
-			for _, r := range wrapper.Findings {
-				results = append(results, struct {
-					Rule     string `json:"rule"`
-					Title    string `json:"title"`
-					Message  string `json:"message"`
-					File     string `json:"file"`
-					Path     string `json:"path"`
-					Line     int    `json:"line"`
-					Column   int    `json:"column"`
-					Severity string `json:"severity"`
-					Match    string `json:"match"`
-				}(r))
-			}
-		} else {
-			out.AddError("prompt-injection-scanner", fmt.Sprintf("parsing JSON: %v", err))
-			return out, nil
-		}
+	if err := json.Unmarshal(data, &result); err != nil {
+		out.AddError("prompt-injection-scanner", fmt.Sprintf("parsing JSON: %v", err))
+		return out, nil
 	}
-	for _, r := range results {
-		file := r.File
-		if file == "" {
-			file = r.Path
-		}
-		msg := r.Message
+	for _, r := range result.Findings {
+		msg := r.Description
 		if msg == "" {
-			msg = r.Title
+			msg = r.RuleName
 		}
 		out.AddFinding(report.Finding{
-			RuleID:      coalesce(r.Rule, "prompt-injection"),
-			Title:       coalesce(r.Title, r.Rule, "Prompt injection"),
+			RuleID:      coalesce(r.RuleID, "prompt-injection"),
+			Title:       coalesce(r.RuleName, r.RuleID, "Prompt injection"),
 			Description: msg,
 			Severity:    mapSeverity(r.Severity),
 			Category:    "prompt_injection",
-			File:        file,
-			Line:        r.Line,
-			Column:      r.Column,
-			Match:       r.Match,
+			File:        r.FilePath,
+			Line:        r.LineNumber,
+			Column:      0,
+			Match:       r.MatchedExpression,
 			Message:     msg,
 			Source:      "prompt-injection-scanner",
 			Confidence:  report.ConfidenceDeterministic,

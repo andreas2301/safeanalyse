@@ -46,7 +46,7 @@ func TestParseBumblebeeOutput(t *testing.T) {
 }
 
 func TestParsePromptInjectionScannerOutput(t *testing.T) {
-	data := []byte(`[{"rule": "pi", "file": "test.go", "line": 3, "column": 4, "severity": "HIGH", "match": "match"}]`)
+	data := []byte(`{"findings": [{"rule_id": "PI001", "rule_name": "Unsafe echo", "severity": "HIGH", "file_path": "test.yml", "line_number": 3, "matched_expression": "${{ github.event.issue.body }}", "description": "User input reaches workflow"}]}`)
 	out := report.NewReport("target")
 	out, err := parsePromptInjectionScannerOutput(out, data)
 	if err != nil {
@@ -59,20 +59,20 @@ func TestParsePromptInjectionScannerOutput(t *testing.T) {
 	if f.Source != "prompt-injection-scanner" || f.Severity != report.SeverityHigh {
 		t.Fatalf("unexpected finding: %+v", f)
 	}
+	if f.RuleID != "PI001" || f.File != "test.yml" || f.Line != 3 {
+		t.Fatalf("unexpected finding fields: %+v", f)
+	}
 }
 
-func TestParsePromptInjectionScannerOutputWrapper(t *testing.T) {
-	data := []byte(`{"findings": [{"rule": "pi2", "path": "x.go", "line": 7, "severity": "CRITICAL", "message": "wrapped"}]}`)
+func TestParsePromptInjectionScannerOutputEmpty(t *testing.T) {
+	data := []byte(`{"findings": []}`)
 	out := report.NewReport("target")
 	out, err := parsePromptInjectionScannerOutput(out, data)
 	if err != nil {
 		t.Fatalf("unexpected error: %v", err)
 	}
-	if len(out.Findings) != 1 {
-		t.Fatalf("expected 1 finding, got %d", len(out.Findings))
-	}
-	if out.Findings[0].Severity != report.SeverityCritical {
-		t.Fatalf("expected critical, got %s", out.Findings[0].Severity)
+	if len(out.Findings) != 0 {
+		t.Fatalf("expected 0 findings, got %d", len(out.Findings))
 	}
 }
 

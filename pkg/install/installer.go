@@ -58,7 +58,7 @@ var KnownScanners = map[string]ScannerMeta{
 		Repo:     "https://github.com/trufflesecurity/trufflehog.git",
 		Language: "go",
 		Binary:   "trufflehog",
-		Ref:      "v3.105.0",
+		Ref:      "v3.95.9",
 	},
 }
 
@@ -358,13 +358,51 @@ func installPython(name, toolPath string) error {
 	cmd.Stdout = os.Stdout
 	cmd.Stderr = os.Stderr
 	if err := cmd.Run(); err != nil {
-		return fmt.Errorf("pip install %s: %w", name, err)
+		// Some packages use the legacy setuptools backend that is incompatible
+		// with editable installs and with build isolation in newer pip/setuptools.
+		// Patch the backend reference, install build dependencies in the venv,
+		// and build without isolation.
+		if patchErr := patchLegacySetuptoolsBackend(toolPath); patchErr != nil {
+			return fmt.Errorf("patching build backend for %s: %w", name, patchErr)
+		}
+		setup := exec.Command(pip, "install", "setuptools==68.2.2", "wheel")
+		setup.Stdout = os.Stdout
+		setup.Stderr = os.Stderr
+		if setupErr := setup.Run(); setupErr != nil {
+			return fmt.Errorf("installing build tooling for %s: %w", name, setupErr)
+		}
+		cmd = exec.Command(pip, "install", "--no-build-isolation", ".")
+		cmd.Dir = toolPath
+		cmd.Stdout = os.Stdout
+		cmd.Stderr = os.Stderr
+		if err2 := cmd.Run(); err2 != nil {
+			return fmt.Errorf("pip install %s: %w", name, err)
+		}
 	}
 
 	if err := linkPythonBinary(name, vd); err != nil {
 		return err
 	}
 	return nil
+}
+
+// patchLegacySetuptoolsBackend rewrites pyproject.toml build-backend entries
+// that reference the removed setuptools.backends.legacy module so the package
+// can be built with a modern setuptools build_meta backend.
+func patchLegacySetuptoolsBackend(toolPath string) error {
+	path := filepath.Join(toolPath, "pyproject.toml")
+	data, err := os.ReadFile(path)
+	if err != nil {
+		if os.IsNotExist(err) {
+			return nil
+		}
+		return err
+	}
+	updated := strings.ReplaceAll(string(data), "setuptools.backends.legacy:build", "setuptools.build_meta")
+	if updated == string(data) {
+		return nil
+	}
+	return os.WriteFile(path, []byte(updated), 0644)
 }
 
 func linkPythonBinary(name, vd string) error {
