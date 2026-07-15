@@ -34,11 +34,11 @@ report (SARIF, Markdown, HTML) in the configured output directory.`,
 		cfg.Sanitization.ExcludedPaths = cfg.Sanitization.EffectiveExcludedPaths(mode)
 
 		var stageNames []string
+		registry := pipeline.BuiltInRegistry(cfg)
 		switch mode {
 		case "fast":
 			stageNames = []string{"yara", "hiddenchars"}
 		case "thorough":
-			registry := pipeline.BuiltInRegistry(cfg)
 			if err := external.RegisterAll(registry, cfg); err != nil {
 				return fmt.Errorf("registering external scanners: %w", err)
 			}
@@ -52,7 +52,6 @@ report (SARIF, Markdown, HTML) in the configured output directory.`,
 			return fmt.Errorf("unknown mode %q; use fast or thorough", mode)
 		}
 
-		registry := pipeline.BuiltInRegistry(cfg)
 		stages, err := registry.Build(stageNames)
 		if err != nil {
 			return fmt.Errorf("building pipeline: %w", err)

@@ -1,4 +1,4 @@
-# safeanalyze v0.2.4
+# safeanalyze v0.2.5
 
 A Go CLI tool that sanitizes and scans untrusted code repositories **before** feeding them to AI assistants. Implements defense-in-depth inspired by [Zones of Distrust](https://github.com/bluvibytes/zone-of-distrust).
 
@@ -13,14 +13,16 @@ Prompt injection via malicious code is real. A repo can contain:
 
 **safeanalyze** runs a security pipeline so AI assistants never see raw, unverified code.
 
-## What's new in v0.2.4
+## What's new in v0.2.5
 
-- **ONNX model path fix:** `safeanalyze install model` now saves the model where the ML stage expects it (`~/.safeanalyze/models/deberta-v3-base-prompt-injection/model.onnx`).
-- **Severity-aware report capping** — `output.max_findings` now keeps critical/high findings first so signal isn't drowned by low-severity noise.
-- **Expanded prompt-injection YARA rules** — detects `strictly adhere to the following instruction`, `you are now`, `pretend you are`, `do not mention`, `I am the developer`, and plural instruction overrides.
+- **External scanners actually run in thorough mode** — fixed a registry reuse bug so enabled third-party scanners are executed.
+- **Clone URL validation** — rejects git option injection and shell metacharacters in `safeanalyze clone`.
+- **ONNX model install reuse** — downloads the model and tokenizer artifacts the ML stage expects.
+- **Severity-aware report capping** — `output.max_findings` keeps critical/high findings first.
+- **Expanded prompt-injection YARA rules** — detects `strictly adhere to...`, `you are now`, `pretend you are`, `do not mention`, `I am the developer`, and plural instruction overrides.
 - **Version-pinned, parallel scanner installer** — external scanners are cloned and built concurrently at known-good refs.
 - **Real `alexh-scrt/prompt-injection-scanner` bridge** — parses the scanner's actual JSON schema.
-- **Report duration in milliseconds** — `duration_ms` replaces `completed_at` so sub-second timings are visible.
+- **Report duration in milliseconds** — `duration_ms` replaces `completed_at`.
 - **Dependency-path config** — `node_modules` and `vendor` are scanned only in thorough mode by default.
 
 ## Pipeline

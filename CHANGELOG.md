@@ -5,6 +5,19 @@ All notable functional and non-functional changes to `safeanalyze` are documente
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.2.5] — 2026-07-15
+
+### Functional
+
+- **External scanners in thorough mode:** Fixed `cmd/scan.go` to use the same pipeline registry that registers enabled external scanners, so Semgrep, Bumblebee, prompt-injection-scanner, Gitleaks, and TruffleHog actually run when enabled.
+- **Clone URL validation:** `safeanalyze clone` now rejects git option injection (`-u`, `--upload-pack`) and shell/control characters. Only http(s), ssh, git, and scp-style URLs are accepted.
+- **ONNX model install reuse:** `safeanalyze install model` now delegates to `pkg/checks/ml.DownloadModel`, avoiding duplicated file lists and downloading tokenizer/config artifacts.
+
+### Non-functional
+
+- Added `cmd/clone_test.go` covering valid and malicious clone URLs.
+- Updated `CLAUDE.md` autoresearch loop with explicit premortem and red-team steps and security-hardening notes.
+
 ## [0.2.4] — 2026-07-15
 
 ### Functional

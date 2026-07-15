@@ -12,6 +12,8 @@ import (
 	"runtime"
 	"strings"
 	"sync"
+
+	"github.com/user/safeanalyze/pkg/checks/ml"
 )
 
 // ScannerMeta holds metadata for an installable scanner.
@@ -159,37 +161,14 @@ func InstallAll() error {
 	return nil
 }
 
-// InstallModel downloads the protectai prompt-injection ONNX model.
+// InstallModel downloads the protectai prompt-injection ONNX model and its
+// tokenizer/config artifacts to the default safeanalyze models directory.
 func InstallModel() error {
 	dir, err := modelDir()
 	if err != nil {
 		return err
 	}
-	modelDir := filepath.Join(dir, "deberta-v3-base-prompt-injection")
-	if err := os.MkdirAll(modelDir, 0755); err != nil {
-		return fmt.Errorf("creating model dir: %w", err)
-	}
-
-	const url = "https://huggingface.co/protectai/deberta-v3-base-prompt-injection/resolve/main/onnx/model.onnx"
-	dst := filepath.Join(modelDir, "model.onnx")
-	if err := downloadFile(url, dst); err != nil {
-		// Fallback to huggingface-cli if available.
-		if hfErr := installModelViaHFCLI(modelDir); hfErr == nil {
-			return nil
-		}
-		return err
-	}
-	return nil
-}
-
-func installModelViaHFCLI(dir string) error {
-	if _, err := exec.LookPath("huggingface-cli"); err != nil {
-		return err
-	}
-	cmd := exec.Command("huggingface-cli", "download", "protectai/deberta-v3-base-prompt-injection", "--local-dir", dir)
-	cmd.Stdout = os.Stdout
-	cmd.Stderr = os.Stderr
-	return cmd.Run()
+	return ml.DownloadModel(dir)
 }
 
 // ResolveBinary returns the path to an installed binary or empty string.

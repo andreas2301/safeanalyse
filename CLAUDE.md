@@ -32,12 +32,20 @@
 To continuously improve detection on test data, follow this iterative cycle:
 
 1. **Measure baseline** — run `safeanalyze scan --mode thorough` against the test corpus and record findings + durations.
-2. **Analyze gaps** — compare findings to known prompt-injection patterns. Look for false negatives and false positives.
-3. **Hypothesize** — pick one concrete improvement: a new YARA rule, a tuned entropy threshold, a smaller/faster model, or a file-size limit.
-4. **Implement** — make the smallest change that tests the hypothesis.
-5. **Evaluate** — re-run the same test corpus. Did recall or precision improve? Did latency meet the mode's budget?
-6. **Keep or revert** — if the metric improved, commit and bump the version. If not, revert and try another hypothesis.
-7. **Repeat** until no measurable progress remains.
+2. **Premortem** — before changing code, ask: "If this improvement lands and the tool still fails in production, what most likely broke?" Document the biggest risks (false positives, latency blow-out, missing variants).
+3. **Analyze gaps** — compare findings to known prompt-injection patterns. Look for false negatives and false positives.
+4. **Hypothesize** — pick one concrete improvement: a new YARA rule, a tuned entropy threshold, a smaller/faster model, or a file-size limit.
+5. **Implement** — make the smallest change that tests the hypothesis.
+6. **Red-team** — try to evade the new check with rephrased, encoded, or multi-language injections. If it is trivially bypassed, revert or harden.
+7. **Evaluate** — re-run the same test corpus. Did recall or precision improve? Did latency meet the mode's budget?
+8. **Keep or revert** — if the metric improved, commit and bump the version. If not, revert and try another hypothesis.
+9. **Repeat** until no measurable progress remains.
+
+## Security hardening notes
+
+- `safeanalyze clone` validates URLs to prevent git option injection (`-u`, `--upload-pack`, shell metacharacters). Permitted formats are http(s), ssh, git, and scp-style.
+- External scanners run as separate processes with non-fatal error handling; a missing or crashing scanner must not abort the whole pipeline.
+- Fast mode intentionally avoids ML inference, external scanners, and repository walking to keep latency deterministic.
 
 ## Fast-mode latency budget
 

@@ -25,6 +25,10 @@ Examples:
 	Args: cobra.RangeArgs(1, 2),
 	RunE: func(cmd *cobra.Command, args []string) error {
 		url := args[0]
+		if err := validateGitURL(url); err != nil {
+			return fmt.Errorf("invalid clone URL: %w", err)
+		}
+
 		keepRaw, _ := cmd.Flags().GetBool("keep-raw")
 		runIngest, _ := cmd.Flags().GetBool("ingest")
 
@@ -96,4 +100,31 @@ Examples:
 func init() {
 	cloneCmd.Flags().Bool("keep-raw", false, "keep the raw cloned repository after analysis")
 	cloneCmd.Flags().Bool("ingest", true, "automatically run ingest after clone")
+}
+
+// validateGitURL rejects URLs that could be interpreted as git options or
+// contain shell/control characters. Permitted forms are http(s)://, ssh://,
+// git://, and scp-style user@host:path URLs.
+func validateGitURL(url string) error {
+	if url == "" {
+		return fmt.Errorf("URL is empty")
+	}
+	if strings.HasPrefix(url, "-") {
+		return fmt.Errorf("URL must not start with '-'")
+	}
+	forbidden := []string{"\n", "\r", "\t", ";", "|", "&", "$", "`", "\\", "<", ">"}
+	for _, c := range forbidden {
+		if strings.Contains(url, c) {
+			return fmt.Errorf("URL contains forbidden character %q", c)
+		}
+	}
+	if strings.HasPrefix(url, "http://") || strings.HasPrefix(url, "https://") ||
+		strings.HasPrefix(url, "ssh://") || strings.HasPrefix(url, "git://") {
+		return nil
+	}
+	// scp-style: [user@]host:path
+	if idx := strings.Index(url, "@"); idx > 0 && strings.Contains(url[idx:], ":") {
+		return nil
+	}
+	return fmt.Errorf("URL must use http(s), ssh, git, or scp-style format")
 }
