@@ -80,7 +80,13 @@ type MLConfig struct {
 	BatchSize         int      `yaml:"batch_size"`
 	AllowedExtensions []string `yaml:"allowed_extensions"`
 	ExcludedPaths     []string `yaml:"excluded_paths"`
-	FailOnFindings    bool     `yaml:"fail_on_findings"`
+	// MaxFileSizeBytes skips files larger than this limit to avoid feeding
+	// multi-megabyte JSON/lockfiles to the model. 0 means unlimited.
+	MaxFileSizeBytes int `yaml:"max_file_size_bytes"`
+	// TimeoutSeconds bounds the total time the ML stage may run, including
+	// model loading. 0 means no additional timeout (the parent context governs).
+	TimeoutSeconds int `yaml:"timeout_seconds"`
+	FailOnFindings bool `yaml:"fail_on_findings"`
 }
 
 // OutputConfig controls how results are formatted.
@@ -172,6 +178,8 @@ func DefaultConfig() *Config {
 			BatchSize:         4,
 			AllowedExtensions: []string{".go", ".py", ".js", ".ts", ".jsx", ".tsx", ".rs", ".java", ".c", ".cpp", ".h", ".rb", ".php", ".swift", ".kt", ".md", ".txt", ".yaml", ".yml", ".json", ".sql"},
 			ExcludedPaths:     []string{".git", "node_modules", "vendor", "target", "build", "dist", ".venv", "__pycache__", ".idea", ".vscode"},
+			MaxFileSizeBytes:  1024 * 1024, // 1 MB
+			TimeoutSeconds:    300,         // 5 minutes total budget for the stage
 			FailOnFindings:    false,
 		},
 		Output: OutputConfig{

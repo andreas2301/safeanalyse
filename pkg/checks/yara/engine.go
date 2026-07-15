@@ -95,8 +95,7 @@ func (e *Engine) LoadBuiltins() {
 			Description: "Comment containing prompt injection keywords",
 			Severity:    report.SeverityCritical,
 			Patterns: []string{
-				`(?i)ignore\s+(all\s+)?previous\s+instruction`,
-				`(?i)ignore\s+(all\s+)?prior\s+instruction`,
+				`(?i)ignore\s+(all\s+|every\s+)?(previous\s+|prior\s+)?instructions?\b`,
 				`(?i)strictly\s+adhere\s+to\s+the\s+following\s+instruction`,
 				`(?i)system\s+prompt`,
 				`(?i)disregard\s+your\s+instructions`,
@@ -183,6 +182,41 @@ func (e *Engine) LoadBuiltins() {
 				`(?i)persistence`,
 				`(?i)keylogger`,
 				`(?i)rootkit`,
+			},
+		},
+		{
+			Name:        "indirect_prompt_injection",
+			Description: "Content that may carry an indirect prompt-injection payload (user comment, email, web content, tool input delimiter)",
+			Severity:    report.SeverityHigh,
+			Patterns: []string{
+				`(?i)\[user\s+(input|comment|message)\s*[:\-]`,
+				`(?i)\b(from|subject)\s*:\s*.*ignore\s+(all\s+)?previous`,
+				`(?i)<!--\s*ignore\s+(all\s+)?previous\s+instruction`,
+				`(?i)\{\{.*user.*input.*\}\}`,
+				`(?i)<user>(?s:.*?</user>)`,
+				`(?i)\buser[_-]?input\s*[:=]`,
+				`(?i)\bemail[_-]?body\s*[:=]`,
+			},
+		},
+		{
+			Name:        "llm_tool_injection",
+			Description: "Suspicious LLM tool or function-call payload",
+			Severity:    report.SeverityHigh,
+			Patterns: []string{
+				`(?i)\{\s*["']name["']\s*:\s*["'].*["']\s*,\s*["']arguments["']\s*:\s*\{`,
+				`(?i)<function_calls>`,
+				`(?i)<tool>.*?</tool>`,
+				`(?i)functions\.[a-zA-Z_]+\s*:\s*`,
+			},
+		},
+		{
+			Name:        "delimiter_breakout",
+			Description: "Attempt to break out of a quoted or delimited context",
+			Severity:    report.SeverityMedium,
+			Patterns: []string{
+				`"""\s*\n.*(?i)(ignore|disregard|system\s+prompt)`,
+				`'''\s*\n.*(?i)(ignore|disregard|system\s+prompt)`,
+				`(?i)(ignore|disregard).{0,30}\n\s*["']{3}`,
 			},
 		},
 	}

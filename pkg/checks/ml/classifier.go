@@ -10,6 +10,7 @@ import (
 	"os"
 	"path/filepath"
 	"strings"
+	"time"
 	"unicode/utf8"
 
 	"github.com/knights-analytics/hugot"
@@ -41,7 +42,9 @@ type Stage struct {
 	batchSize       int
 	allowedExts     []string
 	excludedPaths   []string
-	enabled         bool
+	maxFileSizeBytes int
+	timeoutSeconds   int
+	enabled          bool
 }
 
 // NewStage creates a new ML prompt-injection pipeline stage.
@@ -55,12 +58,14 @@ func NewStage(cfg *config.MLConfig) *Stage {
 		batchSize = defaultBatchSize
 	}
 	return &Stage{
-		modelPath:     defaultModelPath(cfg.ModelPath),
-		threshold:     threshold,
-		batchSize:     batchSize,
-		allowedExts:   cfg.AllowedExtensions,
-		excludedPaths: cfg.ExcludedPaths,
-		enabled:       cfg.Enabled,
+		modelPath:        defaultModelPath(cfg.ModelPath),
+		threshold:        threshold,
+		batchSize:        batchSize,
+		allowedExts:      cfg.AllowedExtensions,
+		excludedPaths:    cfg.ExcludedPaths,
+		maxFileSizeBytes: cfg.MaxFileSizeBytes,
+		timeoutSeconds:   cfg.TimeoutSeconds,
+		enabled:          cfg.Enabled,
 	}
 }
 
@@ -84,11 +89,17 @@ func (s *Stage) Run(ctx context.Context, target string, input *report.Report) (*
 		return out, nil
 	}
 
+	if s.timeoutSeconds > 0 {
+		var cancel context.CancelFunc
+		ctx, cancel = context.WithTimeout(ctx, time.Duration(s.timeoutSeconds)*time.Second)
+		defer cancel()
+	}
+
 	modelFile := filepath.Join(s.modelPath, "model.onnx")
 	if _, err := os.Stat(modelFile); os.IsNotExist(err) {
 		out.AddError(stageName, fmt.Sprintf(
-			"ONNX model not found at %s. Download it with DownloadModel(%q) or place %s in the model directory.",
-			modelFile, s.modelPath, onnxFile,
+			"ONNX model not found at %s. Download it with DownloadModel(%q) or place model.onnx in the model directory.",
+			modelFile, s.modelPath,
 		))
 		return out, nil
 	}
@@ -124,6 +135,9 @@ func (s *Stage) Run(ctx context.Context, target string, input *report.Report) (*
 		default:
 		}
 
+		if s.maxFileSizeBytes > 0 && len(content) > s.maxFileSizeBytes {
+			return nil
+		}
 		if len(s.allowedExts) > 0 && !containsExt(s.allowedExts, filepath.Ext(rel)) {
 			return nil
 		}
@@ -161,7 +175,7 @@ func (s *Stage) Run(ctx context.Context, target string, input *report.Report) (*
 					out.AddFinding(report.Finding{
 						RuleID:       "ml_prompt_injection",
 						Title:        "ML prompt-injection detected",
-						Description:  "Text chunk classified as a prompt-injection attempt by the embedded DeBERTa model.",
+						Description:  "Text chunk classified as a prompt-injection attempt by the embedded ONNX model.",
 						Severity:     severity,
 						Category:     "prompt_injection",
 						File:         rel,

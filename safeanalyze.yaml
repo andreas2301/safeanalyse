@@ -76,10 +76,12 @@ yara:
   fail_on_findings: true
 
 ml:
-  enabled: true
+  enabled: false
   model_path: ""
   threshold: 0.5
   batch_size: 4
+  max_file_size_bytes: 1048576
+  timeout_seconds: 300
   allowed_extensions:
     - .go
     - .py

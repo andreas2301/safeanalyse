@@ -5,6 +5,20 @@ All notable functional and non-functional changes to `safeanalyze` are documente
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.2.8] — 2026-07-15
+
+### Functional
+
+- **ML stage guardrails:** Added `ml.max_file_size_bytes` (default 1 MB) and `ml.timeout_seconds` (default 5 minutes) so the stochastic stage cannot hang indefinitely or ingest multi-megabyte lockfiles. ML remains optional and is disabled by default until a model that fits the ~2 GB RAM budget is validated.
+- **Indirect prompt-injection rules:** New YARA rules `indirect_prompt_injection`, `llm_tool_injection`, and `delimiter_breakout` catch user-comment/email/web-content injections, tool/function-call payloads, and delimiter-breakout attempts.
+- **Broader "ignore" pattern:** The `prompt_injection_comment` rule now matches "ignore every instruction", "ignore all prior instructions", and variants without requiring the literal word "previous".
+- **Red-team and premortem scripts:** Added `scripts/redteam.sh` (adversarial payload sweep against `safeanalyze inspect`) and `scripts/premortem.sh` (failure-mode questionnaire) to support the autoresearch improvement loop.
+
+### Non-functional
+
+- Verified fast-mode latency remains ~10 ms per adversarial payload, well under the 100 ms reverse-proxy budget.
+- Documented that the current default DeBERTa model consumes more than the requested ~2 GB RAM; smaller compatible models need further validation.
+
 ## [0.2.7] — 2026-07-15
 
 ### Functional
