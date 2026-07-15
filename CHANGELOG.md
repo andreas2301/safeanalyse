@@ -1,0 +1,62 @@
+# Changelog
+
+All notable functional and non-functional changes to `safeanalyze` are documented in this file.
+
+The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
+and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
+
+## [0.2.1] — 2026-07-15
+
+### Functional
+
+- **Scan modes:** `scan --mode fast` and `scan --mode thorough`. Fast mode runs only YARA + hidden-char checks for reverse-proxy use; thorough mode runs the full suite.
+- **Dependency-path handling:** `node_modules` and `vendor` are no longer blanket-excluded. They are listed under `sanitization.dependency_paths` and are skipped only in fast mode; thorough mode scans them with normal limits.
+- **Report finding cap:** New `output.max_findings` config (default 10,000) prevents multi-gigabyte reports on noisy targets.
+- **Entropy limits:** Entropy analysis now caps findings per file at 1,000 and ignores strings longer than 1,000 bytes, eliminating lockfile blow-up.
+- **Entropy file-size gate:** Entropy stage respects `entropy.max_file_size_bytes` (default 5 MB) and skips oversized files with an error record.
+
+### Non-functional
+
+- Reduced `duriantaco/skylos` thorough-scan time from ~576 s to ~86 s.
+- Reduced `uiuc-kang-lab/InjecAgent` thorough-scan time from ~15 s to ~5 s.
+- All report files now fit within GitHub's 100 MB limit.
+- Reports include `safeanalyze_version` and `scan_mode` metadata.
+
+## [0.2.0] — 2026-07-15
+
+### Functional
+
+- **Pluggable pipeline architecture:** New `pkg/pipeline` DAG scheduler with parallel independent stages and deterministic ordering.
+- **Unified report model:** New `pkg/report` with `Report`, `Finding`, and `Summary` types consumed by all checks and writers.
+- **External scanner bridges:** Added wrappers for Semgrep, Perplexity Bumblebee, `prompt-injection-scanner`, Gitleaks, and TruffleHog in `pkg/checks/external`.
+- **Source-based installer:** New `safeanalyze install` command and `pkg/install` for cloning/building scanners and downloading the ONNX model.
+- **Stochastic ML check:** Added ONNX prompt-injection classifier using `protectai/deberta-v3-base-prompt-injection` via `hugot`.
+- **Multi-format reporting:** SARIF v2.1.0, Markdown summary, self-contained HTML dashboard, and JSON output.
+- **Fast inspect command:** New `safeanalyze inspect` for Squid `external_acl` helpers, returning `OK`/`ERR`.
+- **Versioning:** Added `pkg/version`, `--version` flag, and version metadata in reports.
+- **Bug fixes:** Corrected `pkg/sandbox` `absPath()` to return the actual absolute path; removed duplicate `cloneCmd` registration.
+
+### Non-functional
+
+- Existing YARA, entropy, and hidden-char checks moved to `pkg/checks/*` and adapted to the `pipeline.Stage` interface.
+- Deterministic file iteration and stable report sorting across concurrent execution.
+- Added pipeline engine unit tests covering topological order, cycle detection, unknown dependencies, and error propagation.
+
+## [0.1.0] — pre-refactor baseline
+
+### Functional
+
+- Sequential scanner pipeline: external scanners → YARA rules → entropy → hidden chars.
+- Built-in YARA-like rule engine for prompt injection, obfuscation, shells, credentials, etc.
+- Shannon entropy, base64/hex blob detection.
+- Hidden Unicode character detection (zero-width, bidi, control, whitespace).
+- Sanitization: AST-aware comment stripping, non-ASCII removal, size limits.
+- Markdown/JSON/plain output formatting.
+- Docker/Firejail sandbox wrappers.
+- Git clone wrapper with optional cleanup.
+
+### Non-functional
+
+- Cobra-based CLI.
+- YAML configuration.
+- No report model, no parallel execution, no version metadata.
