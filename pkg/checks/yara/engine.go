@@ -229,28 +229,9 @@ func (e *Engine) LoadBuiltins() {
 			Severity:    report.SeverityHigh,
 			Patterns: []string{
 				`(?i)YmFzZTY0.*(?i)aWdub3Jl.*cHJldmlvdXM`, // base64 fragments containing ignore/previous
-				`(?i)aWdub3JlIHByZXZpb3VzIGluc3RydWN0aW9ucw==`, // "ignore previous instructions"
-				`(?i)aWdub3JlIGFsbCBwcmV2aW91cyBpbnN0cnVjdGlvbnM=`, // "ignore all previous instructions"
-				`(?i)aWdub3JlIGV2ZXJ5IGluc3RydWN0aW9u`, // "ignore every instruction"
-				`(?i)c3lzdGVtIHByb21wdA==`, // "system prompt"
-				`(?i)ZGV2ZWxvcGVyIG1vZGU=`, // "developer mode"
-				`(?i)amFpbGJyZWFr`, // "jailbreak"
-				`(?i)REFOIG1vZGU=`, // "DAN mode"
-				`(?i)ZGlzcmVnYXJkIHlvdXIgaW5zdHJ1Y3Rpb25z`, // "disregard your instructions"
-				`(?i)c3RyaWN0bHkgYWRoZXJlIHRvIHRoZSBmb2xsb3dpbmcgaW5zdHJ1Y3Rpb24=`, // "strictly adhere..."
-				`(?i)eW91IGFyZSBub3c=`, // "you are now"
-				`(?i)cHJldGVuZCB5b3UgYXJl`, // "pretend you are"
 				`(?i)ignore%20all%20previous%20instruction`,
-				`(?i)ignore%20previous%20instructions`,
-				`(?i)ignore%20every%20instruction`,
 				`(?i)ignore\+all\+previous\+instruction`,
-				`(?i)ignore\+previous\+instructions`,
 				`\\x69\\x67\\x6e\\x6f\\x72\\x65`, // hex-encoded "ignore"
-				`(?i)69676e6f72652070726576696f757320696e737472756374696f6e73`, // hex "ignore previous instructions"
-				`(?i)69676e6f726520616c6c2070726576696f757320696e737472756374696f6e73`, // hex "ignore all previous instructions"
-				`(?i)73797374656d2070726f6d7074`, // hex "system prompt"
-				`(?i)646576656c6f706572206d6f6465`, // hex "developer mode"
-				`(?i)6a61696c627265616b`, // hex "jailbreak"
 			},
 		},
 		{

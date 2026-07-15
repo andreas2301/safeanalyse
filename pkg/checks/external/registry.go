@@ -25,7 +25,7 @@ func RegisterAll(r *pipeline.Registry, cfg *config.Config) error {
 	}
 
 	factories := map[string]func() pipeline.Stage{
-		"semgrep":                  func() pipeline.Stage { return NewSemgrepStage() },
+		"semgrep":                  func() pipeline.Stage { return NewSemgrepStage(cfg.Sanitization.ExcludedPaths) },
 		"bumblebee":                func() pipeline.Stage { return NewBumblebeeStage() },
 		"prompt-injection-scanner": func() pipeline.Stage { return NewPromptInjectionScannerStage() },
 		"gitleaks":                 func() pipeline.Stage { return NewGitleaksStage() },

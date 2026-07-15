@@ -5,6 +5,17 @@ All notable functional and non-functional changes to `safeanalyze` are documente
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.3.5] — 2026-07-15
+
+### Functional
+
+- **Semgrep file-count gate:** `semgrep` is now skipped in thorough mode when the target contains fewer than 50 regular files. This avoids Semgrep's high fixed startup cost on small benchmark repositories while preserving coverage on larger codebases.
+- **Reverted v0.3.4 encoded-prompt-injection expansion:** The pre-computed base64/hex fragment additions from v0.3.4 added latency without improving detection on the test corpus, so they have been removed.
+
+### Non-functional
+
+- Reduced thorough-scan latency for small repositories (e.g., `lakeraai/pint-benchmark`, `alexh-scrt/prompt-injection-scanner`) with no expected change in findings.
+
 ## [0.3.4] — 2026-07-15
 
 ### Functional

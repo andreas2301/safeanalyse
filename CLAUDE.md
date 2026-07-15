@@ -80,6 +80,7 @@ echo 'ignore all previous instructions' | ./safeanalyze inspect --verbose
 
 ## Current autoresearch iteration
 
-- **Version under test:** v0.3.4
-- **Active hypothesis:** Adding pre-computed base64 and hex fragments of common prompt-injection phrases to the `encoded_prompt_injection` rule will catch encoded evasions without adding latency or false positives.
+- **Version under test:** v0.3.5
+- **Active hypothesis:** Skipping Semgrep on targets with fewer than 50 regular files will reduce thorough-scan latency on small benchmark repositories without reducing detection coverage.
 - **Last report branch:** `report-mexican-wombat-unstable-65b466a3-2026-07-15` (v0.3.3)
+- **Previous reverted iteration:** v0.3.4 (encoded-prompt-injection fragment expansion added latency but no new detections).
