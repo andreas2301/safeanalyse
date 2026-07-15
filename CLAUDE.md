@@ -29,23 +29,83 @@
 
 ## Autoresearch improvement loop
 
-To continuously improve detection on test data, follow this iterative cycle:
+The project uses an iterative, measurement-driven improvement loop inspired by [karpathy/autoresearch](https://github.com/karpathy/autoresearch). The goal is to keep improving detection coverage, precision, and latency on the prompt-injection test corpus until two consecutive iterations show no measurable progress.
 
-1. **Measure baseline** — run `safeanalyze scan --mode thorough` against the test corpus and record findings + durations.
+### Prerequisites
+
+- Go toolchain installed (`go test ./...` and `go build .` must work).
+- Git with push access to the repository.
+- Test corpus available under `/tmp/`:
+  - `safeanalyze-BIPIA`
+  - `safeanalyze-InjecAgent`
+  - `safeanalyze-pint-benchmark`
+  - `safeanalyze-prompt-injection-scanner`
+  - `safeanalyze-skylos`
+  - `safeanalyze-doc-scenarios.html`
+  - `safeanalyze-doc-webagents.html`
+- External scanners installed via `./safeanalyze install --all` (Semgrep, TruffleHog, prompt-injection-scanner, etc.).
+- Enough disk space and memory for the test corpus. Note: the default DeBERTa ONNX model uses ~11 GB RAM at load/inference time, so the stochastic ML stage is currently disabled by default until a sub-2 GB model is validated.
+- A stable, otherwise idle machine for duration comparisons (run-to-run variance should be <10 % for large targets).
+
+### Iteration steps
+
+1. **Measure baseline** — run `safeanalyze scan --mode thorough` against the test corpus and record findings + durations from `safeanalyze.json` (`duration_ms`) and `duration.txt`.
 2. **Premortem** — run `./scripts/premortem.sh` and ask: "If this improvement lands and the tool still fails in production, what most likely broke?" Document the biggest risks (false positives, latency blow-out, missing variants).
 3. **Analyze gaps** — compare findings to known prompt-injection patterns. Look for false negatives and false positives.
-4. **Hypothesize** — pick one concrete improvement: a new YARA rule, a tuned entropy threshold, a smaller/faster model, or a file-size limit.
-5. **Implement** — make the smallest change that tests the hypothesis.
+4. **Hypothesize** — pick one concrete improvement: a new YARA rule, a tuned entropy threshold, a smaller/faster model, a file-size limit, or parallelism.
+5. **Implement** — make the smallest change that tests the hypothesis. Do not combine multiple unrelated changes in one iteration.
 6. **Red-team** — run `./scripts/redteam.sh`. Try to evade the new check with rephrased, encoded, or multi-language injections. If it is trivially bypassed, revert or harden.
-7. **Evaluate** — re-run the same test corpus. Did recall or precision improve? Did latency meet the mode's budget?
-8. **Keep or revert** — if the metric improved, commit and bump the version. If not, revert and try another hypothesis.
-9. **Repeat** until no measurable progress remains.
+7. **Evaluate** — re-run the same test corpus. Compare:
+   - Total and per-target finding counts.
+   - Wall-clock duration per target (`duration_ms`).
+   - Fast-mode latency (`./scripts/redteam.sh`).
+   - Any new errors or scanner skips.
+8. **Keep or revert** — if coverage, precision, or latency improved, commit and bump the version. If not, revert and try another hypothesis.
+9. **Repeat** until two consecutive iterations show no measurable improvement.
+
+### Decision rules
+
+- **Accept** the iteration if:
+  - Finding count increases without obvious false-positive inflation, **or**
+  - Latency decreases with unchanged findings, **or**
+  - A security hardening fix removes a real foot-gun without regressing metrics.
+- **Revert** the iteration if:
+  - Finding count drops, **or**
+  - Latency increases without a coverage gain, **or**
+  - The change introduces non-deterministic output or new errors.
+- **Stagnation** — stop the loop after two consecutive accepted/reverted iterations produce no improvement in detection coverage, precision, or latency.
+
+### Process review
+
+After every five iterations (or immediately after two consecutive no-improvement iterations), review the process itself:
+
+- Are we measuring the right metric? Should we add precision/recall against labeled test data?
+- Is the test corpus still representative? Are there other public prompt-injection benchmarks or URLs we should include?
+- Are there obvious optimizations we skipped (e.g., faster file walking, smaller model, capping noisy rules)?
+- Are report branches becoming too large? Should old report branches be archived?
+
+Document the outcome of the review in CLAUDE.md or the next commit message.
+
+### Report branches
+
+- Create each report branch as a Git worktree from `master`:
+  ```bash
+  git worktree add -B report-<devicename>-<date> .worktrees/report-<devicename>-<date> master
+  ```
+- Generate a random Deadpool-style device name for each run (e.g., `boom-zany-sarcasm-cd4dee48`).
+- Build the binary in the worktree, run `./scripts/redteam.sh`, run the corpus scan, and write a `COMPARISON.md` against the previous accepted version.
+- Push only the report branch:
+  ```bash
+  git push -u origin report-<devicename>-<date>
+  ```
+- Keep tool improvements on `master`; never commit build artifacts or source-code experiments to report branches.
 
 ## Security hardening notes
 
 - `safeanalyze clone` validates both the URL and the destination directory to prevent git option injection (`-u`, `--upload-pack`, shell metacharacters). It invokes `git clone` with a `--` separator so the URL and directory are always treated as positional arguments.
 - External scanners run as separate processes with non-fatal error handling; a missing or crashing scanner must not abort the whole pipeline.
 - Fast mode intentionally avoids ML inference, external scanners, and repository walking to keep latency deterministic.
+- Potential secret values in finding `match` fields are redacted before reports are written, so report branches can be pushed publicly.
 
 ## Fast-mode latency budget
 
@@ -53,11 +113,11 @@ To continuously improve detection on test data, follow this iterative cycle:
 - Fast mode runs only `yara` and `hiddenchars` stages on a single payload.
 - No ML inference, no external scanners, no entropy analysis, no repository walk.
 
-## Report branches
+## Report contents
 
-- Report branches contain only generated reports under `reports/`.
-- Do not commit tool source code or build artifacts to report branches.
 - Each report directory includes `safeanalyze.json`, `safeanalyze.md`, `safeanalyze.html`, `safeanalyze.sarif`, and `duration.txt`.
+- Reports must include `safeanalyze_version` and `scan_mode` metadata.
+- Durations are recorded in milliseconds (`duration_ms`), not wall-clock end times.
 
 ## Useful commands
 
@@ -76,12 +136,28 @@ echo 'ignore all previous instructions' | ./safeanalyze inspect --verbose
 
 # Install dependencies
 ./safeanalyze install --all
+
+# Autoresearch helpers
+./scripts/redteam.sh
+./scripts/premortem.sh
 ```
 
 ## Current autoresearch iteration
 
 - **Version under test:** v0.3.7
-- **Active hypothesis:** Parallelizing file scanning in the YARA stage will reduce thorough-mode wall-clock latency on large repositories without changing detection coverage.
-- **Last accepted improvement:** v0.3.7 parallel YARA scanning.
-- **Previous accepted improvement:** v0.3.5 Semgrep file-count gate (report branch `report-chimichanga-taco-beaver-18c1c65c-2026-07-15`).
-- **Previous reverted iteration:** v0.3.4 (encoded-prompt-injection fragment expansion added latency but no new detections).
+- **Status:** Accepted.
+- **Active hypothesis result:** Parallelizing file scanning in the YARA stage reduced thorough-mode wall-clock latency on large repositories without changing detection coverage.
+- **Report branch:** `report-boom-zany-sarcasm-cd4dee48-2026-07-15`
+- **Comparison baseline:** v0.3.5 (`report-chimichanga-taco-beaver-18c1c65c-2026-07-15`).
+- **Key metrics vs. v0.3.5:**
+  - `repos/duriantaco-skylos`: 24 298 ms → 8 925 ms, findings unchanged (1371)
+  - `repos/uiuc-injecagent`: 9 286 ms → 2 372 ms, findings unchanged (6924)
+  - `repos/microsoft-bipia`: 4 247 ms → 3 235 ms, findings unchanged (331)
+  - Total findings: 8845 (unchanged)
+- **Reverted iterations:**
+  - v0.3.4 — encoded-prompt-injection fragment expansion added latency but no new detections.
+  - v0.3.8 (provisional) — parallelizing entropy and hiddenchars file scanning did not improve latency and was reverted before release.
+- **Next candidates:**
+  - Evaluate a smaller prompt-injection classifier that fits the ~2 GB RAM budget and actually improves detection on the corpus.
+  - Add targeted YARA rules for chat-template boundary tokens or indirect tool-output injection if gap analysis shows missing true positives.
+  - Review the `safeanalyze.yaml` dependency-path list and decide whether `node_modules`/`vendor` should be scanned in thorough mode or moved to `excluded_paths`.
