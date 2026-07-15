@@ -144,20 +144,16 @@ echo 'ignore all previous instructions' | ./safeanalyze inspect --verbose
 
 ## Current autoresearch iteration
 
-- **Version under test:** v0.3.7
-- **Status:** Accepted.
-- **Active hypothesis result:** Parallelizing file scanning in the YARA stage reduced thorough-mode wall-clock latency on large repositories without changing detection coverage.
-- **Report branch:** `report-boom-zany-sarcasm-cd4dee48-2026-07-15`
-- **Comparison baseline:** v0.3.5 (`report-chimichanga-taco-beaver-18c1c65c-2026-07-15`).
-- **Key metrics vs. v0.3.5:**
-  - `repos/duriantaco-skylos`: 24 298 ms → 8 925 ms, findings unchanged (1371)
-  - `repos/uiuc-injecagent`: 9 286 ms → 2 372 ms, findings unchanged (6924)
-  - `repos/microsoft-bipia`: 4 247 ms → 3 235 ms, findings unchanged (331)
-  - Total findings: 8845 (unchanged)
-- **Reverted iterations:**
+- **Version under test:** v0.3.8
+- **Status:** Accepted (no default-corpus change).
+- **Change:** Hardened the stochastic ML stage for smaller ONNX models (robust label lookup, 512-token chunk limit).
+- **Why not enabled by default:** The evaluated 256 MB DistilBERT model (`fmops/distilbert-prompt-injection-onnx`) fits the ~2 GB RAM budget (~2 GB RSS) but classifies nearly every chunk as injection, producing unacceptable false positives on the test corpus. A suitable small model still needs to be identified.
+- **Last accepted corpus improvement:** v0.3.7 parallel YARA scanning (`report-boom-zany-sarcasm-cd4dee48-2026-07-15`).
+- **Previous reverted iterations:**
   - v0.3.4 — encoded-prompt-injection fragment expansion added latency but no new detections.
-  - v0.3.8 (provisional) — parallelizing entropy and hiddenchars file scanning did not improve latency and was reverted before release.
+  - v0.3.8 (parallel entropy/hiddenchars) — did not improve latency, reverted before release.
+- **Stagnation check:** Two consecutive no-corpus-gain attempts have now occurred (parallel entropy/hiddenchars, small-model ML). Further progress likely requires either a better small prompt-injection model or a new detection-rule hypothesis backed by gap analysis.
 - **Next candidates:**
-  - Evaluate a smaller prompt-injection classifier that fits the ~2 GB RAM budget and actually improves detection on the corpus.
-  - Add targeted YARA rules for chat-template boundary tokens or indirect tool-output injection if gap analysis shows missing true positives.
-  - Review the `safeanalyze.yaml` dependency-path list and decide whether `node_modules`/`vendor` should be scanned in thorough mode or moved to `excluded_paths`.
+  - Evaluate `protectai/deberta-v3-small-prompt-injection-v2` or another sub-2 GB model if a direct ONNX download becomes available.
+  - Add targeted YARA rules for chat-template boundary tokens or tool-output injection only if gap analysis shows missing true positives.
+  - Decide whether `node_modules`/`vendor` should remain in `dependency_paths` for thorough mode.

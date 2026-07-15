@@ -5,6 +5,19 @@ All notable functional and non-functional changes to `safeanalyze` are documente
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.3.8] — 2026-07-15
+
+### Functional
+
+- **ML stage robustness for smaller models:**
+  - `injectionProbability` now searches for the `INJECTION` label across all classification outputs instead of assuming the first output is the injection logit. This makes the stage compatible with models that return labels in either order.
+  - Reduced `maxChunkChars` from 1800 to 1000 so smaller models with a 512-token context window no longer fail on long subword-heavy chunks.
+
+### Non-functional
+
+- The stochastic ML stage remains disabled by default until a sub-2 GB model is validated that improves detection on the test corpus without excessive false positives.
+- Default corpus scan (ML disabled) remains unchanged: 8845 findings.
+
 ## [0.3.7] — 2026-07-15
 
 ### Functional

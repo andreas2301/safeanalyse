@@ -28,11 +28,13 @@ const (
 	defaultThreshold = 0.5
 	defaultBatchSize = 4
 
-	// maxChunkChars is a conservative byte budget that maps roughly to the
-	// model's 512-token max_position_embeddings (≈ 4 chars/token).
-	maxChunkChars = 1800
+	// maxChunkChars is a conservative byte budget that maps to the model's
+	// 512-token max_position_embeddings. DistilBERT uses ~2-4 chars per token
+	// on normal text and fewer on code with subwords, so 1000 chars keeps us
+	// safely under the limit while avoiding graph shape errors.
+	maxChunkChars = 1000
 	// overlapChars keeps context at chunk boundaries.
-	overlapChars = 180
+	overlapChars = 150
 )
 
 // Stage classifies source/text chunks for prompt-injection attempts.
@@ -265,6 +267,14 @@ func alignUTF8(s string, i int) int {
 func injectionProbability(outputs []pipelines.ClassificationOutput) float64 {
 	if len(outputs) == 0 {
 		return 0
+	}
+	// Hugot may return labels in either order depending on the model config.
+	// Prefer the output whose label is "INJECTION", otherwise fall back to the
+	// first logit/score.
+	for _, o := range outputs {
+		if strings.EqualFold(o.Label, "INJECTION") {
+			return float64(o.Score)
+		}
 	}
 	o := outputs[0]
 	switch strings.ToUpper(o.Label) {
