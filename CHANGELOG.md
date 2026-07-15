@@ -5,6 +5,18 @@ All notable functional and non-functional changes to `safeanalyze` are documente
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.3.1] — 2026-07-15
+
+### Functional
+
+- **Semgrep and TruffleHog enabled by default in thorough mode:** Default config now runs Semgrep (`p/security-audit`) and TruffleHog alongside the built-in checks and `prompt-injection-scanner`.
+- **ML disabled by default:** The stochastic ONNX classifier is opt-in until a model that fits the ~2 GB RAM budget is validated.
+- **TruffleHog no longer fails the pipeline by default:** Secret findings are reported rather than blocking, matching the behavior of other external scanners.
+
+### Non-functional
+
+- Updated example `safeanalyze.yaml` to list all external scanners with their default enabled flags.
+
 ## [0.3.0] — 2026-07-15
 
 ### Functional

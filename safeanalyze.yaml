@@ -5,9 +5,21 @@ scanners:
   - name: trufflehog
     command: "trufflehog filesystem {path} --json"
     enabled: true
-    fail_on_findings: true
+    fail_on_findings: false
   - name: semgrep
-    command: "semgrep --config=auto {path} --json"
+    command: "semgrep --config=p/security-audit {path} --json"
+    enabled: true
+    fail_on_findings: false
+  - name: gitleaks
+    command: "gitleaks dir {path} --report-format json --report-path -"
+    enabled: false
+    fail_on_findings: false
+  - name: prompt-injection-scanner
+    command: "prompt-injection-scanner {path} --format json --min-severity HIGH --no-fail"
+    enabled: true
+    fail_on_findings: false
+  - name: bumblebee
+    command: "bumblebee scan --profile deep --root {path} --findings-only"
     enabled: false
     fail_on_findings: false
 
