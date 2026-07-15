@@ -1,0 +1,3880 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>safeanalyze Dashboard: /tmp/safeanalyze-BIPIA</title>
+  <style>
+    :root {
+      --bg: #f6f8fa;
+      --fg: #1f2328;
+      --card: #ffffff;
+      --border: #d0d7de;
+      --critical: #da3633;
+      --high: #cf222e;
+      --medium: #9a6700;
+      --low: #0969da;
+      --info: #656d76;
+      --unknown: #6e7781;
+    }
+    * { box-sizing: border-box; }
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+      background: var(--bg);
+      color: var(--fg);
+      margin: 0;
+      padding: 2rem;
+      line-height: 1.5;
+    }
+    .container { max-width: 1200px; margin: 0 auto; }
+    header { margin-bottom: 1.5rem; }
+    header h1 { margin: 0 0 0.25rem; }
+    header p { margin: 0; color: var(--info); }
+    .note {
+      background: #ddf4ff;
+      border: 1px solid #84d8ff;
+      border-radius: 6px;
+      padding: 0.75rem 1rem;
+      margin-bottom: 1.5rem;
+      font-size: 0.9rem;
+    }
+    .cards {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
+      gap: 1rem;
+      margin-bottom: 1.5rem;
+    }
+    .card {
+      background: var(--card);
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      padding: 1rem;
+      text-align: center;
+    }
+    .card .value {
+      font-size: 2rem;
+      font-weight: 700;
+      display: block;
+    }
+    .card .label {
+      color: var(--info);
+      font-size: 0.85rem;
+    }
+    section {
+      background: var(--card);
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      padding: 1.25rem;
+      margin-bottom: 1.5rem;
+    }
+    section h2 {
+      margin-top: 0;
+      font-size: 1.25rem;
+    }
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      margin-top: 0.75rem;
+    }
+    th, td {
+      text-align: left;
+      padding: 0.5rem;
+      border-bottom: 1px solid var(--border);
+    }
+    th { cursor: pointer; background: #f6f8fa; }
+    th:hover { background: #eff2f5; }
+    tr:hover { background: #f6f8fa; }
+    .badge {
+      display: inline-block;
+      padding: 0.15rem 0.5rem;
+      border-radius: 999px;
+      font-size: 0.75rem;
+      font-weight: 600;
+      text-transform: uppercase;
+      color: #fff;
+    }
+    .severity-critical { background: var(--critical); }
+    .severity-high { background: var(--high); }
+    .severity-medium { background: var(--medium); }
+    .severity-low { background: var(--low); }
+    .severity-info { background: var(--info); }
+    .severity-unknown { background: var(--unknown); }
+    .filter { margin-bottom: 0.75rem; }
+    .filter input {
+      padding: 0.4rem 0.6rem;
+      border: 1px solid var(--border);
+      border-radius: 4px;
+      width: 100%;
+      max-width: 320px;
+    }
+    .empty { color: var(--info); font-style: italic; }
+    .errors li { margin-bottom: 0.5rem; }
+    pre {
+      background: #f6f8fa;
+      border: 1px solid var(--border);
+      border-radius: 4px;
+      padding: 0.75rem;
+      overflow-x: auto;
+    }
+    .file-list { columns: 2; }
+    @media (max-width: 640px) {
+      body { padding: 1rem; }
+      .file-list { columns: 1; }
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <header>
+      <h1>safeanalyze Dashboard</h1>
+      <p>Target: <strong>/tmp/safeanalyze-BIPIA</strong> &middot; Duration: 3235 ms</p>
+    </header>
+
+    <div class="note">
+      This is the dashboard view of the SARIF and Markdown reports. For machine-readable output, consume the SARIF file; for review-friendly output, use the Markdown report.
+    </div>
+
+    <section>
+      <h2>Executive summary</h2>
+      <div class="cards">
+        <div class="card"><span class="value">331</span><span class="label">Total findings</span></div>
+        <div class="card"><span class="value">99</span><span class="label">Files scanned</span></div>
+        <div class="card"><span class="value">0</span><span class="label">Files sanitized</span></div>
+        <div class="card"><span class="value">0</span><span class="label">Errors</span></div>
+      </div>
+      
+      <h3>Findings by severity</h3>
+      <table>
+        <thead><tr><th>Severity</th><th>Count</th></tr></thead>
+        <tbody>
+          <tr><td><span class="badge severity-critical">critical</span></td><td>2</td></tr><tr><td><span class="badge severity-high">high</span></td><td>193</td></tr><tr><td><span class="badge severity-medium">medium</span></td><td>80</td></tr><tr><td><span class="badge severity-low">low</span></td><td>56</td></tr>
+        </tbody>
+      </table>
+      
+      
+      <h3>Findings by source</h3>
+      <table>
+        <thead><tr><th>Source</th><th>Count</th></tr></thead>
+        <tbody>
+          <tr><td>entropy</td><td>57</td></tr><tr><td>hiddenchars</td><td>152</td></tr><tr><td>semgrep</td><td>1</td></tr><tr><td>yara</td><td>121</td></tr>
+        </tbody>
+      </table>
+      
+    </section>
+
+    <section>
+      <h2>Findings</h2>
+      <div class="filter">
+        <input type="text" id="findingFilter" placeholder="Filter findings by rule, file, message, or source...">
+      </div>
+      
+      <table id="findingsTable">
+        <thead>
+          <tr>
+            <th onclick="sortTable(0)">Severity</th>
+            <th onclick="sortTable(1)">Rule</th>
+            <th onclick="sortTable(2)">File</th>
+            <th onclick="sortTable(3)">Line</th>
+            <th onclick="sortTable(4)">Column</th>
+            <th onclick="sortTable(5)">Message</th>
+            <th onclick="sortTable(6)">Source</th>
+            <th onclick="sortTable(7)">Confidence</th>
+          </tr>
+        </thead>
+        <tbody>
+          
+          <tr>
+            <td><span class="badge severity-critical">critical</span></td>
+            <td>prompt_injection_comment</td>
+            <td>defense/README.md</td>
+            <td>77</td>
+            <td>137</td>
+            <td>Comment containing prompt injection keywords</td>
+            <td>yara</td>
+            <td>deterministic</td>
+          </tr>
+          
+          <tr>
+            <td><span class="badge severity-critical">critical</span></td>
+            <td>backdoor_indicator</td>
+            <td>defense/white_box/utils.py</td>
+            <td>33</td>
+            <td>10</td>
+            <td>Common backdoor or persistence patterns</td>
+            <td>yara</td>
+            <td>deterministic</td>
+          </tr>
+          
+          <tr>
+            <td><span class="badge severity-high">high</span></td>
+            <td>data_exfiltration_email</td>
+            <td>SECURITY.md</td>
+            <td>15</td>
+            <td>45</td>
+            <td>Natural-language request to retrieve data and send it to an email address</td>
+            <td>yara</td>
+            <td>deterministic</td>
+          </tr>
+          
+          <tr>
+            <td><span class="badge severity-high">high</span></td>
+            <td>data_exfiltration_email</td>
+            <td>SECURITY.md</td>
+            <td>15</td>
+            <td>50</td>
+            <td>Natural-language request to retrieve data and send it to an email address</td>
+            <td>yara</td>
+            <td>deterministic</td>
+          </tr>
+          
+          <tr>
+            <td><span class="badge severity-high">high</span></td>
+            <td>obfuscated_javascript</td>
+            <td>benchmark/code/test.jsonl</td>
+            <td>2</td>
+            <td>866</td>
+            <td>Obfuscated or packed JavaScript patterns</td>
+            <td>yara</td>
+            <td>deterministic</td>
+          </tr>
+          
+          <tr>
+            <td><span class="badge severity-high">high</span></td>
+            <td>obfuscated_javascript</td>
+            <td>benchmark/code/test.jsonl</td>
+            <td>2</td>
+            <td>881</td>
+            <td>Obfuscated or packed JavaScript patterns</td>
+            <td>yara</td>
+            <td>deterministic</td>
+          </tr>
+          
+          <tr>
+            <td><span class="badge severity-high">high</span></td>
+            <td>obfuscated_javascript</td>
+            <td>benchmark/code/test.jsonl</td>
+            <td>2</td>
+            <td>971</td>
+            <td>Obfuscated or packed JavaScript patterns</td>
+            <td>yara</td>
+            <td>deterministic</td>
+          </tr>
+          
+          <tr>
+            <td><span class="badge severity-high">high</span></td>
+            <td>obfuscated_javascript</td>
+            <td>benchmark/code/test.jsonl</td>
+            <td>2</td>
+            <td>1034</td>
+            <td>Obfuscated or packed JavaScript patterns</td>
+            <td>yara</td>
+            <td>deterministic</td>
+          </tr>
+          
+          <tr>
+            <td><span class="badge severity-high">high</span></td>
+            <td>obfuscated_javascript</td>
+            <td>benchmark/code/test.jsonl</td>
+            <td>2</td>
+            <td>1133</td>
+            <td>Obfuscated or packed JavaScript patterns</td>
+            <td>yara</td>
+            <td>deterministic</td>
+          </tr>
+          
+          <tr>
+            <td><span class="badge severity-high">high</span></td>
+            <td>obfuscated_javascript</td>
+            <td>benchmark/code/test.jsonl</td>
+            <td>2</td>
+            <td>1178</td>
+            <td>Obfuscated or packed JavaScript patterns</td>
+            <td>yara</td>
+            <td>deterministic</td>
+          </tr>
+          
+          <tr>
+            <td><span class="badge severity-high">high</span></td>
+            <td>instruction_to_include_code</td>
+            <td>benchmark/code_attack_test.json</td>
+            <td>3</td>
+            <td>10</td>
+            <td>Natural-language instruction telling the model to include, merge, or execute a code snippet</td>
+            <td>yara</td>
+            <td>deterministic</td>
+          </tr>
+          
+          <tr>
+            <td><span class="badge severity-high">high</span></td>
+            <td>instruction_to_include_code</td>
+            <td>benchmark/code_attack_test.json</td>
+            <td>5</td>
+            <td>10</td>
+            <td>Natural-language instruction telling the model to include, merge, or execute a code snippet</td>
+            <td>yara</td>
+            <td>deterministic</td>
+          </tr>
+          
+          <tr>
+            <td><span class="badge severity-high">high</span></td>
+            <td>instruction_to_include_code</td>
+            <td>benchmark/code_attack_test.json</td>
+            <td>18</td>
+            <td>10</td>
+            <td>Natural-language instruction telling the model to include, merge, or execute a code snippet</td>
+            <td>yara</td>
+            <td>deterministic</td>
+          </tr>
+          
+          <tr>
+            <td><span class="badge severity-high">high</span></td>
+            <td>instruction_to_include_code</td>
+            <td>benchmark/code_attack_test.json</td>
+            <td>24</td>
+            <td>10</td>
+            <td>Natural-language instruction telling the model to include, merge, or execute a code snippet</td>
+            <td>yara</td>
+            <td>deterministic</td>
+          </tr>
+          
+          <tr>
+            <td><span class="badge severity-high">high</span></td>
+            <td>instruction_to_include_code</td>
+            <td>benchmark/code_attack_test.json</td>
+            <td>25</td>
+            <td>10</td>
+            <td>Natural-language instruction telling the model to include, merge, or execute a code snippet</td>
+            <td>yara</td>
+            <td>deterministic</td>
+          </tr>
+          
+          <tr>
+            <td><span class="badge severity-high">high</span></td>
+            <td>instruction_to_include_code</td>
+            <td>benchmark/code_attack_test.json</td>
+            <td>34</td>
+            <td>10</td>
+            <td>Natural-language instruction telling the model to include, merge, or execute a code snippet</td>
+            <td>yara</td>
+            <td>deterministic</td>
+          </tr>
+          
+          <tr>
+            <td><span class="badge severity-high">high</span></td>
+            <td>instruction_to_include_code</td>
+            <td>benchmark/code_attack_test.json</td>
+            <td>38</td>
+            <td>10</td>
+            <td>Natural-language instruction telling the model to include, merge, or execute a code snippet</td>
+            <td>yara</td>
+            <td>deterministic</td>
+          </tr>
+          
+          <tr>
+            <td><span class="badge severity-high">high</span></td>
+            <td>instruction_to_include_code</td>
+            <td>benchmark/code_attack_test.json</td>
+            <td>42</td>
+            <td>10</td>
+            <td>Natural-language instruction telling the model to include, merge, or execute a code snippet</td>
+            <td>yara</td>
+            <td>deterministic</td>
+          </tr>
+          
+          <tr>
+            <td><span class="badge severity-high">high</span></td>
+            <td>instruction_to_include_code</td>
+            <td>benchmark/code_attack_test.json</td>
+            <td>46</td>
+            <td>28</td>
+            <td>Natural-language instruction telling the model to include, merge, or execute a code snippet</td>
+            <td>yara</td>
+            <td>deterministic</td>
+          </tr>
+          
+          <tr>
+            <td><span class="badge severity-high">high</span></td>
+            <td>instruction_to_include_code</td>
+            <td>benchmark/code_attack_test.json</td>
+            <td>55</td>
+            <td>26</td>
+            <td>Natural-language instruction telling the model to include, merge, or execute a code snippet</td>
+            <td>yara</td>
+            <td>deterministic</td>
+          </tr>
+          
+          <tr>
+            <td><span class="badge severity-high">high</span></td>
+            <td>instruction_to_include_code</td>
+            <td>benchmark/code_attack_test.json</td>
+            <td>56</td>
+            <td>39</td>
+            <td>Natural-language instruction telling the model to include, merge, or execute a code snippet</td>
+            <td>yara</td>
+            <td>deterministic</td>
+          </tr>
+          
+          <tr>
+            <td><span class="badge severity-high">high</span></td>
+            <td>instruction_to_include_code</td>
+            <td>benchmark/code_attack_test.json</td>
+            <td>61</td>
+            <td>10</td>
+            <td>Natural-language instruction telling the model to include, merge, or execute a code snippet</td>
+            <td>yara</td>
+            <td>deterministic</td>
+          </tr>
+          
+          <tr>
+            <td><span class="badge severity-high">high</span></td>
+            <td>suspicious_shell</td>
+            <td>benchmark/code_attack_test.json</td>
+            <td>61</td>
+            <td>116</td>
+            <td>Suspicious shell command patterns</td>
+            <td>yara</td>
+            <td>deterministic</td>
+          </tr>
+          
+          <tr>
+            <td><span class="badge severity-high">high</span></td>
+            <td>suspicious_shell</td>
+            <td>benchmark/code_attack_test.json</td>
+            <td>62</td>
+            <td>130</td>
+            <td>Suspicious shell command patterns</td>
+            <td>yara</td>
+            <td>deterministic</td>
+          </tr>
+          
+          <tr>
+            <td><span class="badge severity-high">high</span></td>
+            <td>instruction_to_include_code</td>
+            <td>benchmark/code_attack_test.json</td>
+            <td>68</td>
+            <td>21</td>
+            <td>Natural-language instruction telling the model to include, merge, or execute a code snippet</td>
+            <td>yara</td>
+            <td>deterministic</td>
+          </tr>
+          
+          <tr>
+            <td><span class="badge severity-high">high</span></td>
+            <td>instruction_to_include_code</td>
+            <td>benchmark/code_attack_test.json</td>
+            <td>69</td>
+            <td>10</td>
+            <td>Natural-language instruction telling the model to include, merge, or execute a code snippet</td>
+            <td>yara</td>
+            <td>deterministic</td>
+          </tr>
+          
+          <tr>
+            <td><span class="badge severity-high">high</span></td>
+            <td>instruction_to_include_code</td>
+            <td>benchmark/code_attack_train.json</td>
+            <td>3</td>
+            <td>28</td>
+            <td>Natural-language instruction telling the model to include, merge, or execute a code snippet</td>
+            <td>yara</td>
+            <td>deterministic</td>
+          </tr>
+          
+          <tr>
+            <td><span class="badge severity-high">high</span></td>
+            <td>instruction_to_include_code</td>
+            <td>benchmark/code_attack_train.json</td>
+            <td>6</td>
+            <td>10</td>
+            <td>Natural-language instruction telling the model to include, merge, or execute a code snippet</td>
+            <td>yara</td>
+            <td>deterministic</td>
+          </tr>
+          
+          <tr>
+            <td><span class="badge severity-high">high</span></td>
+            <td>instruction_to_include_code</td>
+            <td>benchmark/code_attack_train.json</td>
+            <td>7</td>
+            <td>36</td>
+            <td>Natural-language instruction telling the model to include, merge, or execute a code snippet</td>
+            <td>yara</td>
+            <td>deterministic</td>
+          </tr>
+          
+          <tr>
+            <td><span class="badge severity-high">high</span></td>
+            <td>instruction_to_include_code</td>
+            <td>benchmark/code_attack_train.json</td>
+            <td>20</td>
+            <td>26</td>
+            <td>Natural-language instruction telling the model to include, merge, or execute a code snippet</td>
+            <td>yara</td>
+            <td>deterministic</td>
+          </tr>
+          
+          <tr>
+            <td><span class="badge severity-high">high</span></td>
+            <td>instruction_to_include_code</td>
+            <td>benchmark/code_attack_train.json</td>
+            <td>24</td>
+            <td>10</td>
+            <td>Natural-language instruction telling the model to include, merge, or execute a code snippet</td>
+            <td>yara</td>
+            <td>deterministic</td>
+          </tr>
+          
+          <tr>
+            <td><span class="badge severity-high">high</span></td>
+            <td>instruction_to_include_code</td>
+            <td>benchmark/code_attack_train.json</td>
+            <td>25</td>
+            <td>10</td>
+            <td>Natural-language instruction telling the model to include, merge, or execute a code snippet</td>
+            <td>yara</td>
+            <td>deterministic</td>
+          </tr>
+          
+          <tr>
+            <td><span class="badge severity-high">high</span></td>
+            <td>instruction_to_include_code</td>
+            <td>benchmark/code_attack_train.json</td>
+            <td>35</td>
+            <td>11</td>
+            <td>Natural-language instruction telling the model to include, merge, or execute a code snippet</td>
+            <td>yara</td>
+            <td>deterministic</td>
+          </tr>
+          
+          <tr>
+            <td><span class="badge severity-high">high</span></td>
+            <td>instruction_to_include_code</td>
+            <td>benchmark/code_attack_train.json</td>
+            <td>42</td>
+            <td>10</td>
+            <td>Natural-language instruction telling the model to include, merge, or execute a code snippet</td>
+            <td>yara</td>
+            <td>deterministic</td>
+          </tr>
+          
+          <tr>
+            <td><span class="badge severity-high">high</span></td>
+            <td>data_exfiltration_email</td>
+            <td>benchmark/code_attack_train.json</td>
+            <td>42</td>
+            <td>241</td>
+            <td>Natural-language request to retrieve data and send it to an email address</td>
+            <td>yara</td>
+            <td>deterministic</td>
+          </tr>
+          
+          <tr>
+            <td><span class="badge severity-high">high</span></td>
+            <td>instruction_to_include_code</td>
+            <td>benchmark/code_attack_train.json</td>
+            <td>47</td>
+            <td>10</td>
+            <td>Natural-language instruction telling the model to include, merge, or execute a code snippet</td>
+            <td>yara</td>
+            <td>deterministic</td>
+          </tr>
+          
+          <tr>
+            <td><span class="badge severity-high">high</span></td>
+            <td>instruction_to_include_code</td>
+            <td>benchmark/code_attack_train.json</td>
+            <td>48</td>
+            <td>13</td>
+            <td>Natural-language instruction telling the model to include, merge, or execute a code snippet</td>
+            <td>yara</td>
+            <td>deterministic</td>
+          </tr>
+          
+          <tr>
+            <td><span class="badge severity-high">high</span></td>
+            <td>instruction_to_include_code</td>
+            <td>benchmark/code_attack_train.json</td>
+            <td>52</td>
+            <td>10</td>
+            <td>Natural-language instruction telling the model to include, merge, or execute a code snippet</td>
+            <td>yara</td>
+            <td>deterministic</td>
+          </tr>
+          
+          <tr>
+            <td><span class="badge severity-high">high</span></td>
+            <td>instruction_to_include_code</td>
+            <td>benchmark/code_attack_train.json</td>
+            <td>67</td>
+            <td>10</td>
+            <td>Natural-language instruction telling the model to include, merge, or execute a code snippet</td>
+            <td>yara</td>
+            <td>deterministic</td>
+          </tr>
+          
+          <tr>
+            <td><span class="badge severity-high">high</span></td>
+            <td>instruction_to_include_code</td>
+            <td>benchmark/code_attack_train.json</td>
+            <td>70</td>
+            <td>11</td>
+            <td>Natural-language instruction telling the model to include, merge, or execute a code snippet</td>
+            <td>yara</td>
+            <td>deterministic</td>
+          </tr>
+          
+          <tr>
+            <td><span class="badge severity-high">high</span></td>
+            <td>data_exfiltration_email</td>
+            <td>benchmark/email/test.jsonl</td>
+            <td>37</td>
+            <td>729</td>
+            <td>Natural-language request to retrieve data and send it to an email address</td>
+            <td>yara</td>
+            <td>deterministic</td>
+          </tr>
+          
+          <tr>
+            <td><span class="badge severity-high">high</span></td>
+            <td>hidden_char_zero_width</td>
+            <td>benchmark/table/train.jsonl</td>
+            <td>43</td>
+            <td>254</td>
+            <td>BYTE ORDER MARK (zero_width) in benchmark/table/train.jsonl</td>
+            <td>hiddenchars</td>
+            <td>deterministic</td>
+          </tr>
+          
+          <tr>
+            <td><span class="badge severity-high">high</span></td>
+            <td>hidden_char_zero_width</td>
+            <td>benchmark/table/train.jsonl</td>
+            <td>43</td>
+            <td>260</td>
+            <td>BYTE ORDER MARK (zero_width) in benchmark/table/train.jsonl</td>
+            <td>hiddenchars</td>
+            <td>deterministic</td>
+          </tr>
+          
+          <tr>
+            <td><span class="badge severity-high">high</span></td>
+            <td>hidden_char_zero_width</td>
+            <td>benchmark/table/train.jsonl</td>
+            <td>43</td>
+            <td>390</td>
+            <td>BYTE ORDER MARK (zero_width) in benchmark/table/train.jsonl</td>
+            <td>hiddenchars</td>
+            <td>deterministic</td>
+          </tr>
+          
+          <tr>
+            <td><span class="badge severity-high">high</span></td>
+            <td>hidden_char_zero_width</td>
+            <td>benchmark/table/train.jsonl</td>
+            <td>43</td>
+            <td>396</td>
+            <td>BYTE ORDER MARK (zero_width) in benchmark/table/train.jsonl</td>
+            <td>hiddenchars</td>
+            <td>deterministic</td>
+          </tr>
+          
+          <tr>
+            <td><span class="badge severity-high">high</span></td>
+            <td>hidden_char_zero_width</td>
+            <td>benchmark/table/train.jsonl</td>
+            <td>43</td>
+            <td>529</td>
+            <td>BYTE ORDER MARK (zero_width) in benchmark/table/train.jsonl</td>
+            <td>hiddenchars</td>
+            <td>deterministic</td>
+          </tr>
+          
+          <tr>
+            <td><span class="badge severity-high">high</span></td>
+            <td>hidden_char_zero_width</td>
+            <td>benchmark/table/train.jsonl</td>
+            <td>43</td>
+            <td>535</td>
+            <td>BYTE ORDER MARK (zero_width) in benchmark/table/train.jsonl</td>
+            <td>hiddenchars</td>
+            <td>deterministic</td>
+          </tr>
+          
+          <tr>
+            <td><span class="badge severity-high">high</span></td>
+            <td>hidden_char_zero_width</td>
+            <td>benchmark/table/train.jsonl</td>
+            <td>43</td>
+            <td>662</td>
+            <td>BYTE ORDER MARK (zero_width) in benchmark/table/train.jsonl</td>
+            <td>hiddenchars</td>
+            <td>deterministic</td>
+          </tr>
+          
+          <tr>
+            <td><span class="badge severity-high">high</span></td>
+            <td>hidden_char_zero_width</td>
+            <td>benchmark/table/train.jsonl</td>
+            <td>43</td>
+            <td>668</td>
+            <td>BYTE ORDER MARK (zero_width) in benchmark/table/train.jsonl</td>
+            <td>hiddenchars</td>
+            <td>deterministic</td>
+          </tr>
+          
+          <tr>
+            <td><span class="badge severity-high">high</span></td>
+            <td>hidden_char_zero_width</td>
+            <td>benchmark/table/train.jsonl</td>
+            <td>43</td>
+            <td>798</td>
+            <td>BYTE ORDER MARK (zero_width) in benchmark/table/train.jsonl</td>
+            <td>hiddenchars</td>
+            <td>deterministic</td>
+          </tr>
+          
+          <tr>
+            <td><span class="badge severity-high">high</span></td>
+            <td>hidden_char_zero_width</td>
+            <td>benchmark/table/train.jsonl</td>
+            <td>43</td>
+            <td>804</td>
+            <td>BYTE ORDER MARK (zero_width) in benchmark/table/train.jsonl</td>
+            <td>hiddenchars</td>
+            <td>deterministic</td>
+          </tr>
+          
+          <tr>
+            <td><span class="badge severity-high">high</span></td>
+            <td>hidden_char_zero_width</td>
+            <td>benchmark/table/train.jsonl</td>
+            <td>43</td>
+            <td>934</td>
+            <td>BYTE ORDER MARK (zero_width) in benchmark/table/train.jsonl</td>
+            <td>hiddenchars</td>
+            <td>deterministic</td>
+          </tr>
+          
+          <tr>
+            <td><span class="badge severity-high">high</span></td>
+            <td>hidden_char_zero_width</td>
+            <td>benchmark/table/train.jsonl</td>
+            <td>43</td>
+            <td>940</td>
+            <td>BYTE ORDER MARK (zero_width) in benchmark/table/train.jsonl</td>
+            <td>hiddenchars</td>
+            <td>deterministic</td>
+          </tr>
+          
+          <tr>
+            <td><span class="badge severity-high">high</span></td>
+            <td>hidden_char_zero_width</td>
+            <td>benchmark/table/train.jsonl</td>
+            <td>43</td>
+            <td>1070</td>
+            <td>BYTE ORDER MARK (zero_width) in benchmark/table/train.jsonl</td>
+            <td>hiddenchars</td>
+            <td>deterministic</td>
+          </tr>
+          
+          <tr>
+            <td><span class="badge severity-high">high</span></td>
+            <td>hidden_char_zero_width</td>
+            <td>benchmark/table/train.jsonl</td>
+            <td>43</td>
+            <td>1076</td>
+            <td>BYTE ORDER MARK (zero_width) in benchmark/table/train.jsonl</td>
+            <td>hiddenchars</td>
+            <td>deterministic</td>
+          </tr>
+          
+          <tr>
+            <td><span class="badge severity-high">high</span></td>
+            <td>hidden_char_zero_width</td>
+            <td>benchmark/table/train.jsonl</td>
+            <td>43</td>
+            <td>1206</td>
+            <td>BYTE ORDER MARK (zero_width) in benchmark/table/train.jsonl</td>
+            <td>hiddenchars</td>
+            <td>deterministic</td>
+          </tr>
+          
+          <tr>
+            <td><span class="badge severity-high">high</span></td>
+            <td>hidden_char_zero_width</td>
+            <td>benchmark/table/train.jsonl</td>
+            <td>43</td>
+            <td>1212</td>
+            <td>BYTE ORDER MARK (zero_width) in benchmark/table/train.jsonl</td>
+            <td>hiddenchars</td>
+            <td>deterministic</td>
+          </tr>
+          
+          <tr>
+            <td><span class="badge severity-high">high</span></td>
+            <td>hidden_char_zero_width</td>
+            <td>benchmark/table/train.jsonl</td>
+            <td>43</td>
+            <td>1342</td>
+            <td>BYTE ORDER MARK (zero_width) in benchmark/table/train.jsonl</td>
+            <td>hiddenchars</td>
+            <td>deterministic</td>
+          </tr>
+          
+          <tr>
+            <td><span class="badge severity-high">high</span></td>
+            <td>hidden_char_zero_width</td>
+            <td>benchmark/table/train.jsonl</td>
+            <td>43</td>
+            <td>1348</td>
+            <td>BYTE ORDER MARK (zero_width) in benchmark/table/train.jsonl</td>
+            <td>hiddenchars</td>
+            <td>deterministic</td>
+          </tr>
+          
+          <tr>
+            <td><span class="badge severity-high">high</span></td>
+            <td>hidden_char_zero_width</td>
+            <td>benchmark/table/train.jsonl</td>
+            <td>43</td>
+            <td>1478</td>
+            <td>BYTE ORDER MARK (zero_width) in benchmark/table/train.jsonl</td>
+            <td>hiddenchars</td>
+            <td>deterministic</td>
+          </tr>
+          
+          <tr>
+            <td><span class="badge severity-high">high</span></td>
+            <td>hidden_char_zero_width</td>
+            <td>benchmark/table/train.jsonl</td>
+            <td>43</td>
+            <td>1484</td>
+            <td>BYTE ORDER MARK (zero_width) in benchmark/table/train.jsonl</td>
+            <td>hiddenchars</td>
+            <td>deterministic</td>
+          </tr>
+          
+          <tr>
+            <td><span class="badge severity-high">high</span></td>
+            <td>hidden_char_zero_width</td>
+            <td>benchmark/table/train.jsonl</td>
+            <td>43</td>
+            <td>1614</td>
+            <td>BYTE ORDER MARK (zero_width) in benchmark/table/train.jsonl</td>
+            <td>hiddenchars</td>
+            <td>deterministic</td>
+          </tr>
+          
+          <tr>
+            <td><span class="badge severity-high">high</span></td>
+            <td>hidden_char_zero_width</td>
+            <td>benchmark/table/train.jsonl</td>
+            <td>43</td>
+            <td>1620</td>
+            <td>BYTE ORDER MARK (zero_width) in benchmark/table/train.jsonl</td>
+            <td>hiddenchars</td>
+            <td>deterministic</td>
+          </tr>
+          
+          <tr>
+            <td><span class="badge severity-high">high</span></td>
+            <td>hidden_char_zero_width</td>
+            <td>benchmark/table/train.jsonl</td>
+            <td>43</td>
+            <td>1750</td>
+            <td>BYTE ORDER MARK (zero_width) in benchmark/table/train.jsonl</td>
+            <td>hiddenchars</td>
+            <td>deterministic</td>
+          </tr>
+          
+          <tr>
+            <td><span class="badge severity-high">high</span></td>
+            <td>hidden_char_zero_width</td>
+            <td>benchmark/table/train.jsonl</td>
+            <td>43</td>
+            <td>1756</td>
+            <td>BYTE ORDER MARK (zero_width) in benchmark/table/train.jsonl</td>
+            <td>hiddenchars</td>
+            <td>deterministic</td>
+          </tr>
+          
+          <tr>
+            <td><span class="badge severity-high">high</span></td>
+            <td>hidden_char_zero_width</td>
+            <td>benchmark/table/train.jsonl</td>
+            <td>43</td>
+            <td>1886</td>
+            <td>BYTE ORDER MARK (zero_width) in benchmark/table/train.jsonl</td>
+            <td>hiddenchars</td>
+            <td>deterministic</td>
+          </tr>
+          
+          <tr>
+            <td><span class="badge severity-high">high</span></td>
+            <td>hidden_char_zero_width</td>
+            <td>benchmark/table/train.jsonl</td>
+            <td>43</td>
+            <td>1892</td>
+            <td>BYTE ORDER MARK (zero_width) in benchmark/table/train.jsonl</td>
+            <td>hiddenchars</td>
+            <td>deterministic</td>
+          </tr>
+          
+          <tr>
+            <td><span class="badge severity-high">high</span></td>
+            <td>hidden_char_zero_width</td>
+            <td>benchmark/table/train.jsonl</td>
+            <td>125</td>
+            <td>304</td>
+            <td>BYTE ORDER MARK (zero_width) in benchmark/table/train.jsonl</td>
+            <td>hiddenchars</td>
+            <td>deterministic</td>
+          </tr>
+          
+          <tr>
+            <td><span class="badge severity-high">high</span></td>
+            <td>hidden_char_zero_width</td>
+            <td>benchmark/table/train.jsonl</td>
+            <td>125</td>
+            <td>310</td>
+            <td>BYTE ORDER MARK (zero_width) in benchmark/table/train.jsonl</td>
+            <td>hiddenchars</td>
+            <td>deterministic</td>
+          </tr>
+          
+          <tr>
+            <td><span class="badge severity-high">high</span></td>
+            <td>hidden_char_zero_width</td>
+            <td>benchmark/table/train.jsonl</td>
+            <td>125</td>
+            <td>467</td>
+            <td>BYTE ORDER MARK (zero_width) in benchmark/table/train.jsonl</td>
+            <td>hiddenchars</td>
+            <td>deterministic</td>
+          </tr>
+          
+          <tr>
+            <td><span class="badge severity-high">high</span></td>
+            <td>hidden_char_zero_width</td>
+            <td>benchmark/table/train.jsonl</td>
+            <td>125</td>
+            <td>473</td>
+            <td>BYTE ORDER MARK (zero_width) in benchmark/table/train.jsonl</td>
+            <td>hiddenchars</td>
+            <td>deterministic</td>
+          </tr>
+          
+          <tr>
+            <td><span class="badge severity-high">high</span></td>
+            <td>hidden_char_zero_width</td>
+            <td>benchmark/table/train.jsonl</td>
+            <td>125</td>
+            <td>630</td>
+            <td>BYTE ORDER MARK (zero_width) in benchmark/table/train.jsonl</td>
+            <td>hiddenchars</td>
+            <td>deterministic</td>
+          </tr>
+          
+          <tr>
+            <td><span class="badge severity-high">high</span></td>
+            <td>hidden_char_zero_width</td>
+            <td>benchmark/table/train.jsonl</td>
+            <td>125</td>
+            <td>636</td>
+            <td>BYTE ORDER MARK (zero_width) in benchmark/table/train.jsonl</td>
+            <td>hiddenchars</td>
+            <td>deterministic</td>
+          </tr>
+          
+          <tr>
+            <td><span class="badge severity-high">high</span></td>
+            <td>hidden_char_zero_width</td>
+            <td>benchmark/table/train.jsonl</td>
+            <td>125</td>
+            <td>793</td>
+            <td>BYTE ORDER MARK (zero_width) in benchmark/table/train.jsonl</td>
+            <td>hiddenchars</td>
+            <td>deterministic</td>
+          </tr>
+          
+          <tr>
+            <td><span class="badge severity-high">high</span></td>
+            <td>hidden_char_zero_width</td>
+            <td>benchmark/table/train.jsonl</td>
+            <td>125</td>
+            <td>799</td>
+            <td>BYTE ORDER MARK (zero_width) in benchmark/table/train.jsonl</td>
+            <td>hiddenchars</td>
+            <td>deterministic</td>
+          </tr>
+          
+          <tr>
+            <td><span class="badge severity-high">high</span></td>
+            <td>hidden_char_zero_width</td>
+            <td>benchmark/table/train.jsonl</td>
+            <td>125</td>
+            <td>956</td>
+            <td>BYTE ORDER MARK (zero_width) in benchmark/table/train.jsonl</td>
+            <td>hiddenchars</td>
+            <td>deterministic</td>
+          </tr>
+          
+          <tr>
+            <td><span class="badge severity-high">high</span></td>
+            <td>hidden_char_zero_width</td>
+            <td>benchmark/table/train.jsonl</td>
+            <td>125</td>
+            <td>962</td>
+            <td>BYTE ORDER MARK (zero_width) in benchmark/table/train.jsonl</td>
+            <td>hiddenchars</td>
+            <td>deterministic</td>
+          </tr>
+          
+          <tr>
+            <td><span class="badge severity-high">high</span></td>
+            <td>hidden_char_zero_width</td>
+            <td>benchmark/table/train.jsonl</td>
+            <td>125</td>
+            <td>1119</td>
+            <td>BYTE ORDER MARK (zero_width) in benchmark/table/train.jsonl</td>
+            <td>hiddenchars</td>
+            <td>deterministic</td>
+          </tr>
+          
+          <tr>
+            <td><span class="badge severity-high">high</span></td>
+            <td>hidden_char_zero_width</td>
+            <td>benchmark/table/train.jsonl</td>
+            <td>125</td>
+            <td>1125</td>
+            <td>BYTE ORDER MARK (zero_width) in benchmark/table/train.jsonl</td>
+            <td>hiddenchars</td>
+            <td>deterministic</td>
+          </tr>
+          
+          <tr>
+            <td><span class="badge severity-high">high</span></td>
+            <td>hidden_char_zero_width</td>
+            <td>benchmark/table/train.jsonl</td>
+            <td>125</td>
+            <td>1282</td>
+            <td>BYTE ORDER MARK (zero_width) in benchmark/table/train.jsonl</td>
+            <td>hiddenchars</td>
+            <td>deterministic</td>
+          </tr>
+          
+          <tr>
+            <td><span class="badge severity-high">high</span></td>
+            <td>hidden_char_zero_width</td>
+            <td>benchmark/table/train.jsonl</td>
+            <td>125</td>
+            <td>1288</td>
+            <td>BYTE ORDER MARK (zero_width) in benchmark/table/train.jsonl</td>
+            <td>hiddenchars</td>
+            <td>deterministic</td>
+          </tr>
+          
+          <tr>
+            <td><span class="badge severity-high">high</span></td>
+            <td>hidden_char_zero_width</td>
+            <td>benchmark/table/train.jsonl</td>
+            <td>125</td>
+            <td>1445</td>
+            <td>BYTE ORDER MARK (zero_width) in benchmark/table/train.jsonl</td>
+            <td>hiddenchars</td>
+            <td>deterministic</td>
+          </tr>
+          
+          <tr>
+            <td><span class="badge severity-high">high</span></td>
+            <td>hidden_char_zero_width</td>
+            <td>benchmark/table/train.jsonl</td>
+            <td>125</td>
+            <td>1451</td>
+            <td>BYTE ORDER MARK (zero_width) in benchmark/table/train.jsonl</td>
+            <td>hiddenchars</td>
+            <td>deterministic</td>
+          </tr>
+          
+          <tr>
+            <td><span class="badge severity-high">high</span></td>
+            <td>hidden_char_zero_width</td>
+            <td>benchmark/table/train.jsonl</td>
+            <td>125</td>
+            <td>1608</td>
+            <td>BYTE ORDER MARK (zero_width) in benchmark/table/train.jsonl</td>
+            <td>hiddenchars</td>
+            <td>deterministic</td>
+          </tr>
+          
+          <tr>
+            <td><span class="badge severity-high">high</span></td>
+            <td>hidden_char_zero_width</td>
+            <td>benchmark/table/train.jsonl</td>
+            <td>125</td>
+            <td>1614</td>
+            <td>BYTE ORDER MARK (zero_width) in benchmark/table/train.jsonl</td>
+            <td>hiddenchars</td>
+            <td>deterministic</td>
+          </tr>
+          
+          <tr>
+            <td><span class="badge severity-high">high</span></td>
+            <td>hidden_char_zero_width</td>
+            <td>benchmark/table/train.jsonl</td>
+            <td>125</td>
+            <td>1771</td>
+            <td>BYTE ORDER MARK (zero_width) in benchmark/table/train.jsonl</td>
+            <td>hiddenchars</td>
+            <td>deterministic</td>
+          </tr>
+          
+          <tr>
+            <td><span class="badge severity-high">high</span></td>
+            <td>hidden_char_zero_width</td>
+            <td>benchmark/table/train.jsonl</td>
+            <td>125</td>
+            <td>1777</td>
+            <td>BYTE ORDER MARK (zero_width) in benchmark/table/train.jsonl</td>
+            <td>hiddenchars</td>
+            <td>deterministic</td>
+          </tr>
+          
+          <tr>
+            <td><span class="badge severity-high">high</span></td>
+            <td>hidden_char_zero_width</td>
+            <td>benchmark/table/train.jsonl</td>
+            <td>125</td>
+            <td>1932</td>
+            <td>BYTE ORDER MARK (zero_width) in benchmark/table/train.jsonl</td>
+            <td>hiddenchars</td>
+            <td>deterministic</td>
+          </tr>
+          
+          <tr>
+            <td><span class="badge severity-high">high</span></td>
+            <td>hidden_char_zero_width</td>
+            <td>benchmark/table/train.jsonl</td>
+            <td>125</td>
+            <td>1938</td>
+            <td>BYTE ORDER MARK (zero_width) in benchmark/table/train.jsonl</td>
+            <td>hiddenchars</td>
+            <td>deterministic</td>
+          </tr>
+          
+          <tr>
+            <td><span class="badge severity-high">high</span></td>
+            <td>hidden_char_zero_width</td>
+            <td>benchmark/table/train.jsonl</td>
+            <td>163</td>
+            <td>508</td>
+            <td>BYTE ORDER MARK (zero_width) in benchmark/table/train.jsonl</td>
+            <td>hiddenchars</td>
+            <td>deterministic</td>
+          </tr>
+          
+          <tr>
+            <td><span class="badge severity-high">high</span></td>
+            <td>hidden_char_zero_width</td>
+            <td>benchmark/table/train.jsonl</td>
+            <td>163</td>
+            <td>514</td>
+            <td>BYTE ORDER MARK (zero_width) in benchmark/table/train.jsonl</td>
+            <td>hiddenchars</td>
+            <td>deterministic</td>
+          </tr>
+          
+          <tr>
+            <td><span class="badge severity-high">high</span></td>
+            <td>hidden_char_zero_width</td>
+            <td>benchmark/table/train.jsonl</td>
+            <td>163</td>
+            <td>881</td>
+            <td>BYTE ORDER MARK (zero_width) in benchmark/table/train.jsonl</td>
+            <td>hiddenchars</td>
+            <td>deterministic</td>
+          </tr>
+          
+          <tr>
+            <td><span class="badge severity-high">high</span></td>
+            <td>hidden_char_zero_width</td>
+            <td>benchmark/table/train.jsonl</td>
+            <td>163</td>
+            <td>887</td>
+            <td>BYTE ORDER MARK (zero_width) in benchmark/table/train.jsonl</td>
+            <td>hiddenchars</td>
+            <td>deterministic</td>
+          </tr>
+          
+          <tr>
+            <td><span class="badge severity-high">high</span></td>
+            <td>hidden_char_zero_width</td>
+            <td>benchmark/table/train.jsonl</td>
+            <td>163</td>
+            <td>1250</td>
+            <td>BYTE ORDER MARK (zero_width) in benchmark/table/train.jsonl</td>
+            <td>hiddenchars</td>
+            <td>deterministic</td>
+          </tr>
+          
+          <tr>
+            <td><span class="badge severity-high">high</span></td>
+            <td>hidden_char_zero_width</td>
+            <td>benchmark/table/train.jsonl</td>
+            <td>163</td>
+            <td>1256</td>
+            <td>BYTE ORDER MARK (zero_width) in benchmark/table/train.jsonl</td>
+            <td>hiddenchars</td>
+            <td>deterministic</td>
+          </tr>
+          
+          <tr>
+            <td><span class="badge severity-high">high</span></td>
+            <td>hidden_char_zero_width</td>
+            <td>benchmark/table/train.jsonl</td>
+            <td>163</td>
+            <td>1631</td>
+            <td>BYTE ORDER MARK (zero_width) in benchmark/table/train.jsonl</td>
+            <td>hiddenchars</td>
+            <td>deterministic</td>
+          </tr>
+          
+          <tr>
+            <td><span class="badge severity-high">high</span></td>
+            <td>hidden_char_zero_width</td>
+            <td>benchmark/table/train.jsonl</td>
+            <td>163</td>
+            <td>1637</td>
+            <td>BYTE ORDER MARK (zero_width) in benchmark/table/train.jsonl</td>
+            <td>hiddenchars</td>
+            <td>deterministic</td>
+          </tr>
+          
+          <tr>
+            <td><span class="badge severity-high">high</span></td>
+            <td>hidden_char_zero_width</td>
+            <td>benchmark/table/train.jsonl</td>
+            <td>163</td>
+            <td>2004</td>
+            <td>BYTE ORDER MARK (zero_width) in benchmark/table/train.jsonl</td>
+            <td>hiddenchars</td>
+            <td>deterministic</td>
+          </tr>
+          
+          <tr>
+            <td><span class="badge severity-high">high</span></td>
+            <td>hidden_char_zero_width</td>
+            <td>benchmark/table/train.jsonl</td>
+            <td>163</td>
+            <td>2010</td>
+            <td>BYTE ORDER MARK (zero_width) in benchmark/table/train.jsonl</td>
+            <td>hiddenchars</td>
+            <td>deterministic</td>
+          </tr>
+          
+          <tr>
+            <td><span class="badge severity-high">high</span></td>
+            <td>hidden_char_zero_width</td>
+            <td>benchmark/table/train.jsonl</td>
+            <td>163</td>
+            <td>2376</td>
+            <td>BYTE ORDER MARK (zero_width) in benchmark/table/train.jsonl</td>
+            <td>hiddenchars</td>
+            <td>deterministic</td>
+          </tr>
+          
+          <tr>
+            <td><span class="badge severity-high">high</span></td>
+            <td>hidden_char_zero_width</td>
+            <td>benchmark/table/train.jsonl</td>
+            <td>163</td>
+            <td>2382</td>
+            <td>BYTE ORDER MARK (zero_width) in benchmark/table/train.jsonl</td>
+            <td>hiddenchars</td>
+            <td>deterministic</td>
+          </tr>
+          
+          <tr>
+            <td><span class="badge severity-high">high</span></td>
+            <td>hidden_char_zero_width</td>
+            <td>benchmark/table/train.jsonl</td>
+            <td>458</td>
+            <td>263</td>
+            <td>BYTE ORDER MARK (zero_width) in benchmark/table/train.jsonl</td>
+            <td>hiddenchars</td>
+            <td>deterministic</td>
+          </tr>
+          
+          <tr>
+            <td><span class="badge severity-high">high</span></td>
+            <td>hidden_char_zero_width</td>
+            <td>benchmark/table/train.jsonl</td>
+            <td>458</td>
+            <td>269</td>
+            <td>BYTE ORDER MARK (zero_width) in benchmark/table/train.jsonl</td>
+            <td>hiddenchars</td>
+            <td>deterministic</td>
+          </tr>
+          
+          <tr>
+            <td><span class="badge severity-high">high</span></td>
+            <td>hidden_char_zero_width</td>
+            <td>benchmark/table/train.jsonl</td>
+            <td>458</td>
+            <td>400</td>
+            <td>BYTE ORDER MARK (zero_width) in benchmark/table/train.jsonl</td>
+            <td>hiddenchars</td>
+            <td>deterministic</td>
+          </tr>
+          
+          <tr>
+            <td><span class="badge severity-high">high</span></td>
+            <td>hidden_char_zero_width</td>
+            <td>benchmark/table/train.jsonl</td>
+            <td>458</td>
+            <td>406</td>
+            <td>BYTE ORDER MARK (zero_width) in benchmark/table/train.jsonl</td>
+            <td>hiddenchars</td>
+            <td>deterministic</td>
+          </tr>
+          
+          <tr>
+            <td><span class="badge severity-high">high</span></td>
+            <td>hidden_char_zero_width</td>
+            <td>benchmark/table/train.jsonl</td>
+            <td>458</td>
+            <td>537</td>
+            <td>BYTE ORDER MARK (zero_width) in benchmark/table/train.jsonl</td>
+            <td>hiddenchars</td>
+            <td>deterministic</td>
+          </tr>
+          
+          <tr>
+            <td><span class="badge severity-high">high</span></td>
+            <td>hidden_char_zero_width</td>
+            <td>benchmark/table/train.jsonl</td>
+            <td>458</td>
+            <td>543</td>
+            <td>BYTE ORDER MARK (zero_width) in benchmark/table/train.jsonl</td>
+            <td>hiddenchars</td>
+            <td>deterministic</td>
+          </tr>
+          
+          <tr>
+            <td><span class="badge severity-high">high</span></td>
+            <td>hidden_char_zero_width</td>
+            <td>benchmark/table/train.jsonl</td>
+            <td>458</td>
+            <td>664</td>
+            <td>BYTE ORDER MARK (zero_width) in benchmark/table/train.jsonl</td>
+            <td>hiddenchars</td>
+            <td>deterministic</td>
+          </tr>
+          
+          <tr>
+            <td><span class="badge severity-high">high</span></td>
+            <td>hidden_char_zero_width</td>
+            <td>benchmark/table/train.jsonl</td>
+            <td>458</td>
+            <td>670</td>
+            <td>BYTE ORDER MARK (zero_width) in benchmark/table/train.jsonl</td>
+            <td>hiddenchars</td>
+            <td>deterministic</td>
+          </tr>
+          
+          <tr>
+            <td><span class="badge severity-high">high</span></td>
+            <td>hidden_char_zero_width</td>
+            <td>benchmark/table/train.jsonl</td>
+            <td>458</td>
+            <td>807</td>
+            <td>BYTE ORDER MARK (zero_width) in benchmark/table/train.jsonl</td>
+            <td>hiddenchars</td>
+            <td>deterministic</td>
+          </tr>
+          
+          <tr>
+            <td><span class="badge severity-high">high</span></td>
+            <td>hidden_char_zero_width</td>
+            <td>benchmark/table/train.jsonl</td>
+            <td>458</td>
+            <td>813</td>
+            <td>BYTE ORDER MARK (zero_width) in benchmark/table/train.jsonl</td>
+            <td>hiddenchars</td>
+            <td>deterministic</td>
+          </tr>
+          
+          <tr>
+            <td><span class="badge severity-high">high</span></td>
+            <td>hidden_char_zero_width</td>
+            <td>benchmark/table/train.jsonl</td>
+            <td>458</td>
+            <td>944</td>
+            <td>BYTE ORDER MARK (zero_width) in benchmark/table/train.jsonl</td>
+            <td>hiddenchars</td>
+            <td>deterministic</td>
+          </tr>
+          
+          <tr>
+            <td><span class="badge severity-high">high</span></td>
+            <td>hidden_char_zero_width</td>
+            <td>benchmark/table/train.jsonl</td>
+            <td>458</td>
+            <td>950</td>
+            <td>BYTE ORDER MARK (zero_width) in benchmark/table/train.jsonl</td>
+            <td>hiddenchars</td>
+            <td>deterministic</td>
+          </tr>
+          
+          <tr>
+            <td><span class="badge severity-high">high</span></td>
+            <td>hidden_char_zero_width</td>
+            <td>benchmark/table/train.jsonl</td>
+            <td>458</td>
+            <td>1081</td>
+            <td>BYTE ORDER MARK (zero_width) in benchmark/table/train.jsonl</td>
+            <td>hiddenchars</td>
+            <td>deterministic</td>
+          </tr>
+          
+          <tr>
+            <td><span class="badge severity-high">high</span></td>
+            <td>hidden_char_zero_width</td>
+            <td>benchmark/table/train.jsonl</td>
+            <td>458</td>
+            <td>1087</td>
+            <td>BYTE ORDER MARK (zero_width) in benchmark/table/train.jsonl</td>
+            <td>hiddenchars</td>
+            <td>deterministic</td>
+          </tr>
+          
+          <tr>
+            <td><span class="badge severity-high">high</span></td>
+            <td>hidden_char_zero_width</td>
+            <td>benchmark/table/train.jsonl</td>
+            <td>458</td>
+            <td>1218</td>
+            <td>BYTE ORDER MARK (zero_width) in benchmark/table/train.jsonl</td>
+            <td>hiddenchars</td>
+            <td>deterministic</td>
+          </tr>
+          
+          <tr>
+            <td><span class="badge severity-high">high</span></td>
+            <td>hidden_char_zero_width</td>
+            <td>benchmark/table/train.jsonl</td>
+            <td>458</td>
+            <td>1224</td>
+            <td>BYTE ORDER MARK (zero_width) in benchmark/table/train.jsonl</td>
+            <td>hiddenchars</td>
+            <td>deterministic</td>
+          </tr>
+          
+          <tr>
+            <td><span class="badge severity-high">high</span></td>
+            <td>hidden_char_zero_width</td>
+            <td>benchmark/table/train.jsonl</td>
+            <td>632</td>
+            <td>310</td>
+            <td>BYTE ORDER MARK (zero_width) in benchmark/table/train.jsonl</td>
+            <td>hiddenchars</td>
+            <td>deterministic</td>
+          </tr>
+          
+          <tr>
+            <td><span class="badge severity-high">high</span></td>
+            <td>hidden_char_zero_width</td>
+            <td>benchmark/table/train.jsonl</td>
+            <td>632</td>
+            <td>316</td>
+            <td>BYTE ORDER MARK (zero_width) in benchmark/table/train.jsonl</td>
+            <td>hiddenchars</td>
+            <td>deterministic</td>
+          </tr>
+          
+          <tr>
+            <td><span class="badge severity-high">high</span></td>
+            <td>hidden_char_zero_width</td>
+            <td>benchmark/table/train.jsonl</td>
+            <td>632</td>
+            <td>473</td>
+            <td>BYTE ORDER MARK (zero_width) in benchmark/table/train.jsonl</td>
+            <td>hiddenchars</td>
+            <td>deterministic</td>
+          </tr>
+          
+          <tr>
+            <td><span class="badge severity-high">high</span></td>
+            <td>hidden_char_zero_width</td>
+            <td>benchmark/table/train.jsonl</td>
+            <td>632</td>
+            <td>479</td>
+            <td>BYTE ORDER MARK (zero_width) in benchmark/table/train.jsonl</td>
+            <td>hiddenchars</td>
+            <td>deterministic</td>
+          </tr>
+          
+          <tr>
+            <td><span class="badge severity-high">high</span></td>
+            <td>hidden_char_zero_width</td>
+            <td>benchmark/table/train.jsonl</td>
+            <td>632</td>
+            <td>636</td>
+            <td>BYTE ORDER MARK (zero_width) in benchmark/table/train.jsonl</td>
+            <td>hiddenchars</td>
+            <td>deterministic</td>
+          </tr>
+          
+          <tr>
+            <td><span class="badge severity-high">high</span></td>
+            <td>hidden_char_zero_width</td>
+            <td>benchmark/table/train.jsonl</td>
+            <td>632</td>
+            <td>642</td>
+            <td>BYTE ORDER MARK (zero_width) in benchmark/table/train.jsonl</td>
+            <td>hiddenchars</td>
+            <td>deterministic</td>
+          </tr>
+          
+          <tr>
+            <td><span class="badge severity-high">high</span></td>
+            <td>hidden_char_zero_width</td>
+            <td>benchmark/table/train.jsonl</td>
+            <td>632</td>
+            <td>799</td>
+            <td>BYTE ORDER MARK (zero_width) in benchmark/table/train.jsonl</td>
+            <td>hiddenchars</td>
+            <td>deterministic</td>
+          </tr>
+          
+          <tr>
+            <td><span class="badge severity-high">high</span></td>
+            <td>hidden_char_zero_width</td>
+            <td>benchmark/table/train.jsonl</td>
+            <td>632</td>
+            <td>805</td>
+            <td>BYTE ORDER MARK (zero_width) in benchmark/table/train.jsonl</td>
+            <td>hiddenchars</td>
+            <td>deterministic</td>
+          </tr>
+          
+          <tr>
+            <td><span class="badge severity-high">high</span></td>
+            <td>hidden_char_zero_width</td>
+            <td>benchmark/table/train.jsonl</td>
+            <td>632</td>
+            <td>962</td>
+            <td>BYTE ORDER MARK (zero_width) in benchmark/table/train.jsonl</td>
+            <td>hiddenchars</td>
+            <td>deterministic</td>
+          </tr>
+          
+          <tr>
+            <td><span class="badge severity-high">high</span></td>
+            <td>hidden_char_zero_width</td>
+            <td>benchmark/table/train.jsonl</td>
+            <td>632</td>
+            <td>968</td>
+            <td>BYTE ORDER MARK (zero_width) in benchmark/table/train.jsonl</td>
+            <td>hiddenchars</td>
+            <td>deterministic</td>
+          </tr>
+          
+          <tr>
+            <td><span class="badge severity-high">high</span></td>
+            <td>hidden_char_zero_width</td>
+            <td>benchmark/table/train.jsonl</td>
+            <td>632</td>
+            <td>1125</td>
+            <td>BYTE ORDER MARK (zero_width) in benchmark/table/train.jsonl</td>
+            <td>hiddenchars</td>
+            <td>deterministic</td>
+          </tr>
+          
+          <tr>
+            <td><span class="badge severity-high">high</span></td>
+            <td>hidden_char_zero_width</td>
+            <td>benchmark/table/train.jsonl</td>
+            <td>632</td>
+            <td>1131</td>
+            <td>BYTE ORDER MARK (zero_width) in benchmark/table/train.jsonl</td>
+            <td>hiddenchars</td>
+            <td>deterministic</td>
+          </tr>
+          
+          <tr>
+            <td><span class="badge severity-high">high</span></td>
+            <td>hidden_char_zero_width</td>
+            <td>benchmark/table/train.jsonl</td>
+            <td>632</td>
+            <td>1288</td>
+            <td>BYTE ORDER MARK (zero_width) in benchmark/table/train.jsonl</td>
+            <td>hiddenchars</td>
+            <td>deterministic</td>
+          </tr>
+          
+          <tr>
+            <td><span class="badge severity-high">high</span></td>
+            <td>hidden_char_zero_width</td>
+            <td>benchmark/table/train.jsonl</td>
+            <td>632</td>
+            <td>1294</td>
+            <td>BYTE ORDER MARK (zero_width) in benchmark/table/train.jsonl</td>
+            <td>hiddenchars</td>
+            <td>deterministic</td>
+          </tr>
+          
+          <tr>
+            <td><span class="badge severity-high">high</span></td>
+            <td>hidden_char_zero_width</td>
+            <td>benchmark/table/train.jsonl</td>
+            <td>632</td>
+            <td>1451</td>
+            <td>BYTE ORDER MARK (zero_width) in benchmark/table/train.jsonl</td>
+            <td>hiddenchars</td>
+            <td>deterministic</td>
+          </tr>
+          
+          <tr>
+            <td><span class="badge severity-high">high</span></td>
+            <td>hidden_char_zero_width</td>
+            <td>benchmark/table/train.jsonl</td>
+            <td>632</td>
+            <td>1457</td>
+            <td>BYTE ORDER MARK (zero_width) in benchmark/table/train.jsonl</td>
+            <td>hiddenchars</td>
+            <td>deterministic</td>
+          </tr>
+          
+          <tr>
+            <td><span class="badge severity-high">high</span></td>
+            <td>hidden_char_zero_width</td>
+            <td>benchmark/table/train.jsonl</td>
+            <td>632</td>
+            <td>1614</td>
+            <td>BYTE ORDER MARK (zero_width) in benchmark/table/train.jsonl</td>
+            <td>hiddenchars</td>
+            <td>deterministic</td>
+          </tr>
+          
+          <tr>
+            <td><span class="badge severity-high">high</span></td>
+            <td>hidden_char_zero_width</td>
+            <td>benchmark/table/train.jsonl</td>
+            <td>632</td>
+            <td>1620</td>
+            <td>BYTE ORDER MARK (zero_width) in benchmark/table/train.jsonl</td>
+            <td>hiddenchars</td>
+            <td>deterministic</td>
+          </tr>
+          
+          <tr>
+            <td><span class="badge severity-high">high</span></td>
+            <td>hidden_char_zero_width</td>
+            <td>benchmark/table/train.jsonl</td>
+            <td>632</td>
+            <td>1777</td>
+            <td>BYTE ORDER MARK (zero_width) in benchmark/table/train.jsonl</td>
+            <td>hiddenchars</td>
+            <td>deterministic</td>
+          </tr>
+          
+          <tr>
+            <td><span class="badge severity-high">high</span></td>
+            <td>hidden_char_zero_width</td>
+            <td>benchmark/table/train.jsonl</td>
+            <td>632</td>
+            <td>1783</td>
+            <td>BYTE ORDER MARK (zero_width) in benchmark/table/train.jsonl</td>
+            <td>hiddenchars</td>
+            <td>deterministic</td>
+          </tr>
+          
+          <tr>
+            <td><span class="badge severity-high">high</span></td>
+            <td>hidden_char_zero_width</td>
+            <td>benchmark/table/train.jsonl</td>
+            <td>632</td>
+            <td>1938</td>
+            <td>BYTE ORDER MARK (zero_width) in benchmark/table/train.jsonl</td>
+            <td>hiddenchars</td>
+            <td>deterministic</td>
+          </tr>
+          
+          <tr>
+            <td><span class="badge severity-high">high</span></td>
+            <td>hidden_char_zero_width</td>
+            <td>benchmark/table/train.jsonl</td>
+            <td>632</td>
+            <td>1944</td>
+            <td>BYTE ORDER MARK (zero_width) in benchmark/table/train.jsonl</td>
+            <td>hiddenchars</td>
+            <td>deterministic</td>
+          </tr>
+          
+          <tr>
+            <td><span class="badge severity-high">high</span></td>
+            <td>hidden_char_zero_width</td>
+            <td>benchmark/table/train.jsonl</td>
+            <td>652</td>
+            <td>258</td>
+            <td>BYTE ORDER MARK (zero_width) in benchmark/table/train.jsonl</td>
+            <td>hiddenchars</td>
+            <td>deterministic</td>
+          </tr>
+          
+          <tr>
+            <td><span class="badge severity-high">high</span></td>
+            <td>hidden_char_zero_width</td>
+            <td>benchmark/table/train.jsonl</td>
+            <td>652</td>
+            <td>264</td>
+            <td>BYTE ORDER MARK (zero_width) in benchmark/table/train.jsonl</td>
+            <td>hiddenchars</td>
+            <td>deterministic</td>
+          </tr>
+          
+          <tr>
+            <td><span class="badge severity-high">high</span></td>
+            <td>hidden_char_zero_width</td>
+            <td>benchmark/table/train.jsonl</td>
+            <td>652</td>
+            <td>395</td>
+            <td>BYTE ORDER MARK (zero_width) in benchmark/table/train.jsonl</td>
+            <td>hiddenchars</td>
+            <td>deterministic</td>
+          </tr>
+          
+          <tr>
+            <td><span class="badge severity-high">high</span></td>
+            <td>hidden_char_zero_width</td>
+            <td>benchmark/table/train.jsonl</td>
+            <td>652</td>
+            <td>401</td>
+            <td>BYTE ORDER MARK (zero_width) in benchmark/table/train.jsonl</td>
+            <td>hiddenchars</td>
+            <td>deterministic</td>
+          </tr>
+          
+          <tr>
+            <td><span class="badge severity-high">high</span></td>
+            <td>hidden_char_zero_width</td>
+            <td>benchmark/table/train.jsonl</td>
+            <td>652</td>
+            <td>532</td>
+            <td>BYTE ORDER MARK (zero_width) in benchmark/table/train.jsonl</td>
+            <td>hiddenchars</td>
+            <td>deterministic</td>
+          </tr>
+          
+          <tr>
+            <td><span class="badge severity-high">high</span></td>
+            <td>hidden_char_zero_width</td>
+            <td>benchmark/table/train.jsonl</td>
+            <td>652</td>
+            <td>538</td>
+            <td>BYTE ORDER MARK (zero_width) in benchmark/table/train.jsonl</td>
+            <td>hiddenchars</td>
+            <td>deterministic</td>
+          </tr>
+          
+          <tr>
+            <td><span class="badge severity-high">high</span></td>
+            <td>hidden_char_zero_width</td>
+            <td>benchmark/table/train.jsonl</td>
+            <td>652</td>
+            <td>659</td>
+            <td>BYTE ORDER MARK (zero_width) in benchmark/table/train.jsonl</td>
+            <td>hiddenchars</td>
+            <td>deterministic</td>
+          </tr>
+          
+          <tr>
+            <td><span class="badge severity-high">high</span></td>
+            <td>hidden_char_zero_width</td>
+            <td>benchmark/table/train.jsonl</td>
+            <td>652</td>
+            <td>665</td>
+            <td>BYTE ORDER MARK (zero_width) in benchmark/table/train.jsonl</td>
+            <td>hiddenchars</td>
+            <td>deterministic</td>
+          </tr>
+          
+          <tr>
+            <td><span class="badge severity-high">high</span></td>
+            <td>hidden_char_zero_width</td>
+            <td>benchmark/table/train.jsonl</td>
+            <td>652</td>
+            <td>802</td>
+            <td>BYTE ORDER MARK (zero_width) in benchmark/table/train.jsonl</td>
+            <td>hiddenchars</td>
+            <td>deterministic</td>
+          </tr>
+          
+          <tr>
+            <td><span class="badge severity-high">high</span></td>
+            <td>hidden_char_zero_width</td>
+            <td>benchmark/table/train.jsonl</td>
+            <td>652</td>
+            <td>808</td>
+            <td>BYTE ORDER MARK (zero_width) in benchmark/table/train.jsonl</td>
+            <td>hiddenchars</td>
+            <td>deterministic</td>
+          </tr>
+          
+          <tr>
+            <td><span class="badge severity-high">high</span></td>
+            <td>hidden_char_zero_width</td>
+            <td>benchmark/table/train.jsonl</td>
+            <td>652</td>
+            <td>939</td>
+            <td>BYTE ORDER MARK (zero_width) in benchmark/table/train.jsonl</td>
+            <td>hiddenchars</td>
+            <td>deterministic</td>
+          </tr>
+          
+          <tr>
+            <td><span class="badge severity-high">high</span></td>
+            <td>hidden_char_zero_width</td>
+            <td>benchmark/table/train.jsonl</td>
+            <td>652</td>
+            <td>945</td>
+            <td>BYTE ORDER MARK (zero_width) in benchmark/table/train.jsonl</td>
+            <td>hiddenchars</td>
+            <td>deterministic</td>
+          </tr>
+          
+          <tr>
+            <td><span class="badge severity-high">high</span></td>
+            <td>hidden_char_zero_width</td>
+            <td>benchmark/table/train.jsonl</td>
+            <td>652</td>
+            <td>1076</td>
+            <td>BYTE ORDER MARK (zero_width) in benchmark/table/train.jsonl</td>
+            <td>hiddenchars</td>
+            <td>deterministic</td>
+          </tr>
+          
+          <tr>
+            <td><span class="badge severity-high">high</span></td>
+            <td>hidden_char_zero_width</td>
+            <td>benchmark/table/train.jsonl</td>
+            <td>652</td>
+            <td>1082</td>
+            <td>BYTE ORDER MARK (zero_width) in benchmark/table/train.jsonl</td>
+            <td>hiddenchars</td>
+            <td>deterministic</td>
+          </tr>
+          
+          <tr>
+            <td><span class="badge severity-high">high</span></td>
+            <td>hidden_char_zero_width</td>
+            <td>benchmark/table/train.jsonl</td>
+            <td>652</td>
+            <td>1213</td>
+            <td>BYTE ORDER MARK (zero_width) in benchmark/table/train.jsonl</td>
+            <td>hiddenchars</td>
+            <td>deterministic</td>
+          </tr>
+          
+          <tr>
+            <td><span class="badge severity-high">high</span></td>
+            <td>hidden_char_zero_width</td>
+            <td>benchmark/table/train.jsonl</td>
+            <td>652</td>
+            <td>1219</td>
+            <td>BYTE ORDER MARK (zero_width) in benchmark/table/train.jsonl</td>
+            <td>hiddenchars</td>
+            <td>deterministic</td>
+          </tr>
+          
+          <tr>
+            <td><span class="badge severity-high">high</span></td>
+            <td>hidden_char_zero_width</td>
+            <td>benchmark/table/train.jsonl</td>
+            <td>848</td>
+            <td>508</td>
+            <td>BYTE ORDER MARK (zero_width) in benchmark/table/train.jsonl</td>
+            <td>hiddenchars</td>
+            <td>deterministic</td>
+          </tr>
+          
+          <tr>
+            <td><span class="badge severity-high">high</span></td>
+            <td>hidden_char_zero_width</td>
+            <td>benchmark/table/train.jsonl</td>
+            <td>848</td>
+            <td>514</td>
+            <td>BYTE ORDER MARK (zero_width) in benchmark/table/train.jsonl</td>
+            <td>hiddenchars</td>
+            <td>deterministic</td>
+          </tr>
+          
+          <tr>
+            <td><span class="badge severity-high">high</span></td>
+            <td>hidden_char_zero_width</td>
+            <td>benchmark/table/train.jsonl</td>
+            <td>848</td>
+            <td>881</td>
+            <td>BYTE ORDER MARK (zero_width) in benchmark/table/train.jsonl</td>
+            <td>hiddenchars</td>
+            <td>deterministic</td>
+          </tr>
+          
+          <tr>
+            <td><span class="badge severity-high">high</span></td>
+            <td>hidden_char_zero_width</td>
+            <td>benchmark/table/train.jsonl</td>
+            <td>848</td>
+            <td>887</td>
+            <td>BYTE ORDER MARK (zero_width) in benchmark/table/train.jsonl</td>
+            <td>hiddenchars</td>
+            <td>deterministic</td>
+          </tr>
+          
+          <tr>
+            <td><span class="badge severity-high">high</span></td>
+            <td>hidden_char_zero_width</td>
+            <td>benchmark/table/train.jsonl</td>
+            <td>848</td>
+            <td>1250</td>
+            <td>BYTE ORDER MARK (zero_width) in benchmark/table/train.jsonl</td>
+            <td>hiddenchars</td>
+            <td>deterministic</td>
+          </tr>
+          
+          <tr>
+            <td><span class="badge severity-high">high</span></td>
+            <td>hidden_char_zero_width</td>
+            <td>benchmark/table/train.jsonl</td>
+            <td>848</td>
+            <td>1256</td>
+            <td>BYTE ORDER MARK (zero_width) in benchmark/table/train.jsonl</td>
+            <td>hiddenchars</td>
+            <td>deterministic</td>
+          </tr>
+          
+          <tr>
+            <td><span class="badge severity-high">high</span></td>
+            <td>hidden_char_zero_width</td>
+            <td>benchmark/table/train.jsonl</td>
+            <td>848</td>
+            <td>1631</td>
+            <td>BYTE ORDER MARK (zero_width) in benchmark/table/train.jsonl</td>
+            <td>hiddenchars</td>
+            <td>deterministic</td>
+          </tr>
+          
+          <tr>
+            <td><span class="badge severity-high">high</span></td>
+            <td>hidden_char_zero_width</td>
+            <td>benchmark/table/train.jsonl</td>
+            <td>848</td>
+            <td>1637</td>
+            <td>BYTE ORDER MARK (zero_width) in benchmark/table/train.jsonl</td>
+            <td>hiddenchars</td>
+            <td>deterministic</td>
+          </tr>
+          
+          <tr>
+            <td><span class="badge severity-high">high</span></td>
+            <td>hidden_char_zero_width</td>
+            <td>benchmark/table/train.jsonl</td>
+            <td>848</td>
+            <td>2004</td>
+            <td>BYTE ORDER MARK (zero_width) in benchmark/table/train.jsonl</td>
+            <td>hiddenchars</td>
+            <td>deterministic</td>
+          </tr>
+          
+          <tr>
+            <td><span class="badge severity-high">high</span></td>
+            <td>hidden_char_zero_width</td>
+            <td>benchmark/table/train.jsonl</td>
+            <td>848</td>
+            <td>2010</td>
+            <td>BYTE ORDER MARK (zero_width) in benchmark/table/train.jsonl</td>
+            <td>hiddenchars</td>
+            <td>deterministic</td>
+          </tr>
+          
+          <tr>
+            <td><span class="badge severity-high">high</span></td>
+            <td>hidden_char_zero_width</td>
+            <td>benchmark/table/train.jsonl</td>
+            <td>848</td>
+            <td>2376</td>
+            <td>BYTE ORDER MARK (zero_width) in benchmark/table/train.jsonl</td>
+            <td>hiddenchars</td>
+            <td>deterministic</td>
+          </tr>
+          
+          <tr>
+            <td><span class="badge severity-high">high</span></td>
+            <td>hidden_char_zero_width</td>
+            <td>benchmark/table/train.jsonl</td>
+            <td>848</td>
+            <td>2382</td>
+            <td>BYTE ORDER MARK (zero_width) in benchmark/table/train.jsonl</td>
+            <td>hiddenchars</td>
+            <td>deterministic</td>
+          </tr>
+          
+          <tr>
+            <td><span class="badge severity-high">high</span></td>
+            <td>hidden_char_zero_width</td>
+            <td>benchmark/table/train.jsonl</td>
+            <td>853</td>
+            <td>263</td>
+            <td>BYTE ORDER MARK (zero_width) in benchmark/table/train.jsonl</td>
+            <td>hiddenchars</td>
+            <td>deterministic</td>
+          </tr>
+          
+          <tr>
+            <td><span class="badge severity-high">high</span></td>
+            <td>hidden_char_zero_width</td>
+            <td>benchmark/table/train.jsonl</td>
+            <td>853</td>
+            <td>269</td>
+            <td>BYTE ORDER MARK (zero_width) in benchmark/table/train.jsonl</td>
+            <td>hiddenchars</td>
+            <td>deterministic</td>
+          </tr>
+          
+          <tr>
+            <td><span class="badge severity-high">high</span></td>
+            <td>hidden_char_zero_width</td>
+            <td>benchmark/table/train.jsonl</td>
+            <td>853</td>
+            <td>399</td>
+            <td>BYTE ORDER MARK (zero_width) in benchmark/table/train.jsonl</td>
+            <td>hiddenchars</td>
+            <td>deterministic</td>
+          </tr>
+          
+          <tr>
+            <td><span class="badge severity-high">high</span></td>
+            <td>hidden_char_zero_width</td>
+            <td>benchmark/table/train.jsonl</td>
+            <td>853</td>
+            <td>405</td>
+            <td>BYTE ORDER MARK (zero_width) in benchmark/table/train.jsonl</td>
+            <td>hiddenchars</td>
+            <td>deterministic</td>
+          </tr>
+          
+          <tr>
+            <td><span class="badge severity-high">high</span></td>
+            <td>hidden_char_zero_width</td>
+            <td>benchmark/table/train.jsonl</td>
+            <td>853</td>
+            <td>538</td>
+            <td>BYTE ORDER MARK (zero_width) in benchmark/table/train.jsonl</td>
+            <td>hiddenchars</td>
+            <td>deterministic</td>
+          </tr>
+          
+          <tr>
+            <td><span class="badge severity-high">high</span></td>
+            <td>hidden_char_zero_width</td>
+            <td>benchmark/table/train.jsonl</td>
+            <td>853</td>
+            <td>544</td>
+            <td>BYTE ORDER MARK (zero_width) in benchmark/table/train.jsonl</td>
+            <td>hiddenchars</td>
+            <td>deterministic</td>
+          </tr>
+          
+          <tr>
+            <td><span class="badge severity-high">high</span></td>
+            <td>hidden_char_zero_width</td>
+            <td>benchmark/table/train.jsonl</td>
+            <td>853</td>
+            <td>671</td>
+            <td>BYTE ORDER MARK (zero_width) in benchmark/table/train.jsonl</td>
+            <td>hiddenchars</td>
+            <td>deterministic</td>
+          </tr>
+          
+          <tr>
+            <td><span class="badge severity-high">high</span></td>
+            <td>hidden_char_zero_width</td>
+            <td>benchmark/table/train.jsonl</td>
+            <td>853</td>
+            <td>677</td>
+            <td>BYTE ORDER MARK (zero_width) in benchmark/table/train.jsonl</td>
+            <td>hiddenchars</td>
+            <td>deterministic</td>
+          </tr>
+          
+          <tr>
+            <td><span class="badge severity-high">high</span></td>
+            <td>hidden_char_zero_width</td>
+            <td>benchmark/table/train.jsonl</td>
+            <td>853</td>
+            <td>807</td>
+            <td>BYTE ORDER MARK (zero_width) in benchmark/table/train.jsonl</td>
+            <td>hiddenchars</td>
+            <td>deterministic</td>
+          </tr>
+          
+          <tr>
+            <td><span class="badge severity-high">high</span></td>
+            <td>hidden_char_zero_width</td>
+            <td>benchmark/table/train.jsonl</td>
+            <td>853</td>
+            <td>813</td>
+            <td>BYTE ORDER MARK (zero_width) in benchmark/table/train.jsonl</td>
+            <td>hiddenchars</td>
+            <td>deterministic</td>
+          </tr>
+          
+          <tr>
+            <td><span class="badge severity-high">high</span></td>
+            <td>hidden_char_zero_width</td>
+            <td>benchmark/table/train.jsonl</td>
+            <td>853</td>
+            <td>943</td>
+            <td>BYTE ORDER MARK (zero_width) in benchmark/table/train.jsonl</td>
+            <td>hiddenchars</td>
+            <td>deterministic</td>
+          </tr>
+          
+          <tr>
+            <td><span class="badge severity-high">high</span></td>
+            <td>hidden_char_zero_width</td>
+            <td>benchmark/table/train.jsonl</td>
+            <td>853</td>
+            <td>949</td>
+            <td>BYTE ORDER MARK (zero_width) in benchmark/table/train.jsonl</td>
+            <td>hiddenchars</td>
+            <td>deterministic</td>
+          </tr>
+          
+          <tr>
+            <td><span class="badge severity-high">high</span></td>
+            <td>hidden_char_zero_width</td>
+            <td>benchmark/table/train.jsonl</td>
+            <td>853</td>
+            <td>1079</td>
+            <td>BYTE ORDER MARK (zero_width) in benchmark/table/train.jsonl</td>
+            <td>hiddenchars</td>
+            <td>deterministic</td>
+          </tr>
+          
+          <tr>
+            <td><span class="badge severity-high">high</span></td>
+            <td>hidden_char_zero_width</td>
+            <td>benchmark/table/train.jsonl</td>
+            <td>853</td>
+            <td>1085</td>
+            <td>BYTE ORDER MARK (zero_width) in benchmark/table/train.jsonl</td>
+            <td>hiddenchars</td>
+            <td>deterministic</td>
+          </tr>
+          
+          <tr>
+            <td><span class="badge severity-high">high</span></td>
+            <td>hidden_char_zero_width</td>
+            <td>benchmark/table/train.jsonl</td>
+            <td>853</td>
+            <td>1215</td>
+            <td>BYTE ORDER MARK (zero_width) in benchmark/table/train.jsonl</td>
+            <td>hiddenchars</td>
+            <td>deterministic</td>
+          </tr>
+          
+          <tr>
+            <td><span class="badge severity-high">high</span></td>
+            <td>hidden_char_zero_width</td>
+            <td>benchmark/table/train.jsonl</td>
+            <td>853</td>
+            <td>1221</td>
+            <td>BYTE ORDER MARK (zero_width) in benchmark/table/train.jsonl</td>
+            <td>hiddenchars</td>
+            <td>deterministic</td>
+          </tr>
+          
+          <tr>
+            <td><span class="badge severity-high">high</span></td>
+            <td>hidden_char_zero_width</td>
+            <td>benchmark/table/train.jsonl</td>
+            <td>853</td>
+            <td>1351</td>
+            <td>BYTE ORDER MARK (zero_width) in benchmark/table/train.jsonl</td>
+            <td>hiddenchars</td>
+            <td>deterministic</td>
+          </tr>
+          
+          <tr>
+            <td><span class="badge severity-high">high</span></td>
+            <td>hidden_char_zero_width</td>
+            <td>benchmark/table/train.jsonl</td>
+            <td>853</td>
+            <td>1357</td>
+            <td>BYTE ORDER MARK (zero_width) in benchmark/table/train.jsonl</td>
+            <td>hiddenchars</td>
+            <td>deterministic</td>
+          </tr>
+          
+          <tr>
+            <td><span class="badge severity-high">high</span></td>
+            <td>hidden_char_zero_width</td>
+            <td>benchmark/table/train.jsonl</td>
+            <td>853</td>
+            <td>1487</td>
+            <td>BYTE ORDER MARK (zero_width) in benchmark/table/train.jsonl</td>
+            <td>hiddenchars</td>
+            <td>deterministic</td>
+          </tr>
+          
+          <tr>
+            <td><span class="badge severity-high">high</span></td>
+            <td>hidden_char_zero_width</td>
+            <td>benchmark/table/train.jsonl</td>
+            <td>853</td>
+            <td>1493</td>
+            <td>BYTE ORDER MARK (zero_width) in benchmark/table/train.jsonl</td>
+            <td>hiddenchars</td>
+            <td>deterministic</td>
+          </tr>
+          
+          <tr>
+            <td><span class="badge severity-high">high</span></td>
+            <td>hidden_char_zero_width</td>
+            <td>benchmark/table/train.jsonl</td>
+            <td>853</td>
+            <td>1623</td>
+            <td>BYTE ORDER MARK (zero_width) in benchmark/table/train.jsonl</td>
+            <td>hiddenchars</td>
+            <td>deterministic</td>
+          </tr>
+          
+          <tr>
+            <td><span class="badge severity-high">high</span></td>
+            <td>hidden_char_zero_width</td>
+            <td>benchmark/table/train.jsonl</td>
+            <td>853</td>
+            <td>1629</td>
+            <td>BYTE ORDER MARK (zero_width) in benchmark/table/train.jsonl</td>
+            <td>hiddenchars</td>
+            <td>deterministic</td>
+          </tr>
+          
+          <tr>
+            <td><span class="badge severity-high">high</span></td>
+            <td>hidden_char_zero_width</td>
+            <td>benchmark/table/train.jsonl</td>
+            <td>853</td>
+            <td>1759</td>
+            <td>BYTE ORDER MARK (zero_width) in benchmark/table/train.jsonl</td>
+            <td>hiddenchars</td>
+            <td>deterministic</td>
+          </tr>
+          
+          <tr>
+            <td><span class="badge severity-high">high</span></td>
+            <td>hidden_char_zero_width</td>
+            <td>benchmark/table/train.jsonl</td>
+            <td>853</td>
+            <td>1765</td>
+            <td>BYTE ORDER MARK (zero_width) in benchmark/table/train.jsonl</td>
+            <td>hiddenchars</td>
+            <td>deterministic</td>
+          </tr>
+          
+          <tr>
+            <td><span class="badge severity-high">high</span></td>
+            <td>hidden_char_zero_width</td>
+            <td>benchmark/table/train.jsonl</td>
+            <td>853</td>
+            <td>1895</td>
+            <td>BYTE ORDER MARK (zero_width) in benchmark/table/train.jsonl</td>
+            <td>hiddenchars</td>
+            <td>deterministic</td>
+          </tr>
+          
+          <tr>
+            <td><span class="badge severity-high">high</span></td>
+            <td>hidden_char_zero_width</td>
+            <td>benchmark/table/train.jsonl</td>
+            <td>853</td>
+            <td>1901</td>
+            <td>BYTE ORDER MARK (zero_width) in benchmark/table/train.jsonl</td>
+            <td>hiddenchars</td>
+            <td>deterministic</td>
+          </tr>
+          
+          <tr>
+            <td><span class="badge severity-high">high</span></td>
+            <td>suspicious_shell</td>
+            <td>bipia/metrics/regist.py</td>
+            <td>267</td>
+            <td>38</td>
+            <td>Suspicious shell command patterns</td>
+            <td>yara</td>
+            <td>deterministic</td>
+          </tr>
+          
+          <tr>
+            <td><span class="badge severity-high">high</span></td>
+            <td>suspicious_shell</td>
+            <td>bipia/metrics/regist.py</td>
+            <td>268</td>
+            <td>52</td>
+            <td>Suspicious shell command patterns</td>
+            <td>yara</td>
+            <td>deterministic</td>
+          </tr>
+          
+          <tr>
+            <td><span class="badge severity-medium">medium</span></td>
+            <td>python.lang.security.audit.eval-detected.eval-detected</td>
+            <td>/tmp/safeanalyze-BIPIA/benchmark/qa/process.py</td>
+            <td>21</td>
+            <td>32</td>
+            <td>Detected the use of eval(). eval() can be dangerous if used to evaluate dynamic content. If this content can be input from outside the program, this may be a code injection vulnerability. Ensure evaluated content is not definable by external sources.</td>
+            <td>semgrep</td>
+            <td>deterministic</td>
+          </tr>
+          
+          <tr>
+            <td><span class="badge severity-medium">medium</span></td>
+            <td>suspicious_imports</td>
+            <td>benchmark/code/train.jsonl</td>
+            <td>9</td>
+            <td>2092</td>
+            <td>Imports of known suspicious packages</td>
+            <td>yara</td>
+            <td>deterministic</td>
+          </tr>
+          
+          <tr>
+            <td><span class="badge severity-medium">medium</span></td>
+            <td>suspicious_imports</td>
+            <td>benchmark/code/train.jsonl</td>
+            <td>9</td>
+            <td>2410</td>
+            <td>Imports of known suspicious packages</td>
+            <td>yara</td>
+            <td>deterministic</td>
+          </tr>
+          
+          <tr>
+            <td><span class="badge severity-medium">medium</span></td>
+            <td>suspicious_imports</td>
+            <td>benchmark/code/train.jsonl</td>
+            <td>9</td>
+            <td>2683</td>
+            <td>Imports of known suspicious packages</td>
+            <td>yara</td>
+            <td>deterministic</td>
+          </tr>
+          
+          <tr>
+            <td><span class="badge severity-medium">medium</span></td>
+            <td>suspicious_imports</td>
+            <td>benchmark/code_attack_test.json</td>
+            <td>4</td>
+            <td>87</td>
+            <td>Imports of known suspicious packages</td>
+            <td>yara</td>
+            <td>deterministic</td>
+          </tr>
+          
+          <tr>
+            <td><span class="badge severity-medium">medium</span></td>
+            <td>suspicious_imports</td>
+            <td>benchmark/code_attack_test.json</td>
+            <td>10</td>
+            <td>88</td>
+            <td>Imports of known suspicious packages</td>
+            <td>yara</td>
+            <td>deterministic</td>
+          </tr>
+          
+          <tr>
+            <td><span class="badge severity-medium">medium</span></td>
+            <td>suspicious_imports</td>
+            <td>benchmark/code_attack_test.json</td>
+            <td>11</td>
+            <td>89</td>
+            <td>Imports of known suspicious packages</td>
+            <td>yara</td>
+            <td>deterministic</td>
+          </tr>
+          
+          <tr>
+            <td><span class="badge severity-medium">medium</span></td>
+            <td>suspicious_imports</td>
+            <td>benchmark/code_attack_test.json</td>
+            <td>17</td>
+            <td>88</td>
+            <td>Imports of known suspicious packages</td>
+            <td>yara</td>
+            <td>deterministic</td>
+          </tr>
+          
+          <tr>
+            <td><span class="badge severity-medium">medium</span></td>
+            <td>suspicious_imports</td>
+            <td>benchmark/code_attack_test.json</td>
+            <td>21</td>
+            <td>87</td>
+            <td>Imports of known suspicious packages</td>
+            <td>yara</td>
+            <td>deterministic</td>
+          </tr>
+          
+          <tr>
+            <td><span class="badge severity-medium">medium</span></td>
+            <td>suspicious_imports</td>
+            <td>benchmark/code_attack_test.json</td>
+            <td>24</td>
+            <td>72</td>
+            <td>Imports of known suspicious packages</td>
+            <td>yara</td>
+            <td>deterministic</td>
+          </tr>
+          
+          <tr>
+            <td><span class="badge severity-medium">medium</span></td>
+            <td>suspicious_imports</td>
+            <td>benchmark/code_attack_test.json</td>
+            <td>25</td>
+            <td>77</td>
+            <td>Imports of known suspicious packages</td>
+            <td>yara</td>
+            <td>deterministic</td>
+          </tr>
+          
+          <tr>
+            <td><span class="badge severity-medium">medium</span></td>
+            <td>suspicious_imports</td>
+            <td>benchmark/code_attack_test.json</td>
+            <td>26</td>
+            <td>75</td>
+            <td>Imports of known suspicious packages</td>
+            <td>yara</td>
+            <td>deterministic</td>
+          </tr>
+          
+          <tr>
+            <td><span class="badge severity-medium">medium</span></td>
+            <td>suspicious_imports</td>
+            <td>benchmark/code_attack_test.json</td>
+            <td>27</td>
+            <td>84</td>
+            <td>Imports of known suspicious packages</td>
+            <td>yara</td>
+            <td>deterministic</td>
+          </tr>
+          
+          <tr>
+            <td><span class="badge severity-medium">medium</span></td>
+            <td>suspicious_imports</td>
+            <td>benchmark/code_attack_test.json</td>
+            <td>28</td>
+            <td>96</td>
+            <td>Imports of known suspicious packages</td>
+            <td>yara</td>
+            <td>deterministic</td>
+          </tr>
+          
+          <tr>
+            <td><span class="badge severity-medium">medium</span></td>
+            <td>suspicious_imports</td>
+            <td>benchmark/code_attack_test.json</td>
+            <td>32</td>
+            <td>93</td>
+            <td>Imports of known suspicious packages</td>
+            <td>yara</td>
+            <td>deterministic</td>
+          </tr>
+          
+          <tr>
+            <td><span class="badge severity-medium">medium</span></td>
+            <td>suspicious_imports</td>
+            <td>benchmark/code_attack_test.json</td>
+            <td>34</td>
+            <td>79</td>
+            <td>Imports of known suspicious packages</td>
+            <td>yara</td>
+            <td>deterministic</td>
+          </tr>
+          
+          <tr>
+            <td><span class="badge severity-medium">medium</span></td>
+            <td>suspicious_imports</td>
+            <td>benchmark/code_attack_test.json</td>
+            <td>35</td>
+            <td>105</td>
+            <td>Imports of known suspicious packages</td>
+            <td>yara</td>
+            <td>deterministic</td>
+          </tr>
+          
+          <tr>
+            <td><span class="badge severity-medium">medium</span></td>
+            <td>suspicious_imports</td>
+            <td>benchmark/code_attack_test.json</td>
+            <td>38</td>
+            <td>90</td>
+            <td>Imports of known suspicious packages</td>
+            <td>yara</td>
+            <td>deterministic</td>
+          </tr>
+          
+          <tr>
+            <td><span class="badge severity-medium">medium</span></td>
+            <td>suspicious_imports</td>
+            <td>benchmark/code_attack_test.json</td>
+            <td>39</td>
+            <td>87</td>
+            <td>Imports of known suspicious packages</td>
+            <td>yara</td>
+            <td>deterministic</td>
+          </tr>
+          
+          <tr>
+            <td><span class="badge severity-medium">medium</span></td>
+            <td>suspicious_imports</td>
+            <td>benchmark/code_attack_test.json</td>
+            <td>46</td>
+            <td>93</td>
+            <td>Imports of known suspicious packages</td>
+            <td>yara</td>
+            <td>deterministic</td>
+          </tr>
+          
+          <tr>
+            <td><span class="badge severity-medium">medium</span></td>
+            <td>suspicious_imports</td>
+            <td>benchmark/code_attack_test.json</td>
+            <td>60</td>
+            <td>77</td>
+            <td>Imports of known suspicious packages</td>
+            <td>yara</td>
+            <td>deterministic</td>
+          </tr>
+          
+          <tr>
+            <td><span class="badge severity-medium">medium</span></td>
+            <td>suspicious_imports</td>
+            <td>benchmark/code_attack_test.json</td>
+            <td>60</td>
+            <td>77</td>
+            <td>Imports of known suspicious packages</td>
+            <td>yara</td>
+            <td>deterministic</td>
+          </tr>
+          
+          <tr>
+            <td><span class="badge severity-medium">medium</span></td>
+            <td>suspicious_imports</td>
+            <td>benchmark/code_attack_test.json</td>
+            <td>61</td>
+            <td>91</td>
+            <td>Imports of known suspicious packages</td>
+            <td>yara</td>
+            <td>deterministic</td>
+          </tr>
+          
+          <tr>
+            <td><span class="badge severity-medium">medium</span></td>
+            <td>suspicious_imports</td>
+            <td>benchmark/code_attack_test.json</td>
+            <td>62</td>
+            <td>91</td>
+            <td>Imports of known suspicious packages</td>
+            <td>yara</td>
+            <td>deterministic</td>
+          </tr>
+          
+          <tr>
+            <td><span class="badge severity-medium">medium</span></td>
+            <td>suspicious_imports</td>
+            <td>benchmark/code_attack_test.json</td>
+            <td>66</td>
+            <td>111</td>
+            <td>Imports of known suspicious packages</td>
+            <td>yara</td>
+            <td>deterministic</td>
+          </tr>
+          
+          <tr>
+            <td><span class="badge severity-medium">medium</span></td>
+            <td>suspicious_imports</td>
+            <td>benchmark/code_attack_test.json</td>
+            <td>68</td>
+            <td>90</td>
+            <td>Imports of known suspicious packages</td>
+            <td>yara</td>
+            <td>deterministic</td>
+          </tr>
+          
+          <tr>
+            <td><span class="badge severity-medium">medium</span></td>
+            <td>suspicious_imports</td>
+            <td>benchmark/code_attack_test.json</td>
+            <td>69</td>
+            <td>81</td>
+            <td>Imports of known suspicious packages</td>
+            <td>yara</td>
+            <td>deterministic</td>
+          </tr>
+          
+          <tr>
+            <td><span class="badge severity-medium">medium</span></td>
+            <td>suspicious_imports</td>
+            <td>benchmark/code_attack_train.json</td>
+            <td>10</td>
+            <td>104</td>
+            <td>Imports of known suspicious packages</td>
+            <td>yara</td>
+            <td>deterministic</td>
+          </tr>
+          
+          <tr>
+            <td><span class="badge severity-medium">medium</span></td>
+            <td>suspicious_imports</td>
+            <td>benchmark/code_attack_train.json</td>
+            <td>12</td>
+            <td>98</td>
+            <td>Imports of known suspicious packages</td>
+            <td>yara</td>
+            <td>deterministic</td>
+          </tr>
+          
+          <tr>
+            <td><span class="badge severity-medium">medium</span></td>
+            <td>suspicious_imports</td>
+            <td>benchmark/code_attack_train.json</td>
+            <td>19</td>
+            <td>100</td>
+            <td>Imports of known suspicious packages</td>
+            <td>yara</td>
+            <td>deterministic</td>
+          </tr>
+          
+          <tr>
+            <td><span class="badge severity-medium">medium</span></td>
+            <td>suspicious_imports</td>
+            <td>benchmark/code_attack_train.json</td>
+            <td>20</td>
+            <td>98</td>
+            <td>Imports of known suspicious packages</td>
+            <td>yara</td>
+            <td>deterministic</td>
+          </tr>
+          
+          <tr>
+            <td><span class="badge severity-medium">medium</span></td>
+            <td>suspicious_imports</td>
+            <td>benchmark/code_attack_train.json</td>
+            <td>32</td>
+            <td>75</td>
+            <td>Imports of known suspicious packages</td>
+            <td>yara</td>
+            <td>deterministic</td>
+          </tr>
+          
+          <tr>
+            <td><span class="badge severity-medium">medium</span></td>
+            <td>suspicious_imports</td>
+            <td>benchmark/code_attack_train.json</td>
+            <td>45</td>
+            <td>74</td>
+            <td>Imports of known suspicious packages</td>
+            <td>yara</td>
+            <td>deterministic</td>
+          </tr>
+          
+          <tr>
+            <td><span class="badge severity-medium">medium</span></td>
+            <td>suspicious_imports</td>
+            <td>benchmark/code_attack_train.json</td>
+            <td>46</td>
+            <td>78</td>
+            <td>Imports of known suspicious packages</td>
+            <td>yara</td>
+            <td>deterministic</td>
+          </tr>
+          
+          <tr>
+            <td><span class="badge severity-medium">medium</span></td>
+            <td>suspicious_imports</td>
+            <td>benchmark/code_attack_train.json</td>
+            <td>48</td>
+            <td>80</td>
+            <td>Imports of known suspicious packages</td>
+            <td>yara</td>
+            <td>deterministic</td>
+          </tr>
+          
+          <tr>
+            <td><span class="badge severity-medium">medium</span></td>
+            <td>suspicious_imports</td>
+            <td>benchmark/code_attack_train.json</td>
+            <td>49</td>
+            <td>90</td>
+            <td>Imports of known suspicious packages</td>
+            <td>yara</td>
+            <td>deterministic</td>
+          </tr>
+          
+          <tr>
+            <td><span class="badge severity-medium">medium</span></td>
+            <td>suspicious_imports</td>
+            <td>benchmark/code_attack_train.json</td>
+            <td>55</td>
+            <td>87</td>
+            <td>Imports of known suspicious packages</td>
+            <td>yara</td>
+            <td>deterministic</td>
+          </tr>
+          
+          <tr>
+            <td><span class="badge severity-medium">medium</span></td>
+            <td>suspicious_imports</td>
+            <td>benchmark/code_attack_train.json</td>
+            <td>61</td>
+            <td>73</td>
+            <td>Imports of known suspicious packages</td>
+            <td>yara</td>
+            <td>deterministic</td>
+          </tr>
+          
+          <tr>
+            <td><span class="badge severity-medium">medium</span></td>
+            <td>suspicious_imports</td>
+            <td>benchmark/code_attack_train.json</td>
+            <td>63</td>
+            <td>77</td>
+            <td>Imports of known suspicious packages</td>
+            <td>yara</td>
+            <td>deterministic</td>
+          </tr>
+          
+          <tr>
+            <td><span class="badge severity-medium">medium</span></td>
+            <td>suspicious_imports</td>
+            <td>benchmark/code_attack_train.json</td>
+            <td>66</td>
+            <td>72</td>
+            <td>Imports of known suspicious packages</td>
+            <td>yara</td>
+            <td>deterministic</td>
+          </tr>
+          
+          <tr>
+            <td><span class="badge severity-medium">medium</span></td>
+            <td>suspicious_imports</td>
+            <td>benchmark/code_attack_train.json</td>
+            <td>67</td>
+            <td>77</td>
+            <td>Imports of known suspicious packages</td>
+            <td>yara</td>
+            <td>deterministic</td>
+          </tr>
+          
+          <tr>
+            <td><span class="badge severity-medium">medium</span></td>
+            <td>suspicious_imports</td>
+            <td>benchmark/code_attack_train.json</td>
+            <td>68</td>
+            <td>79</td>
+            <td>Imports of known suspicious packages</td>
+            <td>yara</td>
+            <td>deterministic</td>
+          </tr>
+          
+          <tr>
+            <td><span class="badge severity-medium">medium</span></td>
+            <td>suspicious_imports</td>
+            <td>benchmark/code_attack_train.json</td>
+            <td>69</td>
+            <td>82</td>
+            <td>Imports of known suspicious packages</td>
+            <td>yara</td>
+            <td>deterministic</td>
+          </tr>
+          
+          <tr>
+            <td><span class="badge severity-medium">medium</span></td>
+            <td>suspicious_imports</td>
+            <td>benchmark/code_attack_train.json</td>
+            <td>70</td>
+            <td>85</td>
+            <td>Imports of known suspicious packages</td>
+            <td>yara</td>
+            <td>deterministic</td>
+          </tr>
+          
+          <tr>
+            <td><span class="badge severity-medium">medium</span></td>
+            <td>account_access_request</td>
+            <td>benchmark/email/test.jsonl</td>
+            <td>37</td>
+            <td>230</td>
+            <td>Natural-language request to access a user account or service</td>
+            <td>yara</td>
+            <td>deterministic</td>
+          </tr>
+          
+          <tr>
+            <td><span class="badge severity-medium">medium</span></td>
+            <td>account_access_request</td>
+            <td>benchmark/email/train.jsonl</td>
+            <td>44</td>
+            <td>484</td>
+            <td>Natural-language request to access a user account or service</td>
+            <td>yara</td>
+            <td>deterministic</td>
+          </tr>
+          
+          <tr>
+            <td><span class="badge severity-medium">medium</span></td>
+            <td>entropy_base64_blob</td>
+            <td>bipia/metrics/eval/utils.py</td>
+            <td>30</td>
+            <td>19</td>
+            <td>entropy=5.86 len=58 type=base64_blob</td>
+            <td>entropy</td>
+            <td>heuristic</td>
+          </tr>
+          
+          <tr>
+            <td><span class="badge severity-medium">medium</span></td>
+            <td>suspicious_imports</td>
+            <td>bipia/metrics/regist.py</td>
+            <td>210</td>
+            <td>14</td>
+            <td>Imports of known suspicious packages</td>
+            <td>yara</td>
+            <td>deterministic</td>
+          </tr>
+          
+          <tr>
+            <td><span class="badge severity-medium">medium</span></td>
+            <td>suspicious_imports</td>
+            <td>bipia/metrics/regist.py</td>
+            <td>216</td>
+            <td>14</td>
+            <td>Imports of known suspicious packages</td>
+            <td>yara</td>
+            <td>deterministic</td>
+          </tr>
+          
+          <tr>
+            <td><span class="badge severity-medium">medium</span></td>
+            <td>suspicious_imports</td>
+            <td>bipia/metrics/regist.py</td>
+            <td>217</td>
+            <td>14</td>
+            <td>Imports of known suspicious packages</td>
+            <td>yara</td>
+            <td>deterministic</td>
+          </tr>
+          
+          <tr>
+            <td><span class="badge severity-medium">medium</span></td>
+            <td>suspicious_imports</td>
+            <td>bipia/metrics/regist.py</td>
+            <td>223</td>
+            <td>14</td>
+            <td>Imports of known suspicious packages</td>
+            <td>yara</td>
+            <td>deterministic</td>
+          </tr>
+          
+          <tr>
+            <td><span class="badge severity-medium">medium</span></td>
+            <td>suspicious_imports</td>
+            <td>bipia/metrics/regist.py</td>
+            <td>227</td>
+            <td>14</td>
+            <td>Imports of known suspicious packages</td>
+            <td>yara</td>
+            <td>deterministic</td>
+          </tr>
+          
+          <tr>
+            <td><span class="badge severity-medium">medium</span></td>
+            <td>suspicious_imports</td>
+            <td>bipia/metrics/regist.py</td>
+            <td>230</td>
+            <td>14</td>
+            <td>Imports of known suspicious packages</td>
+            <td>yara</td>
+            <td>deterministic</td>
+          </tr>
+          
+          <tr>
+            <td><span class="badge severity-medium">medium</span></td>
+            <td>suspicious_imports</td>
+            <td>bipia/metrics/regist.py</td>
+            <td>231</td>
+            <td>14</td>
+            <td>Imports of known suspicious packages</td>
+            <td>yara</td>
+            <td>deterministic</td>
+          </tr>
+          
+          <tr>
+            <td><span class="badge severity-medium">medium</span></td>
+            <td>suspicious_imports</td>
+            <td>bipia/metrics/regist.py</td>
+            <td>232</td>
+            <td>14</td>
+            <td>Imports of known suspicious packages</td>
+            <td>yara</td>
+            <td>deterministic</td>
+          </tr>
+          
+          <tr>
+            <td><span class="badge severity-medium">medium</span></td>
+            <td>suspicious_imports</td>
+            <td>bipia/metrics/regist.py</td>
+            <td>233</td>
+            <td>14</td>
+            <td>Imports of known suspicious packages</td>
+            <td>yara</td>
+            <td>deterministic</td>
+          </tr>
+          
+          <tr>
+            <td><span class="badge severity-medium">medium</span></td>
+            <td>suspicious_imports</td>
+            <td>bipia/metrics/regist.py</td>
+            <td>234</td>
+            <td>14</td>
+            <td>Imports of known suspicious packages</td>
+            <td>yara</td>
+            <td>deterministic</td>
+          </tr>
+          
+          <tr>
+            <td><span class="badge severity-medium">medium</span></td>
+            <td>suspicious_imports</td>
+            <td>bipia/metrics/regist.py</td>
+            <td>238</td>
+            <td>14</td>
+            <td>Imports of known suspicious packages</td>
+            <td>yara</td>
+            <td>deterministic</td>
+          </tr>
+          
+          <tr>
+            <td><span class="badge severity-medium">medium</span></td>
+            <td>suspicious_imports</td>
+            <td>bipia/metrics/regist.py</td>
+            <td>240</td>
+            <td>14</td>
+            <td>Imports of known suspicious packages</td>
+            <td>yara</td>
+            <td>deterministic</td>
+          </tr>
+          
+          <tr>
+            <td><span class="badge severity-medium">medium</span></td>
+            <td>suspicious_imports</td>
+            <td>bipia/metrics/regist.py</td>
+            <td>241</td>
+            <td>14</td>
+            <td>Imports of known suspicious packages</td>
+            <td>yara</td>
+            <td>deterministic</td>
+          </tr>
+          
+          <tr>
+            <td><span class="badge severity-medium">medium</span></td>
+            <td>suspicious_imports</td>
+            <td>bipia/metrics/regist.py</td>
+            <td>244</td>
+            <td>14</td>
+            <td>Imports of known suspicious packages</td>
+            <td>yara</td>
+            <td>deterministic</td>
+          </tr>
+          
+          <tr>
+            <td><span class="badge severity-medium">medium</span></td>
+            <td>suspicious_imports</td>
+            <td>bipia/metrics/regist.py</td>
+            <td>245</td>
+            <td>14</td>
+            <td>Imports of known suspicious packages</td>
+            <td>yara</td>
+            <td>deterministic</td>
+          </tr>
+          
+          <tr>
+            <td><span class="badge severity-medium">medium</span></td>
+            <td>suspicious_imports</td>
+            <td>bipia/metrics/regist.py</td>
+            <td>252</td>
+            <td>14</td>
+            <td>Imports of known suspicious packages</td>
+            <td>yara</td>
+            <td>deterministic</td>
+          </tr>
+          
+          <tr>
+            <td><span class="badge severity-medium">medium</span></td>
+            <td>suspicious_imports</td>
+            <td>bipia/metrics/regist.py</td>
+            <td>266</td>
+            <td>14</td>
+            <td>Imports of known suspicious packages</td>
+            <td>yara</td>
+            <td>deterministic</td>
+          </tr>
+          
+          <tr>
+            <td><span class="badge severity-medium">medium</span></td>
+            <td>suspicious_imports</td>
+            <td>bipia/metrics/regist.py</td>
+            <td>266</td>
+            <td>14</td>
+            <td>Imports of known suspicious packages</td>
+            <td>yara</td>
+            <td>deterministic</td>
+          </tr>
+          
+          <tr>
+            <td><span class="badge severity-medium">medium</span></td>
+            <td>suspicious_imports</td>
+            <td>bipia/metrics/regist.py</td>
+            <td>267</td>
+            <td>14</td>
+            <td>Imports of known suspicious packages</td>
+            <td>yara</td>
+            <td>deterministic</td>
+          </tr>
+          
+          <tr>
+            <td><span class="badge severity-medium">medium</span></td>
+            <td>suspicious_imports</td>
+            <td>bipia/metrics/regist.py</td>
+            <td>268</td>
+            <td>14</td>
+            <td>Imports of known suspicious packages</td>
+            <td>yara</td>
+            <td>deterministic</td>
+          </tr>
+          
+          <tr>
+            <td><span class="badge severity-medium">medium</span></td>
+            <td>suspicious_imports</td>
+            <td>bipia/metrics/regist.py</td>
+            <td>272</td>
+            <td>14</td>
+            <td>Imports of known suspicious packages</td>
+            <td>yara</td>
+            <td>deterministic</td>
+          </tr>
+          
+          <tr>
+            <td><span class="badge severity-medium">medium</span></td>
+            <td>suspicious_imports</td>
+            <td>bipia/metrics/regist.py</td>
+            <td>274</td>
+            <td>14</td>
+            <td>Imports of known suspicious packages</td>
+            <td>yara</td>
+            <td>deterministic</td>
+          </tr>
+          
+          <tr>
+            <td><span class="badge severity-medium">medium</span></td>
+            <td>suspicious_imports</td>
+            <td>bipia/metrics/regist.py</td>
+            <td>275</td>
+            <td>14</td>
+            <td>Imports of known suspicious packages</td>
+            <td>yara</td>
+            <td>deterministic</td>
+          </tr>
+          
+          <tr>
+            <td><span class="badge severity-medium">medium</span></td>
+            <td>credential_hardcode</td>
+            <td>bipia/model/llm_worker.py</td>
+            <td>217</td>
+            <td>32</td>
+            <td>Potential hardcoded credentials</td>
+            <td>yara</td>
+            <td>deterministic</td>
+          </tr>
+          
+          <tr>
+            <td><span class="badge severity-medium">medium</span></td>
+            <td>credential_hardcode</td>
+            <td>bipia/model/llm_worker.py</td>
+            <td>274</td>
+            <td>32</td>
+            <td>Potential hardcoded credentials</td>
+            <td>yara</td>
+            <td>deterministic</td>
+          </tr>
+          
+          <tr>
+            <td><span class="badge severity-medium">medium</span></td>
+            <td>credential_hardcode</td>
+            <td>bipia/model/vllm_worker.py</td>
+            <td>113</td>
+            <td>32</td>
+            <td>Potential hardcoded credentials</td>
+            <td>yara</td>
+            <td>deterministic</td>
+          </tr>
+          
+          <tr>
+            <td><span class="badge severity-medium">medium</span></td>
+            <td>credential_hardcode</td>
+            <td>bipia/model/vllm_worker.py</td>
+            <td>130</td>
+            <td>32</td>
+            <td>Potential hardcoded credentials</td>
+            <td>yara</td>
+            <td>deterministic</td>
+          </tr>
+          
+          <tr>
+            <td><span class="badge severity-medium">medium</span></td>
+            <td>credential_hardcode</td>
+            <td>bipia/model/vllm_worker.py</td>
+            <td>147</td>
+            <td>32</td>
+            <td>Potential hardcoded credentials</td>
+            <td>yara</td>
+            <td>deterministic</td>
+          </tr>
+          
+          <tr>
+            <td><span class="badge severity-medium">medium</span></td>
+            <td>credential_hardcode</td>
+            <td>bipia/model/vllm_worker.py</td>
+            <td>163</td>
+            <td>32</td>
+            <td>Potential hardcoded credentials</td>
+            <td>yara</td>
+            <td>deterministic</td>
+          </tr>
+          
+          <tr>
+            <td><span class="badge severity-medium">medium</span></td>
+            <td>credential_hardcode</td>
+            <td>config/gpt35.yaml</td>
+            <td>1</td>
+            <td>1</td>
+            <td>Potential hardcoded credentials</td>
+            <td>yara</td>
+            <td>deterministic</td>
+          </tr>
+          
+          <tr>
+            <td><span class="badge severity-medium">medium</span></td>
+            <td>credential_hardcode</td>
+            <td>config/gpt35_wosys.yaml</td>
+            <td>1</td>
+            <td>1</td>
+            <td>Potential hardcoded credentials</td>
+            <td>yara</td>
+            <td>deterministic</td>
+          </tr>
+          
+          <tr>
+            <td><span class="badge severity-medium">medium</span></td>
+            <td>credential_hardcode</td>
+            <td>config/gpt4.yaml</td>
+            <td>1</td>
+            <td>1</td>
+            <td>Potential hardcoded credentials</td>
+            <td>yara</td>
+            <td>deterministic</td>
+          </tr>
+          
+          <tr>
+            <td><span class="badge severity-medium">medium</span></td>
+            <td>credential_hardcode</td>
+            <td>config/gpt4_wosys.yaml</td>
+            <td>1</td>
+            <td>1</td>
+            <td>Potential hardcoded credentials</td>
+            <td>yara</td>
+            <td>deterministic</td>
+          </tr>
+          
+          <tr>
+            <td><span class="badge severity-low">low</span></td>
+            <td>entropy_high_entropy</td>
+            <td>benchmark/code/train.jsonl</td>
+            <td>45</td>
+            <td>962</td>
+            <td>entropy=5.18 len=141 type=high_entropy</td>
+            <td>entropy</td>
+            <td>heuristic</td>
+          </tr>
+          
+          <tr>
+            <td><span class="badge severity-low">low</span></td>
+            <td>entropy_high_entropy</td>
+            <td>benchmark/code/train.jsonl</td>
+            <td>45</td>
+            <td>1851</td>
+            <td>entropy=5.18 len=141 type=high_entropy</td>
+            <td>entropy</td>
+            <td>heuristic</td>
+          </tr>
+          
+          <tr>
+            <td><span class="badge severity-low">low</span></td>
+            <td>entropy_high_entropy</td>
+            <td>benchmark/code_attack_test.json</td>
+            <td>60</td>
+            <td>8</td>
+            <td>entropy=5.01 len=307 type=high_entropy</td>
+            <td>entropy</td>
+            <td>heuristic</td>
+          </tr>
+          
+          <tr>
+            <td><span class="badge severity-low">low</span></td>
+            <td>entropy_high_entropy</td>
+            <td>benchmark/email/test.jsonl</td>
+            <td>2</td>
+            <td>12</td>
+            <td>entropy=5.05 len=694 type=high_entropy</td>
+            <td>entropy</td>
+            <td>heuristic</td>
+          </tr>
+          
+          <tr>
+            <td><span class="badge severity-low">low</span></td>
+            <td>entropy_high_entropy</td>
+            <td>benchmark/email/test.jsonl</td>
+            <td>4</td>
+            <td>12</td>
+            <td>entropy=5.19 len=643 type=high_entropy</td>
+            <td>entropy</td>
+            <td>heuristic</td>
+          </tr>
+          
+          <tr>
+            <td><span class="badge severity-low">low</span></td>
+            <td>entropy_high_entropy</td>
+            <td>benchmark/email/test.jsonl</td>
+            <td>8</td>
+            <td>12</td>
+            <td>entropy=5.27 len=164 type=high_entropy</td>
+            <td>entropy</td>
+            <td>heuristic</td>
+          </tr>
+          
+          <tr>
+            <td><span class="badge severity-low">low</span></td>
+            <td>entropy_high_entropy</td>
+            <td>benchmark/email/test.jsonl</td>
+            <td>9</td>
+            <td>12</td>
+            <td>entropy=5.20 len=512 type=high_entropy</td>
+            <td>entropy</td>
+            <td>heuristic</td>
+          </tr>
+          
+          <tr>
+            <td><span class="badge severity-low">low</span></td>
+            <td>entropy_high_entropy</td>
+            <td>benchmark/email/test.jsonl</td>
+            <td>10</td>
+            <td>12</td>
+            <td>entropy=5.05 len=725 type=high_entropy</td>
+            <td>entropy</td>
+            <td>heuristic</td>
+          </tr>
+          
+          <tr>
+            <td><span class="badge severity-low">low</span></td>
+            <td>entropy_high_entropy</td>
+            <td>benchmark/email/test.jsonl</td>
+            <td>11</td>
+            <td>12</td>
+            <td>entropy=5.20 len=620 type=high_entropy</td>
+            <td>entropy</td>
+            <td>heuristic</td>
+          </tr>
+          
+          <tr>
+            <td><span class="badge severity-low">low</span></td>
+            <td>entropy_high_entropy</td>
+            <td>benchmark/email/test.jsonl</td>
+            <td>17</td>
+            <td>12</td>
+            <td>entropy=5.13 len=615 type=high_entropy</td>
+            <td>entropy</td>
+            <td>heuristic</td>
+          </tr>
+          
+          <tr>
+            <td><span class="badge severity-low">low</span></td>
+            <td>entropy_high_entropy</td>
+            <td>benchmark/email/test.jsonl</td>
+            <td>18</td>
+            <td>12</td>
+            <td>entropy=5.07 len=597 type=high_entropy</td>
+            <td>entropy</td>
+            <td>heuristic</td>
+          </tr>
+          
+          <tr>
+            <td><span class="badge severity-low">low</span></td>
+            <td>entropy_high_entropy</td>
+            <td>benchmark/email/test.jsonl</td>
+            <td>19</td>
+            <td>12</td>
+            <td>entropy=5.19 len=643 type=high_entropy</td>
+            <td>entropy</td>
+            <td>heuristic</td>
+          </tr>
+          
+          <tr>
+            <td><span class="badge severity-low">low</span></td>
+            <td>entropy_high_entropy</td>
+            <td>benchmark/email/test.jsonl</td>
+            <td>20</td>
+            <td>12</td>
+            <td>entropy=5.15 len=227 type=high_entropy</td>
+            <td>entropy</td>
+            <td>heuristic</td>
+          </tr>
+          
+          <tr>
+            <td><span class="badge severity-low">low</span></td>
+            <td>entropy_high_entropy</td>
+            <td>benchmark/email/test.jsonl</td>
+            <td>23</td>
+            <td>12</td>
+            <td>entropy=5.08 len=565 type=high_entropy</td>
+            <td>entropy</td>
+            <td>heuristic</td>
+          </tr>
+          
+          <tr>
+            <td><span class="badge severity-low">low</span></td>
+            <td>entropy_high_entropy</td>
+            <td>benchmark/email/test.jsonl</td>
+            <td>24</td>
+            <td>12</td>
+            <td>entropy=5.17 len=595 type=high_entropy</td>
+            <td>entropy</td>
+            <td>heuristic</td>
+          </tr>
+          
+          <tr>
+            <td><span class="badge severity-low">low</span></td>
+            <td>entropy_high_entropy</td>
+            <td>benchmark/email/test.jsonl</td>
+            <td>26</td>
+            <td>12</td>
+            <td>entropy=5.11 len=600 type=high_entropy</td>
+            <td>entropy</td>
+            <td>heuristic</td>
+          </tr>
+          
+          <tr>
+            <td><span class="badge severity-low">low</span></td>
+            <td>entropy_high_entropy</td>
+            <td>benchmark/email/test.jsonl</td>
+            <td>28</td>
+            <td>12</td>
+            <td>entropy=5.08 len=547 type=high_entropy</td>
+            <td>entropy</td>
+            <td>heuristic</td>
+          </tr>
+          
+          <tr>
+            <td><span class="badge severity-low">low</span></td>
+            <td>entropy_high_entropy</td>
+            <td>benchmark/email/test.jsonl</td>
+            <td>30</td>
+            <td>12</td>
+            <td>entropy=5.22 len=437 type=high_entropy</td>
+            <td>entropy</td>
+            <td>heuristic</td>
+          </tr>
+          
+          <tr>
+            <td><span class="badge severity-low">low</span></td>
+            <td>entropy_high_entropy</td>
+            <td>benchmark/email/test.jsonl</td>
+            <td>34</td>
+            <td>12</td>
+            <td>entropy=5.14 len=778 type=high_entropy</td>
+            <td>entropy</td>
+            <td>heuristic</td>
+          </tr>
+          
+          <tr>
+            <td><span class="badge severity-low">low</span></td>
+            <td>entropy_high_entropy</td>
+            <td>benchmark/email/test.jsonl</td>
+            <td>38</td>
+            <td>12</td>
+            <td>entropy=5.13 len=312 type=high_entropy</td>
+            <td>entropy</td>
+            <td>heuristic</td>
+          </tr>
+          
+          <tr>
+            <td><span class="badge severity-low">low</span></td>
+            <td>entropy_high_entropy</td>
+            <td>benchmark/email/test.jsonl</td>
+            <td>39</td>
+            <td>12</td>
+            <td>entropy=5.12 len=557 type=high_entropy</td>
+            <td>entropy</td>
+            <td>heuristic</td>
+          </tr>
+          
+          <tr>
+            <td><span class="badge severity-low">low</span></td>
+            <td>entropy_high_entropy</td>
+            <td>benchmark/email/test.jsonl</td>
+            <td>40</td>
+            <td>12</td>
+            <td>entropy=5.04 len=393 type=high_entropy</td>
+            <td>entropy</td>
+            <td>heuristic</td>
+          </tr>
+          
+          <tr>
+            <td><span class="badge severity-low">low</span></td>
+            <td>entropy_high_entropy</td>
+            <td>benchmark/email/test.jsonl</td>
+            <td>41</td>
+            <td>12</td>
+            <td>entropy=5.14 len=778 type=high_entropy</td>
+            <td>entropy</td>
+            <td>heuristic</td>
+          </tr>
+          
+          <tr>
+            <td><span class="badge severity-low">low</span></td>
+            <td>entropy_high_entropy</td>
+            <td>benchmark/email/test.jsonl</td>
+            <td>42</td>
+            <td>12</td>
+            <td>entropy=5.13 len=515 type=high_entropy</td>
+            <td>entropy</td>
+            <td>heuristic</td>
+          </tr>
+          
+          <tr>
+            <td><span class="badge severity-low">low</span></td>
+            <td>entropy_high_entropy</td>
+            <td>benchmark/email/test.jsonl</td>
+            <td>43</td>
+            <td>12</td>
+            <td>entropy=5.17 len=595 type=high_entropy</td>
+            <td>entropy</td>
+            <td>heuristic</td>
+          </tr>
+          
+          <tr>
+            <td><span class="badge severity-low">low</span></td>
+            <td>entropy_high_entropy</td>
+            <td>benchmark/email/test.jsonl</td>
+            <td>44</td>
+            <td>12</td>
+            <td>entropy=5.13 len=554 type=high_entropy</td>
+            <td>entropy</td>
+            <td>heuristic</td>
+          </tr>
+          
+          <tr>
+            <td><span class="badge severity-low">low</span></td>
+            <td>entropy_high_entropy</td>
+            <td>benchmark/email/test.jsonl</td>
+            <td>45</td>
+            <td>12</td>
+            <td>entropy=5.04 len=722 type=high_entropy</td>
+            <td>entropy</td>
+            <td>heuristic</td>
+          </tr>
+          
+          <tr>
+            <td><span class="badge severity-low">low</span></td>
+            <td>entropy_high_entropy</td>
+            <td>benchmark/email/test.jsonl</td>
+            <td>47</td>
+            <td>12</td>
+            <td>entropy=5.13 len=507 type=high_entropy</td>
+            <td>entropy</td>
+            <td>heuristic</td>
+          </tr>
+          
+          <tr>
+            <td><span class="badge severity-low">low</span></td>
+            <td>entropy_high_entropy</td>
+            <td>benchmark/email/train.jsonl</td>
+            <td>1</td>
+            <td>12</td>
+            <td>entropy=5.02 len=440 type=high_entropy</td>
+            <td>entropy</td>
+            <td>heuristic</td>
+          </tr>
+          
+          <tr>
+            <td><span class="badge severity-low">low</span></td>
+            <td>entropy_high_entropy</td>
+            <td>benchmark/email/train.jsonl</td>
+            <td>6</td>
+            <td>12</td>
+            <td>entropy=5.05 len=572 type=high_entropy</td>
+            <td>entropy</td>
+            <td>heuristic</td>
+          </tr>
+          
+          <tr>
+            <td><span class="badge severity-low">low</span></td>
+            <td>entropy_high_entropy</td>
+            <td>benchmark/email/train.jsonl</td>
+            <td>7</td>
+            <td>12</td>
+            <td>entropy=5.16 len=607 type=high_entropy</td>
+            <td>entropy</td>
+            <td>heuristic</td>
+          </tr>
+          
+          <tr>
+            <td><span class="badge severity-low">low</span></td>
+            <td>entropy_high_entropy</td>
+            <td>benchmark/email/train.jsonl</td>
+            <td>11</td>
+            <td>12</td>
+            <td>entropy=5.13 len=546 type=high_entropy</td>
+            <td>entropy</td>
+            <td>heuristic</td>
+          </tr>
+          
+          <tr>
+            <td><span class="badge severity-low">low</span></td>
+            <td>entropy_high_entropy</td>
+            <td>benchmark/email/train.jsonl</td>
+            <td>14</td>
+            <td>12</td>
+            <td>entropy=5.08 len=565 type=high_entropy</td>
+            <td>entropy</td>
+            <td>heuristic</td>
+          </tr>
+          
+          <tr>
+            <td><span class="badge severity-low">low</span></td>
+            <td>entropy_high_entropy</td>
+            <td>benchmark/email/train.jsonl</td>
+            <td>16</td>
+            <td>12</td>
+            <td>entropy=5.02 len=440 type=high_entropy</td>
+            <td>entropy</td>
+            <td>heuristic</td>
+          </tr>
+          
+          <tr>
+            <td><span class="badge severity-low">low</span></td>
+            <td>entropy_high_entropy</td>
+            <td>benchmark/email/train.jsonl</td>
+            <td>21</td>
+            <td>12</td>
+            <td>entropy=5.09 len=523 type=high_entropy</td>
+            <td>entropy</td>
+            <td>heuristic</td>
+          </tr>
+          
+          <tr>
+            <td><span class="badge severity-low">low</span></td>
+            <td>entropy_high_entropy</td>
+            <td>benchmark/email/train.jsonl</td>
+            <td>26</td>
+            <td>12</td>
+            <td>entropy=5.16 len=651 type=high_entropy</td>
+            <td>entropy</td>
+            <td>heuristic</td>
+          </tr>
+          
+          <tr>
+            <td><span class="badge severity-low">low</span></td>
+            <td>entropy_high_entropy</td>
+            <td>benchmark/email/train.jsonl</td>
+            <td>27</td>
+            <td>12</td>
+            <td>entropy=5.07 len=546 type=high_entropy</td>
+            <td>entropy</td>
+            <td>heuristic</td>
+          </tr>
+          
+          <tr>
+            <td><span class="badge severity-low">low</span></td>
+            <td>entropy_high_entropy</td>
+            <td>benchmark/email/train.jsonl</td>
+            <td>28</td>
+            <td>12</td>
+            <td>entropy=5.01 len=593 type=high_entropy</td>
+            <td>entropy</td>
+            <td>heuristic</td>
+          </tr>
+          
+          <tr>
+            <td><span class="badge severity-low">low</span></td>
+            <td>entropy_high_entropy</td>
+            <td>benchmark/email/train.jsonl</td>
+            <td>29</td>
+            <td>12</td>
+            <td>entropy=5.15 len=461 type=high_entropy</td>
+            <td>entropy</td>
+            <td>heuristic</td>
+          </tr>
+          
+          <tr>
+            <td><span class="badge severity-low">low</span></td>
+            <td>entropy_high_entropy</td>
+            <td>benchmark/email/train.jsonl</td>
+            <td>31</td>
+            <td>12</td>
+            <td>entropy=5.14 len=278 type=high_entropy</td>
+            <td>entropy</td>
+            <td>heuristic</td>
+          </tr>
+          
+          <tr>
+            <td><span class="badge severity-low">low</span></td>
+            <td>entropy_high_entropy</td>
+            <td>benchmark/email/train.jsonl</td>
+            <td>32</td>
+            <td>12</td>
+            <td>entropy=5.20 len=587 type=high_entropy</td>
+            <td>entropy</td>
+            <td>heuristic</td>
+          </tr>
+          
+          <tr>
+            <td><span class="badge severity-low">low</span></td>
+            <td>entropy_high_entropy</td>
+            <td>benchmark/email/train.jsonl</td>
+            <td>36</td>
+            <td>12</td>
+            <td>entropy=5.06 len=324 type=high_entropy</td>
+            <td>entropy</td>
+            <td>heuristic</td>
+          </tr>
+          
+          <tr>
+            <td><span class="badge severity-low">low</span></td>
+            <td>entropy_high_entropy</td>
+            <td>benchmark/email/train.jsonl</td>
+            <td>38</td>
+            <td>12</td>
+            <td>entropy=5.20 len=512 type=high_entropy</td>
+            <td>entropy</td>
+            <td>heuristic</td>
+          </tr>
+          
+          <tr>
+            <td><span class="badge severity-low">low</span></td>
+            <td>entropy_high_entropy</td>
+            <td>benchmark/email/train.jsonl</td>
+            <td>39</td>
+            <td>12</td>
+            <td>entropy=5.16 len=607 type=high_entropy</td>
+            <td>entropy</td>
+            <td>heuristic</td>
+          </tr>
+          
+          <tr>
+            <td><span class="badge severity-low">low</span></td>
+            <td>entropy_high_entropy</td>
+            <td>benchmark/email/train.jsonl</td>
+            <td>41</td>
+            <td>12</td>
+            <td>entropy=5.12 len=489 type=high_entropy</td>
+            <td>entropy</td>
+            <td>heuristic</td>
+          </tr>
+          
+          <tr>
+            <td><span class="badge severity-low">low</span></td>
+            <td>entropy_high_entropy</td>
+            <td>benchmark/email/train.jsonl</td>
+            <td>42</td>
+            <td>12</td>
+            <td>entropy=5.13 len=312 type=high_entropy</td>
+            <td>entropy</td>
+            <td>heuristic</td>
+          </tr>
+          
+          <tr>
+            <td><span class="badge severity-low">low</span></td>
+            <td>entropy_high_entropy</td>
+            <td>benchmark/email/train.jsonl</td>
+            <td>46</td>
+            <td>12</td>
+            <td>entropy=5.14 len=641 type=high_entropy</td>
+            <td>entropy</td>
+            <td>heuristic</td>
+          </tr>
+          
+          <tr>
+            <td><span class="badge severity-low">low</span></td>
+            <td>entropy_high_entropy</td>
+            <td>benchmark/email/train.jsonl</td>
+            <td>47</td>
+            <td>12</td>
+            <td>entropy=5.08 len=573 type=high_entropy</td>
+            <td>entropy</td>
+            <td>heuristic</td>
+          </tr>
+          
+          <tr>
+            <td><span class="badge severity-low">low</span></td>
+            <td>entropy_high_entropy</td>
+            <td>benchmark/email/train.jsonl</td>
+            <td>48</td>
+            <td>12</td>
+            <td>entropy=5.14 len=278 type=high_entropy</td>
+            <td>entropy</td>
+            <td>heuristic</td>
+          </tr>
+          
+          <tr>
+            <td><span class="badge severity-low">low</span></td>
+            <td>entropy_high_entropy</td>
+            <td>benchmark/email/train.jsonl</td>
+            <td>49</td>
+            <td>12</td>
+            <td>entropy=5.07 len=573 type=high_entropy</td>
+            <td>entropy</td>
+            <td>heuristic</td>
+          </tr>
+          
+          <tr>
+            <td><span class="badge severity-low">low</span></td>
+            <td>entropy_high_entropy</td>
+            <td>benchmark/email/train.jsonl</td>
+            <td>50</td>
+            <td>12</td>
+            <td>entropy=5.10 len=286 type=high_entropy</td>
+            <td>entropy</td>
+            <td>heuristic</td>
+          </tr>
+          
+          <tr>
+            <td><span class="badge severity-low">low</span></td>
+            <td>entropy_high_entropy</td>
+            <td>bipia/metrics/eval/utils.py</td>
+            <td>30</td>
+            <td>19</td>
+            <td>entropy=5.86 len=58 type=high_entropy</td>
+            <td>entropy</td>
+            <td>heuristic</td>
+          </tr>
+          
+          <tr>
+            <td><span class="badge severity-low">low</span></td>
+            <td>entropy_high_entropy</td>
+            <td>demo.ipynb</td>
+            <td>52</td>
+            <td>6</td>
+            <td>entropy=5.00 len=172 type=high_entropy</td>
+            <td>entropy</td>
+            <td>heuristic</td>
+          </tr>
+          
+          <tr>
+            <td><span class="badge severity-low">low</span></td>
+            <td>entropy_high_entropy</td>
+            <td>demo.ipynb</td>
+            <td>53</td>
+            <td>6</td>
+            <td>entropy=5.02 len=172 type=high_entropy</td>
+            <td>entropy</td>
+            <td>heuristic</td>
+          </tr>
+          
+          <tr>
+            <td><span class="badge severity-low">low</span></td>
+            <td>entropy_high_entropy</td>
+            <td>demo.ipynb</td>
+            <td>163</td>
+            <td>6</td>
+            <td>entropy=5.12 len=332 type=high_entropy</td>
+            <td>entropy</td>
+            <td>heuristic</td>
+          </tr>
+          
+          <tr>
+            <td><span class="badge severity-low">low</span></td>
+            <td>entropy_high_entropy</td>
+            <td>demo.ipynb</td>
+            <td>226</td>
+            <td>6</td>
+            <td>entropy=5.28 len=166 type=high_entropy</td>
+            <td>entropy</td>
+            <td>heuristic</td>
+          </tr>
+          
+        </tbody>
+      </table>
+      
+    </section>
+
+    <section>
+      <h2>Errors</h2>
+      
+      <p class="empty">No errors recorded.</p>
+      
+    </section>
+
+    
+    <section>
+      <h2>Affected files</h2>
+      
+      <ul class="file-list">
+        <li><code>/tmp/safeanalyze-BIPIA/benchmark/qa/process.py</code></li><li><code>SECURITY.md</code></li><li><code>benchmark/code/test.jsonl</code></li><li><code>benchmark/code/train.jsonl</code></li><li><code>benchmark/code_attack_test.json</code></li><li><code>benchmark/code_attack_train.json</code></li><li><code>benchmark/email/test.jsonl</code></li><li><code>benchmark/email/train.jsonl</code></li><li><code>benchmark/table/train.jsonl</code></li><li><code>bipia/metrics/eval/utils.py</code></li><li><code>bipia/metrics/regist.py</code></li><li><code>bipia/model/llm_worker.py</code></li><li><code>bipia/model/vllm_worker.py</code></li><li><code>config/gpt35.yaml</code></li><li><code>config/gpt35_wosys.yaml</code></li><li><code>config/gpt4.yaml</code></li><li><code>config/gpt4_wosys.yaml</code></li><li><code>defense/README.md</code></li><li><code>defense/white_box/utils.py</code></li><li><code>demo.ipynb</code></li>
+      </ul>
+      
+    </section>
+    
+  </div>
+
+  <script>
+    document.getElementById('findingFilter')?.addEventListener('input', function(e) {
+      const term = e.target.value.toLowerCase();
+      const rows = document.querySelectorAll('#findingsTable tbody tr');
+      rows.forEach(function(row) {
+        const text = row.textContent.toLowerCase();
+        row.style.display = text.includes(term) ? '' : 'none';
+      });
+    });
+
+    function sortTable(n) {
+      const table = document.getElementById('findingsTable');
+      const tbody = table.querySelector('tbody');
+      const rows = Array.from(tbody.querySelectorAll('tr'));
+      const asc = !table.dataset['sortAsc' + n];
+      rows.sort(function(a, b) {
+        let x = a.cells[n].textContent.trim();
+        let y = b.cells[n].textContent.trim();
+        const xi = parseInt(x, 10), yi = parseInt(y, 10);
+        if (!isNaN(xi) && !isNaN(yi)) {
+          return asc ? xi - yi : yi - xi;
+        }
+        return asc ? x.localeCompare(y) : y.localeCompare(x);
+      });
+      rows.forEach(function(r) { tbody.appendChild(r); });
+      table.dataset['sortAsc' + n] = asc ? '1' : '';
+    }
+  </script>
+</body>
+</html>
