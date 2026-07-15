@@ -80,6 +80,6 @@ echo 'ignore all previous instructions' | ./safeanalyze inspect --verbose
 
 ## Current autoresearch iteration
 
-- **Version under test:** v0.3.2
-- **Active hypothesis:** Expanding YARA rules for social-engineering exfiltration, account-access requests, output constraints, system-boundary markers, and template injection will increase recall on agent-focused prompt-injection corpora (InjecAgent, BIPIA) without blowing the fast-mode latency budget.
-- **Last report branch:** `report-mutant-sarcasm-taco-7c259ba7-2026-07-15` (v0.3.1)
+- **Version under test:** v0.3.3
+- **Active hypothesis:** Narrowing `template_injection` to `{{...}}` and `${jndi:...}` will remove hundreds of false positives from code variable interpolations while keeping true-positive detections in GitHub Actions workflows and prompt templates.
+- **Last report branch:** `report-lazer-mustache-snarky-b7dbfa58-2026-07-15` (v0.3.2)

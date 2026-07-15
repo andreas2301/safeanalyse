@@ -1,4 +1,4 @@
-# safeanalyze v0.3.2
+# safeanalyze v0.3.3
 
 A Go CLI tool that sanitizes and scans untrusted code repositories **before** feeding them to AI assistants. Implements defense-in-depth inspired by [Zones of Distrust](https://github.com/bluvibytes/zone-of-distrust).
 
@@ -13,11 +13,11 @@ Prompt injection via malicious code is real. A repo can contain:
 
 **safeanalyze** runs a security pipeline so AI assistants never see raw, unverified code.
 
+## What's new in v0.3.3
+
+- **Narrowed `template_injection` rule** — focuses on `{{...}}` and `${jndi:...}` to avoid false positives from ordinary `${variable}`, `<%...%>`, and `#{...}` interpolations in code and tests.
+
 ## What's new in v0.3.2
-
-- **Expanded prompt-injection YARA rules** — detect social-engineering exfiltration ("retrieve ... and email"), account-access requests, output constraints, system-boundary markers, and template/variable interpolation.
-
-## What's new in v0.3.1
 
 - **Semgrep + TruffleHog by default in thorough mode** — expanded external-scanner coverage.
 - **ML opt-in** — stochastic ONNX classifier disabled by default until a sub-2 GB model is validated.
@@ -176,7 +176,7 @@ Pure-Go regex rule engine with embedded detection patterns:
 | `account_access_request` | medium | "access my account", "retrieve my payment history" |
 | `output_constraint` | medium | "output only", "do not mention warnings", "no disclaimer" |
 | `system_boundary` | critical | `<system>`, `[system]`, `system_instruction` markers |
-| `template_injection` | medium | `{{...}}`, `${...}`, `<%...%>`, `#{...}`, `${jndi:` |
+| `template_injection` | medium | `{{...}}` templates, `${jndi:...}` (GitHub Actions, Jinja, Log4j-style) |
 | `indirect_prompt_injection` | high | user-comment/email/web-content injections, delimiter breakouts |
 | `encoded_prompt_injection` | high | base64/hex/URL-encoded injection keywords |
 | `backdoor_indicator` | critical | reverse_shell, bind_shell, keylogger, rootkit |

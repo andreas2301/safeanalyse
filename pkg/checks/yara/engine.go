@@ -281,13 +281,10 @@ func (e *Engine) LoadBuiltins() {
 		},
 		{
 			Name:        "template_injection",
-			Description: "Template or variable interpolation that may inject instructions into a prompt",
+			Description: "Handlebars/Mustache/Jinja or GitHub Actions template interpolation that may inject instructions into a prompt",
 			Severity:    report.SeverityMedium,
 			Patterns: []string{
-				`\{\{[^}]{0,60}\}\}`,
-				`\$\{[a-zA-Z_][a-zA-Z0-9_]*\}`,
-				`<%\s*=?\s*[^%]{0,60}\s*%>`,
-				`\#\{[a-zA-Z_][a-zA-Z0-9_]*\}`,
+				`\{\{[^}]{0,120}\}\}`,
 				`\$\{jndi:`,
 			},
 		},

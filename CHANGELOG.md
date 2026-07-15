@@ -5,6 +5,16 @@ All notable functional and non-functional changes to `safeanalyze` are documente
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.3.3] — 2026-07-15
+
+### Functional
+
+- **Narrowed `template_injection` rule:** Removed overly broad `${...}`, `<%...%>`, and `#{...}` patterns that matched ordinary code variables, test strings, and shell/JS interpolations. The rule now focuses on `{{...}}` (Handlebars/Mustache/Jinja/GitHub Actions) and `${jndi:...}` (Log4j-style JNDI injection), which are the template syntaxes most commonly exploited in prompt-injection and CI/CD attacks.
+
+### Non-functional
+
+- Reduced false-positive volume in repositories with heavy templated test code (e.g., `alexh-scrt/prompt-injection-scanner`, `duriantaco/skylos`) while preserving true-positive detections in GitHub Actions workflows.
+
 ## [0.3.2] — 2026-07-15
 
 ### Functional
