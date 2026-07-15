@@ -1,4 +1,4 @@
-# safeanalyze v0.2.1
+# safeanalyze v0.2.4
 
 A Go CLI tool that sanitizes and scans untrusted code repositories **before** feeding them to AI assistants. Implements defense-in-depth inspired by [Zones of Distrust](https://github.com/bluvibytes/zone-of-distrust).
 
@@ -12,6 +12,16 @@ Prompt injection via malicious code is real. A repo can contain:
 - Secrets or malware mixed with legitimate source
 
 **safeanalyze** runs a security pipeline so AI assistants never see raw, unverified code.
+
+## What's new in v0.2.4
+
+- **ONNX model path fix:** `safeanalyze install model` now saves the model where the ML stage expects it (`~/.safeanalyze/models/deberta-v3-base-prompt-injection/model.onnx`).
+- **Severity-aware report capping** — `output.max_findings` now keeps critical/high findings first so signal isn't drowned by low-severity noise.
+- **Expanded prompt-injection YARA rules** — detects `strictly adhere to the following instruction`, `you are now`, `pretend you are`, `do not mention`, `I am the developer`, and plural instruction overrides.
+- **Version-pinned, parallel scanner installer** — external scanners are cloned and built concurrently at known-good refs.
+- **Real `alexh-scrt/prompt-injection-scanner` bridge** — parses the scanner's actual JSON schema.
+- **Report duration in milliseconds** — `duration_ms` replaces `completed_at` so sub-second timings are visible.
+- **Dependency-path config** — `node_modules` and `vendor` are scanned only in thorough mode by default.
 
 ## Pipeline
 
@@ -76,7 +86,7 @@ Install optional scanner/model dependencies from source:
 # Full thorough pipeline on a repo
 ./safeanalyze scan ./my-suspicious-repo --mode thorough
 
-# Fast scan (YARA + hidden chars only, ~1 ms per payload)
+# Fast scan (YARA + hidden chars only, ~0.6 ms per typical payload)
 ./safeanalyze scan ./my-suspicious-repo --mode fast
 
 # Inspect a single payload for Squid/reverse-proxy integration
@@ -130,7 +140,7 @@ Pure-Go regex rule engine with embedded detection patterns:
 
 | Rule | Severity | Detects |
 |------|----------|---------|
-| `prompt_injection_comment` | critical | "ignore previous instructions", "system prompt", "DAN mode", "jailbreak" |
+| `prompt_injection_comment` | critical | "ignore previous instructions", "strictly adhere to...", "system prompt", "DAN mode", "jailbreak" |
 | `obfuscated_javascript` | high | eval(Function(...)), String.fromCharCode, atob, hex escapes |
 | `suspicious_shell` | high | curl \| bash, wget \| bash, netcat reverse shells |
 | `credential_hardcode` | medium | password=, api_key=, secret=, AWS keys |
@@ -181,7 +191,7 @@ Every scan produces a unified `Report` with findings and writes:
 - `safeanalyze.html` — self-contained dashboard
 - `safeanalyze.json` — full machine-readable report
 
-Reports include `safeanalyze_version` and `scan_mode` metadata.
+Reports include `safeanalyze_version`, `scan_mode`, and `duration_ms` metadata.
 
 ### 7. AST-Aware Comment Stripping
 
@@ -222,6 +232,11 @@ sanitization:
     - .rs
   excluded_paths:
     - .git
+    - target
+    - build
+    - dist
+    - .venv
+  dependency_paths:
     - node_modules
     - vendor
 
@@ -256,6 +271,7 @@ output:
     - sarif
     - json
   out_dir: ./safeanalyze-out
+  max_findings: 10000
 
 sandbox:
   mode: none              # none, docker, firejail

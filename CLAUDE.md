@@ -20,10 +20,12 @@
 ## Release process
 
 1. Bump `pkg/version/version.go` on every meaningful improvement.
-2. Commit improvements to `master`.
-3. Tag the commit: `git tag vX.Y.Z && git push origin master vX.Y.Z`.
-4. Reports generated from a versioned build must record `safeanalyze_version` and `scan_mode` in their metadata.
-5. Report branches are named `report-<devicename>-<date>`. Device names are random Deadpool-style UUID phrases (e.g., `maximum-effort-chimichanga-9f7d`).
+2. Update `CHANGELOG.md` with functional and non-functional changes.
+3. Update `README.md` so the header, feature list, and config example match the new version.
+4. Commit improvements to `master`.
+5. Tag the commit: `git tag vX.Y.Z && git push origin master vX.Y.Z`.
+6. Reports generated from a versioned build must record `safeanalyze_version`, `scan_mode`, and `duration_ms` in their metadata.
+7. Report branches are named `report-<devicename>-<date>`. Device names are random Deadpool-style UUID phrases (e.g., `maximum-effort-chimichanga-9f7d`).
 
 ## Autoresearch improvement loop
 

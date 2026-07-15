@@ -165,15 +165,16 @@ func InstallModel() error {
 	if err != nil {
 		return err
 	}
-	if err := os.MkdirAll(dir, 0755); err != nil {
+	modelDir := filepath.Join(dir, "deberta-v3-base-prompt-injection")
+	if err := os.MkdirAll(modelDir, 0755); err != nil {
 		return fmt.Errorf("creating model dir: %w", err)
 	}
 
 	const url = "https://huggingface.co/protectai/deberta-v3-base-prompt-injection/resolve/main/onnx/model.onnx"
-	dst := filepath.Join(dir, "deberta-v3-base-prompt-injection.onnx")
+	dst := filepath.Join(modelDir, "model.onnx")
 	if err := downloadFile(url, dst); err != nil {
 		// Fallback to huggingface-cli if available.
-		if hfErr := installModelViaHFCLI(dir); hfErr == nil {
+		if hfErr := installModelViaHFCLI(modelDir); hfErr == nil {
 			return nil
 		}
 		return err
