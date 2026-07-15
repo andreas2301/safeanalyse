@@ -15,17 +15,21 @@ import (
 
 // Detector scans for suspicious encoded/entropy-heavy strings.
 type Detector struct {
-	minEntropy float64
-	minLength  int
-	maxLength  int
+	minEntropy      float64
+	minLength       int
+	maxLength       int
+	maxStringLength int
+	maxFindings     int
 }
 
 // NewDetector creates an entropy scanner with sensible defaults.
 func NewDetector() *Detector {
 	return &Detector{
-		minEntropy: 4.5,
-		minLength:  20,
-		maxLength:  4096,
+		minEntropy:      4.5,
+		minLength:       20,
+		maxLength:       4096,
+		maxStringLength: 1000,
+		maxFindings:     1000,
 	}
 }
 
@@ -35,9 +39,20 @@ func (d *Detector) WithThreshold(t float64) *Detector {
 	return d
 }
 
+// WithMaxFindings sets the maximum findings per file.
+func (d *Detector) WithMaxFindings(n int) *Detector {
+	d.maxFindings = n
+	return d
+}
+
 // ScanString analyzes a single string and returns findings.
 func (d *Detector) ScanString(s, file string, line, col int) []Finding {
 	var findings []Finding
+
+	// Skip absurdly long strings that are almost certainly dependency lockfile noise.
+	if len(s) > d.maxStringLength {
+		return findings
+	}
 
 	if b64 := findBase64(s); b64 != "" && len(b64) >= d.minLength {
 		ent := shannonEntropy(b64)
@@ -92,13 +107,17 @@ func (d *Detector) ScanString(s, file string, line, col int) []Finding {
 	return findings
 }
 
-// ScanLine analyzes a line of text for entropy anomalies.
-func (d *Detector) ScanLine(line, file string, lineNum int) []Finding {
+// ScanLine analyzes a line of text for entropy anomalies. Returns findings and
+// a bool indicating whether the per-file cap was reached.
+func (d *Detector) ScanLine(line, file string, lineNum int, findingsSoFar int) ([]Finding, bool) {
 	var findings []Finding
 	for _, tok := range tokenizeStrings(line) {
 		findings = append(findings, d.ScanString(tok.value, file, lineNum, tok.start)...)
+		if d.maxFindings > 0 && findingsSoFar+len(findings) >= d.maxFindings {
+			return findings, true
+		}
 	}
-	return findings
+	return findings, false
 }
 
 // ScanContent analyzes full file content.
@@ -106,7 +125,14 @@ func (d *Detector) ScanContent(content, file string) []Finding {
 	var findings []Finding
 	lines := strings.Split(content, "\n")
 	for i, line := range lines {
-		findings = append(findings, d.ScanLine(line, file, i+1)...)
+		if d.maxFindings > 0 && len(findings) >= d.maxFindings {
+			break
+		}
+		f, capped := d.ScanLine(line, file, i+1, len(findings))
+		findings = append(findings, f...)
+		if capped {
+			break
+		}
 	}
 	return findings
 }
@@ -294,7 +320,7 @@ func (s *Stage) Run(ctx context.Context, target string, input *report.Report) (*
 	if input != nil {
 		out = input
 	}
-	det := NewDetector().WithThreshold(s.threshold)
+	det := NewDetector().WithThreshold(s.threshold).WithMaxFindings(1000)
 
 	err := yara.WalkDirSorted(target, s.excludedPaths, func(path string, content []byte, rel string) error {
 		select {

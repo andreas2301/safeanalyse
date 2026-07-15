@@ -26,15 +26,19 @@ func WriteAll(report *Report, cfg config.OutputConfig) error {
 		return fmt.Errorf("creating output directory %s: %w", cfg.OutDir, err)
 	}
 
-	formats := cfg.EffectiveFormats()
-	if cfg.SingleFile && len(formats) > 1 {
-		// In single-file mode, write everything into one combined report.
-		// For now, this means one file per format but in the same directory.
+	reportToWrite := report
+	if max := cfg.EffectiveMaxFindings(); max > 0 && len(report.Findings) > max {
+		capped := *report
+		capped.Findings = make([]Finding, max)
+		copy(capped.Findings, report.Findings)
+		capped.Metadata["findings_capped"] = fmt.Sprintf("showing %d of %d", max, len(report.Findings))
+		reportToWrite = &capped
 	}
 
+	formats := cfg.EffectiveFormats()
 	var errs []string
 	for _, f := range formats {
-		if err := writeFormat(report, cfg, f); err != nil {
+		if err := writeFormat(reportToWrite, cfg, f); err != nil {
 			errs = append(errs, fmt.Sprintf("%s: %v", f, err))
 		}
 	}

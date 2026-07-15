@@ -30,6 +30,9 @@ report (SARIF, Markdown, HTML) in the configured output directory.`,
 			return fmt.Errorf("target path does not exist: %s", target)
 		}
 
+		// Apply mode-aware exclusions (dependency paths excluded in fast mode).
+		cfg.Sanitization.ExcludedPaths = cfg.Sanitization.EffectiveExcludedPaths(mode)
+
 		var stageNames []string
 		switch mode {
 		case "fast":
@@ -134,4 +137,5 @@ func printReportSummary(rep *report.Report) {
 func init() {
 	scanCmd.Flags().BoolP("verbose", "v", false, "show scanner output")
 	scanCmd.Flags().StringP("output-dir", "o", "", "output directory for reports")
+	scanCmd.Flags().StringP("mode", "m", "thorough", "scan mode: fast or thorough")
 }

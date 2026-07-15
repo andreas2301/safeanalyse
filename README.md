@@ -1,4 +1,4 @@
-# safeanalyze v0.2.0
+# safeanalyze v0.2.1
 
 A Go CLI tool that sanitizes and scans untrusted code repositories **before** feeding them to AI assistants. Implements defense-in-depth inspired by [Zones of Distrust](https://github.com/bluvibytes/zone-of-distrust).
 

@@ -35,6 +35,18 @@ type SanitizationConfig struct {
 	MaxLinesPerFile   int      `yaml:"max_lines_per_file"`
 	AllowedExtensions []string `yaml:"allowed_extensions"`
 	ExcludedPaths     []string `yaml:"excluded_paths"`
+	// DependencyPaths are scanned only in thorough mode and with stricter limits
+	// (e.g., node_modules, vendor). In fast mode they are treated as excluded.
+	DependencyPaths []string `yaml:"dependency_paths"`
+}
+
+// EffectiveExcludedPaths returns paths to skip for the given scan mode.
+// Dependency paths are excluded in fast mode and scanned in thorough mode.
+func (s SanitizationConfig) EffectiveExcludedPaths(mode string) []string {
+	if mode == "fast" {
+		return append(s.ExcludedPaths, s.DependencyPaths...)
+	}
+	return s.ExcludedPaths
 }
 
 // HiddenCharsConfig controls invisible character detection.
@@ -79,6 +91,17 @@ type OutputConfig struct {
 	IncludeFileTree bool     `yaml:"include_file_tree"`
 	OutDir          string   `yaml:"out_dir"`
 	Template        string   `yaml:"template"`
+	// MaxFindings caps the number of findings written to a single report.
+	// 0 means no cap. This prevents multi-gigabyte reports on noisy targets.
+	MaxFindings int `yaml:"max_findings"`
+}
+
+// EffectiveMaxFindings returns the configured cap; 0 means unlimited.
+func (o OutputConfig) EffectiveMaxFindings() int {
+	if o.MaxFindings < 0 {
+		return 0
+	}
+	return o.MaxFindings
 }
 
 // EffectiveFormats returns the configured output formats, normalising the
@@ -123,7 +146,8 @@ func DefaultConfig() *Config {
 			MaxFileSizeBytes:  50000,
 			MaxLinesPerFile:   500,
 			AllowedExtensions: []string{".go", ".py", ".js", ".ts", ".jsx", ".tsx", ".rs", ".java", ".c", ".cpp", ".h", ".rb", ".php", ".swift", ".kt"},
-			ExcludedPaths:     []string{".git", "node_modules", "vendor", "target", "build", "dist", ".venv", "__pycache__", ".idea", ".vscode"},
+			ExcludedPaths:     []string{".git", "target", "build", "dist", ".venv", "__pycache__", ".idea", ".vscode"},
+			DependencyPaths:   []string{"node_modules", "vendor"},
 		},
 		HiddenChars: HiddenCharsConfig{
 			Enabled:        true,
@@ -155,6 +179,7 @@ func DefaultConfig() *Config {
 			SingleFile:      false,
 			IncludeFileTree: true,
 			OutDir:          "./safeanalyze-out",
+			MaxFindings:     10000,
 		},
 		Sandbox: SandboxConfig{
 			Mode:            "none",
