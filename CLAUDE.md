@@ -80,6 +80,6 @@ echo 'ignore all previous instructions' | ./safeanalyze inspect --verbose
 
 ## Current autoresearch iteration
 
-- **Version under test:** v0.3.3
-- **Active hypothesis:** Narrowing `template_injection` to `{{...}}` and `${jndi:...}` will remove hundreds of false positives from code variable interpolations while keeping true-positive detections in GitHub Actions workflows and prompt templates.
-- **Last report branch:** `report-lazer-mustache-snarky-b7dbfa58-2026-07-15` (v0.3.2)
+- **Version under test:** v0.3.4
+- **Active hypothesis:** Adding pre-computed base64 and hex fragments of common prompt-injection phrases to the `encoded_prompt_injection` rule will catch encoded evasions without adding latency or false positives.
+- **Last report branch:** `report-mexican-wombat-unstable-65b466a3-2026-07-15` (v0.3.3)

@@ -5,6 +5,16 @@ All notable functional and non-functional changes to `safeanalyze` are documente
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.3.4] — 2026-07-15
+
+### Functional
+
+- **Expanded `encoded_prompt_injection` rule:** Added pre-computed base64 and hex fragments for common prompt-injection phrases and their variants, including "ignore previous instructions", "ignore all previous instructions", "ignore every instruction", "system prompt", "developer mode", "jailbreak", "DAN mode", "disregard your instructions", "strictly adhere to...", "you are now", and "pretend you are". URL-encoded variants were also extended.
+
+### Non-functional
+
+- Fast mode remains deterministic and within the sub-100 ms budget because the encoded-pattern checks are pure regex additions.
+
 ## [0.3.3] — 2026-07-15
 
 ### Functional

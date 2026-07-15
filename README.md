@@ -1,4 +1,4 @@
-# safeanalyze v0.3.3
+# safeanalyze v0.3.4
 
 A Go CLI tool that sanitizes and scans untrusted code repositories **before** feeding them to AI assistants. Implements defense-in-depth inspired by [Zones of Distrust](https://github.com/bluvibytes/zone-of-distrust).
 
@@ -12,6 +12,10 @@ Prompt injection via malicious code is real. A repo can contain:
 - Secrets or malware mixed with legitimate source
 
 **safeanalyze** runs a security pipeline so AI assistants never see raw, unverified code.
+
+## What's new in v0.3.4
+
+- **Expanded encoded-prompt-injection detection** — added base64 and hex fragments for common injection phrases and their variants.
 
 ## What's new in v0.3.3
 
