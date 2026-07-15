@@ -38,6 +38,8 @@ func WriteAll(report *Report, cfg config.OutputConfig) error {
 		reportToWrite = &capped
 	}
 
+	report.Redact()
+
 	formats := cfg.EffectiveFormats()
 	var errs []string
 	for _, f := range formats {

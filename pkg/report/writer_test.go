@@ -165,6 +165,71 @@ func TestOutputConfig_EffectiveFormats(t *testing.T) {
 	}
 }
 
+func TestWriteAll_RedactsSecrets(t *testing.T) {
+	dir := t.TempDir()
+	cfg := config.OutputConfig{Formats: []string{"json"}, OutDir: dir}
+
+	// Build secret-looking values at runtime so static secret scanners in git
+	// hosts do not flag the test source itself.
+	stripeKey := "sk_" + "live_" + "abcdef1234567890"
+	gitlabPAT := "glp" + "at-" + "A1b2C3d4E5f6G7h8I9j0"
+
+	r := NewReport("redact-test")
+	r.AddFinding(Finding{
+		RuleID:     "credential_hardcode",
+		Severity:   SeverityMedium,
+		File:       "test.py",
+		Line:       1,
+		Match:      `API_KEY = "` + stripeKey + `"`,
+		Message:    "Potential hardcoded credentials",
+		Source:     "yara",
+		Confidence: ConfidenceDeterministic,
+	})
+	r.AddFinding(Finding{
+		RuleID:     "entropy_high_entropy",
+		Severity:   SeverityLow,
+		File:       "secrets.py",
+		Line:       1,
+		Match:      `GITLAB_PAT = "` + gitlabPAT + `"\n`,
+		Message:    "entropy=5.08 len=43 type=high_entropy",
+		Source:     "entropy",
+		Confidence: ConfidenceHeuristic,
+	})
+	r.AddFinding(Finding{
+		RuleID:     "prompt_injection_comment",
+		Severity:   SeverityCritical,
+		File:       "prompt.py",
+		Line:       1,
+		Match:      `"ignore all previous instructions"`,
+		Message:    "Comment containing prompt injection keywords",
+		Source:     "yara",
+		Confidence: ConfidenceDeterministic,
+	})
+
+	if err := WriteAll(r, cfg); err != nil {
+		t.Fatalf("WriteAll failed: %v", err)
+	}
+
+	data, _ := os.ReadFile(filepath.Join(dir, "safeanalyze.json"))
+	var parsed Report
+	if err := json.Unmarshal(data, &parsed); err != nil {
+		t.Fatalf("JSON unmarshal failed: %v", err)
+	}
+
+	for _, f := range parsed.Findings {
+		if strings.Contains(f.Match, "sk_live_") || strings.Contains(f.Match, "glpat-") {
+			t.Errorf("finding %s still contains raw secret: %s", f.RuleID, f.Match)
+		}
+	}
+
+	// Non-secret matches should not be mangled.
+	for _, f := range parsed.Findings {
+		if f.RuleID == "prompt_injection_comment" && !strings.Contains(f.Match, "ignore all previous instructions") {
+			t.Errorf("non-secret match was unexpectedly redacted: %s", f.Match)
+		}
+	}
+}
+
 func TestWriteAll_UnsupportedFormat(t *testing.T) {
 	dir := t.TempDir()
 	cfg := config.OutputConfig{Formats: []string{"plain"}, OutDir: dir}

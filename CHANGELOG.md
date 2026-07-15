@@ -5,6 +5,16 @@ All notable functional and non-functional changes to `safeanalyze` are documente
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.2.7] — 2026-07-15
+
+### Functional
+
+- **Report secret redaction:** Before writing JSON/SARIF/Markdown/HTML output, potential secret values in finding `match` fields are redacted. This prevents GitHub push-protection blocks when test fixtures contain fake API keys, and keeps public report branches safe.
+
+### Non-functional
+
+- Added `pkg/report` tests verifying that Stripe keys, GitLab PATs, and quoted credential values are redacted while non-secret matches remain readable.
+
 ## [0.2.6] — 2026-07-15
 
 ### Functional

@@ -3,11 +3,52 @@
 package report
 
 import (
+	"regexp"
 	"strings"
 	"time"
 )
 
-// Severity levels.
+// secretTokenPatterns redact common secret-like values from report output so
+// that generated reports can be committed to public branches without leaking
+// credentials found in test data.
+var secretTokenPatterns = []*regexp.Regexp{
+	regexp.MustCompile(`(?i)(sk_|rk_|pk_)(live|test)_[A-Za-z0-9_\-]{10,}`),
+	regexp.MustCompile(`(?i)glpat-[A-Za-z0-9_\-]{10,}`),
+	regexp.MustCompile(`(?i)gh[pousr]_[A-Za-z0-9]{30,}`),
+	regexp.MustCompile(`(?i)AKIA[A-Z0-9]{16}`),
+}
+
+// quotedString matches a double-quoted string. It is used for conservative
+// redaction of credential-like findings.
+var quotedString = regexp.MustCompile(`"[^"]{4,}"`)
+
+// redactMatch sanitizes a finding match string for public report output.
+func redactMatch(match, ruleID, source string) string {
+	// Redact known secret token patterns anywhere they appear.
+	for _, re := range secretTokenPatterns {
+		match = re.ReplaceAllString(match, "[REDACTED]")
+	}
+
+	// For credential findings, also redact any quoted value so fake keys in
+	// test fixtures are not pushed verbatim.
+	if ruleID == "credential_hardcode" {
+		match = quotedString.ReplaceAllString(match, `"[REDACTED]"`)
+	}
+	if source == "entropy" && strings.Contains(strings.ToLower(match), "pat") {
+		match = quotedString.ReplaceAllString(match, `"[REDACTED]"`)
+	}
+
+	return match
+}
+
+// Redact sanitizes finding match strings in place so reports can be stored or
+// shared without leaking credentials found in scanned targets.
+func (r *Report) Redact() {
+	for i := range r.Findings {
+		f := &r.Findings[i]
+		f.Match = redactMatch(f.Match, f.RuleID, f.Source)
+	}
+}
 const (
 	SeverityCritical = "critical"
 	SeverityHigh     = "high"
