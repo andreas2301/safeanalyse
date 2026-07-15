@@ -219,6 +219,28 @@ func (e *Engine) LoadBuiltins() {
 				`(?i)(ignore|disregard).{0,30}\n\s*["']{3}`,
 			},
 		},
+		{
+			Name:        "encoded_prompt_injection",
+			Description: "Prompt-injection keywords encoded as base64, hex, or Unicode escapes",
+			Severity:    report.SeverityHigh,
+			Patterns: []string{
+				`(?i)YmFzZTY0.*(?i)aWdub3Jl.*cHJldmlvdXM`, // base64 fragments containing ignore/previous
+				`(?i)ignore%20all%20previous%20instruction`,
+				`(?i)ignore\+all\+previous\+instruction`,
+				`\\x69\\x67\\x6e\\x6f\\x72\\x65`, // hex-encoded "ignore"
+			},
+		},
+		{
+			Name:        "suspicious_markdown_injection",
+			Description: "Markdown or HTML element that may carry an injected instruction",
+			Severity:    report.SeverityMedium,
+			Patterns: []string{
+				`(?i)\[.*ignore.*previous.*\]\(https?://`,
+				`(?i)<img[^\u003e]*alt\s*=\s*["'].*ignore.*previous`,
+				`(?i)<a[^\u003e]*href\s*=\s*["']javascript:`,
+				`(?i)<!--\s*system\s+prompt`,
+			},
+		},
 	}
 
 	for _, r := range builtins {

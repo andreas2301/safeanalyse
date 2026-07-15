@@ -5,6 +5,17 @@ All notable functional and non-functional changes to `safeanalyze` are documente
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.2.9] — 2026-07-15
+
+### Functional
+
+- **Encoded prompt-injection detection:** New YARA rule `encoded_prompt_injection` catches base64, hex, URL-encoded, and Unicode-escape variants of injection keywords.
+- **Markdown/HTML injection detection:** New YARA rule `suspicious_markdown_injection` flags links, images, and comments that may carry injected instructions.
+
+### Non-functional
+
+- Expanded YARA builtin rule set continues to be exercised by `scripts/redteam.sh`.
+
 ## [0.2.8] — 2026-07-15
 
 ### Functional
