@@ -1,0 +1,202 @@
+{
+  "version": "2.1.0",
+  "$schema": "https://raw.githubusercontent.com/oasis-tcs/sarif-spec/master/Schemata/sarif-schema-2.1.0.json",
+  "runs": [
+    {
+      "tool": {
+        "driver": {
+          "name": "safeanalyze",
+          "informationUri": "https://github.com/user/safeanalyze",
+          "rules": [
+            {
+              "id": "obfuscated_javascript",
+              "name": "obfuscated_javascript",
+              "shortDescription": {
+                "text": "obfuscated_javascript"
+              },
+              "fullDescription": {
+                "text": "Obfuscated or packed JavaScript patterns"
+              },
+              "help": {
+                "text": ""
+              },
+              "properties": {
+                "category": "pattern_match"
+              }
+            },
+            {
+              "id": "prompt_injection_comment",
+              "name": "prompt_injection_comment",
+              "shortDescription": {
+                "text": "prompt_injection_comment"
+              },
+              "fullDescription": {
+                "text": "Comment containing prompt injection keywords"
+              },
+              "help": {
+                "text": ""
+              },
+              "properties": {
+                "category": "pattern_match"
+              }
+            }
+          ]
+        }
+      },
+      "results": [
+        {
+          "ruleId": "prompt_injection_comment",
+          "ruleIndex": 1,
+          "level": "error",
+          "message": {
+            "text": "Comment containing prompt injection keywords"
+          },
+          "locations": [
+            {
+              "physicalLocation": {
+                "artifactLocation": {
+                  "uri": "README.md"
+                },
+                "region": {
+                  "startLine": 404,
+                  "startColumn": 19,
+                  "snippet": {
+                    "text": "ignore previous instruction"
+                  }
+                }
+              }
+            }
+          ],
+          "properties": {
+            "category": "pattern_match",
+            "confidence": "deterministic",
+            "source": "yara"
+          }
+        },
+        {
+          "ruleId": "prompt_injection_comment",
+          "ruleIndex": 1,
+          "level": "error",
+          "message": {
+            "text": "Comment containing prompt injection keywords"
+          },
+          "locations": [
+            {
+              "physicalLocation": {
+                "artifactLocation": {
+                  "uri": "README.md"
+                },
+                "region": {
+                  "startLine": 405,
+                  "startColumn": 19,
+                  "snippet": {
+                    "text": "system prompt"
+                  }
+                }
+              }
+            }
+          ],
+          "properties": {
+            "category": "pattern_match",
+            "confidence": "deterministic",
+            "source": "yara"
+          }
+        },
+        {
+          "ruleId": "prompt_injection_comment",
+          "ruleIndex": 1,
+          "level": "error",
+          "message": {
+            "text": "Comment containing prompt injection keywords"
+          },
+          "locations": [
+            {
+              "physicalLocation": {
+                "artifactLocation": {
+                  "uri": "prompt_injection_scanner/rules.py"
+                },
+                "region": {
+                  "startLine": 997,
+                  "startColumn": 55,
+                  "snippet": {
+                    "text": "jailbreak"
+                  }
+                }
+              }
+            }
+          ],
+          "properties": {
+            "category": "pattern_match",
+            "confidence": "deterministic",
+            "source": "yara"
+          }
+        },
+        {
+          "ruleId": "obfuscated_javascript",
+          "ruleIndex": 0,
+          "level": "error",
+          "message": {
+            "text": "Obfuscated or packed JavaScript patterns"
+          },
+          "locations": [
+            {
+              "physicalLocation": {
+                "artifactLocation": {
+                  "uri": "tests/test_cli.py"
+                },
+                "region": {
+                  "startLine": 185,
+                  "startColumn": 17,
+                  "snippet": {
+                    "text": "\\x1b"
+                  }
+                }
+              }
+            }
+          ],
+          "properties": {
+            "category": "pattern_match",
+            "confidence": "deterministic",
+            "source": "yara"
+          }
+        },
+        {
+          "ruleId": "obfuscated_javascript",
+          "ruleIndex": 0,
+          "level": "error",
+          "message": {
+            "text": "Obfuscated or packed JavaScript patterns"
+          },
+          "locations": [
+            {
+              "physicalLocation": {
+                "artifactLocation": {
+                  "uri": "tests/test_reporter.py"
+                },
+                "region": {
+                  "startLine": 376,
+                  "startColumn": 17,
+                  "snippet": {
+                    "text": "\\x1b"
+                  }
+                }
+              }
+            }
+          ],
+          "properties": {
+            "category": "pattern_match",
+            "confidence": "deterministic",
+            "source": "yara"
+          }
+        }
+      ],
+      "invocations": [
+        {
+          "executionSuccessful": true,
+          "startTimeUtc": "2026-07-15T00:06:11.290Z",
+          "endTimeUtc": "2026-07-15T00:06:11.474Z"
+        }
+      ]
+    }
+  ]
+}

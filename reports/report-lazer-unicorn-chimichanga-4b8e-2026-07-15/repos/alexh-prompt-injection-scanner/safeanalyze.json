@@ -1,0 +1,95 @@
+{
+  "target": "/tmp/safeanalyze-prompt-injection-scanner",
+  "started_at": "2026-07-15T00:06:11.29068377Z",
+  "completed_at": "2026-07-15T00:06:11.474173615Z",
+  "findings": [
+    {
+      "rule_id": "prompt_injection_comment",
+      "title": "prompt_injection_comment",
+      "description": "Comment containing prompt injection keywords",
+      "severity": "critical",
+      "category": "pattern_match",
+      "file": "README.md",
+      "line": 404,
+      "column": 19,
+      "match": "ignore previous instruction",
+      "message": "Comment containing prompt injection keywords",
+      "source": "yara",
+      "confidence": "deterministic"
+    },
+    {
+      "rule_id": "prompt_injection_comment",
+      "title": "prompt_injection_comment",
+      "description": "Comment containing prompt injection keywords",
+      "severity": "critical",
+      "category": "pattern_match",
+      "file": "README.md",
+      "line": 405,
+      "column": 19,
+      "match": "system prompt",
+      "message": "Comment containing prompt injection keywords",
+      "source": "yara",
+      "confidence": "deterministic"
+    },
+    {
+      "rule_id": "prompt_injection_comment",
+      "title": "prompt_injection_comment",
+      "description": "Comment containing prompt injection keywords",
+      "severity": "critical",
+      "category": "pattern_match",
+      "file": "prompt_injection_scanner/rules.py",
+      "line": 997,
+      "column": 55,
+      "match": "jailbreak",
+      "message": "Comment containing prompt injection keywords",
+      "source": "yara",
+      "confidence": "deterministic"
+    },
+    {
+      "rule_id": "obfuscated_javascript",
+      "title": "obfuscated_javascript",
+      "description": "Obfuscated or packed JavaScript patterns",
+      "severity": "high",
+      "category": "pattern_match",
+      "file": "tests/test_cli.py",
+      "line": 185,
+      "column": 17,
+      "match": "\\x1b",
+      "message": "Obfuscated or packed JavaScript patterns",
+      "source": "yara",
+      "confidence": "deterministic"
+    },
+    {
+      "rule_id": "obfuscated_javascript",
+      "title": "obfuscated_javascript",
+      "description": "Obfuscated or packed JavaScript patterns",
+      "severity": "high",
+      "category": "pattern_match",
+      "file": "tests/test_reporter.py",
+      "line": 376,
+      "column": 17,
+      "match": "\\x1b",
+      "message": "Obfuscated or packed JavaScript patterns",
+      "source": "yara",
+      "confidence": "deterministic"
+    }
+  ],
+  "errors": [],
+  "summary": {
+    "files_scanned": 18,
+    "files_sanitized": 0,
+    "bytes_before": 0,
+    "bytes_after": 0,
+    "counts_by_severity": {
+      "critical": 3,
+      "high": 2
+    },
+    "counts_by_source": {
+      "yara": 5
+    }
+  },
+  "metadata": {
+    "safeanalyze_version": "0.2.1",
+    "scan_mode": "thorough"
+  }
+}
