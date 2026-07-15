@@ -1,0 +1,956 @@
+{
+  "version": "2.1.0",
+  "$schema": "https://raw.githubusercontent.com/oasis-tcs/sarif-spec/master/Schemata/sarif-schema-2.1.0.json",
+  "runs": [
+    {
+      "tool": {
+        "driver": {
+          "name": "safeanalyze",
+          "informationUri": "https://github.com/user/safeanalyze",
+          "rules": [
+            {
+              "id": "hidden_char_zero_width",
+              "name": "Hidden Unicode character: ZERO WIDTH SPACE",
+              "shortDescription": {
+                "text": "Hidden Unicode character: ZERO WIDTH SPACE"
+              },
+              "fullDescription": {
+                "text": ""
+              },
+              "help": {
+                "text": ""
+              },
+              "properties": {
+                "category": "hidden_char"
+              }
+            },
+            {
+              "id": "prompt_injection_comment",
+              "name": "prompt_injection_comment",
+              "shortDescription": {
+                "text": "prompt_injection_comment"
+              },
+              "fullDescription": {
+                "text": "Comment containing prompt injection keywords"
+              },
+              "help": {
+                "text": ""
+              },
+              "properties": {
+                "category": "pattern_match"
+              }
+            }
+          ]
+        }
+      },
+      "results": [
+        {
+          "ruleId": "prompt_injection_comment",
+          "ruleIndex": 1,
+          "level": "error",
+          "message": {
+            "text": "Comment containing prompt injection keywords"
+          },
+          "locations": [
+            {
+              "physicalLocation": {
+                "artifactLocation": {
+                  "uri": "."
+                },
+                "region": {
+                  "startLine": 28,
+                  "startColumn": 3254,
+                  "snippet": {
+                    "text": "jailbreak"
+                  }
+                }
+              }
+            }
+          ],
+          "properties": {
+            "category": "pattern_match",
+            "confidence": "deterministic",
+            "source": "yara"
+          }
+        },
+        {
+          "ruleId": "hidden_char_zero_width",
+          "ruleIndex": 0,
+          "level": "error",
+          "message": {
+            "text": "ZERO WIDTH SPACE (zero_width) in ."
+          },
+          "locations": [
+            {
+              "physicalLocation": {
+                "artifactLocation": {
+                  "uri": "."
+                },
+                "region": {
+                  "startLine": 32,
+                  "startColumn": 204,
+                  "snippet": {
+                    "text": "U+200B"
+                  }
+                }
+              }
+            }
+          ],
+          "properties": {
+            "category": "hidden_char",
+            "confidence": "deterministic",
+            "source": "hiddenchars"
+          }
+        },
+        {
+          "ruleId": "hidden_char_zero_width",
+          "ruleIndex": 0,
+          "level": "error",
+          "message": {
+            "text": "ZERO WIDTH SPACE (zero_width) in ."
+          },
+          "locations": [
+            {
+              "physicalLocation": {
+                "artifactLocation": {
+                  "uri": "."
+                },
+                "region": {
+                  "startLine": 52,
+                  "startColumn": 254,
+                  "snippet": {
+                    "text": "U+200B"
+                  }
+                }
+              }
+            }
+          ],
+          "properties": {
+            "category": "hidden_char",
+            "confidence": "deterministic",
+            "source": "hiddenchars"
+          }
+        },
+        {
+          "ruleId": "hidden_char_zero_width",
+          "ruleIndex": 0,
+          "level": "error",
+          "message": {
+            "text": "ZERO WIDTH SPACE (zero_width) in ."
+          },
+          "locations": [
+            {
+              "physicalLocation": {
+                "artifactLocation": {
+                  "uri": "."
+                },
+                "region": {
+                  "startLine": 54,
+                  "startColumn": 219,
+                  "snippet": {
+                    "text": "U+200B"
+                  }
+                }
+              }
+            }
+          ],
+          "properties": {
+            "category": "hidden_char",
+            "confidence": "deterministic",
+            "source": "hiddenchars"
+          }
+        },
+        {
+          "ruleId": "prompt_injection_comment",
+          "ruleIndex": 1,
+          "level": "error",
+          "message": {
+            "text": "Comment containing prompt injection keywords"
+          },
+          "locations": [
+            {
+              "physicalLocation": {
+                "artifactLocation": {
+                  "uri": "."
+                },
+                "region": {
+                  "startLine": 56,
+                  "startColumn": 1073,
+                  "snippet": {
+                    "text": "You are now "
+                  }
+                }
+              }
+            }
+          ],
+          "properties": {
+            "category": "pattern_match",
+            "confidence": "deterministic",
+            "source": "yara"
+          }
+        },
+        {
+          "ruleId": "prompt_injection_comment",
+          "ruleIndex": 1,
+          "level": "error",
+          "message": {
+            "text": "Comment containing prompt injection keywords"
+          },
+          "locations": [
+            {
+              "physicalLocation": {
+                "artifactLocation": {
+                  "uri": "."
+                },
+                "region": {
+                  "startLine": 58,
+                  "startColumn": 115,
+                  "snippet": {
+                    "text": "system prompt"
+                  }
+                }
+              }
+            }
+          ],
+          "properties": {
+            "category": "pattern_match",
+            "confidence": "deterministic",
+            "source": "yara"
+          }
+        },
+        {
+          "ruleId": "hidden_char_zero_width",
+          "ruleIndex": 0,
+          "level": "error",
+          "message": {
+            "text": "ZERO WIDTH SPACE (zero_width) in ."
+          },
+          "locations": [
+            {
+              "physicalLocation": {
+                "artifactLocation": {
+                  "uri": "."
+                },
+                "region": {
+                  "startLine": 59,
+                  "startColumn": 224,
+                  "snippet": {
+                    "text": "U+200B"
+                  }
+                }
+              }
+            }
+          ],
+          "properties": {
+            "category": "hidden_char",
+            "confidence": "deterministic",
+            "source": "hiddenchars"
+          }
+        },
+        {
+          "ruleId": "hidden_char_zero_width",
+          "ruleIndex": 0,
+          "level": "error",
+          "message": {
+            "text": "ZERO WIDTH SPACE (zero_width) in ."
+          },
+          "locations": [
+            {
+              "physicalLocation": {
+                "artifactLocation": {
+                  "uri": "."
+                },
+                "region": {
+                  "startLine": 64,
+                  "startColumn": 244,
+                  "snippet": {
+                    "text": "U+200B"
+                  }
+                }
+              }
+            }
+          ],
+          "properties": {
+            "category": "hidden_char",
+            "confidence": "deterministic",
+            "source": "hiddenchars"
+          }
+        },
+        {
+          "ruleId": "hidden_char_zero_width",
+          "ruleIndex": 0,
+          "level": "error",
+          "message": {
+            "text": "ZERO WIDTH SPACE (zero_width) in ."
+          },
+          "locations": [
+            {
+              "physicalLocation": {
+                "artifactLocation": {
+                  "uri": "."
+                },
+                "region": {
+                  "startLine": 69,
+                  "startColumn": 342,
+                  "snippet": {
+                    "text": "U+200B"
+                  }
+                }
+              }
+            }
+          ],
+          "properties": {
+            "category": "hidden_char",
+            "confidence": "deterministic",
+            "source": "hiddenchars"
+          }
+        },
+        {
+          "ruleId": "prompt_injection_comment",
+          "ruleIndex": 1,
+          "level": "error",
+          "message": {
+            "text": "Comment containing prompt injection keywords"
+          },
+          "locations": [
+            {
+              "physicalLocation": {
+                "artifactLocation": {
+                  "uri": "."
+                },
+                "region": {
+                  "startLine": 71,
+                  "startColumn": 187,
+                  "snippet": {
+                    "text": "jailbreak"
+                  }
+                }
+              }
+            }
+          ],
+          "properties": {
+            "category": "pattern_match",
+            "confidence": "deterministic",
+            "source": "yara"
+          }
+        },
+        {
+          "ruleId": "hidden_char_zero_width",
+          "ruleIndex": 0,
+          "level": "error",
+          "message": {
+            "text": "ZERO WIDTH SPACE (zero_width) in ."
+          },
+          "locations": [
+            {
+              "physicalLocation": {
+                "artifactLocation": {
+                  "uri": "."
+                },
+                "region": {
+                  "startLine": 72,
+                  "startColumn": 249,
+                  "snippet": {
+                    "text": "U+200B"
+                  }
+                }
+              }
+            }
+          ],
+          "properties": {
+            "category": "hidden_char",
+            "confidence": "deterministic",
+            "source": "hiddenchars"
+          }
+        },
+        {
+          "ruleId": "hidden_char_zero_width",
+          "ruleIndex": 0,
+          "level": "error",
+          "message": {
+            "text": "ZERO WIDTH SPACE (zero_width) in ."
+          },
+          "locations": [
+            {
+              "physicalLocation": {
+                "artifactLocation": {
+                  "uri": "."
+                },
+                "region": {
+                  "startLine": 74,
+                  "startColumn": 239,
+                  "snippet": {
+                    "text": "U+200B"
+                  }
+                }
+              }
+            }
+          ],
+          "properties": {
+            "category": "hidden_char",
+            "confidence": "deterministic",
+            "source": "hiddenchars"
+          }
+        },
+        {
+          "ruleId": "hidden_char_zero_width",
+          "ruleIndex": 0,
+          "level": "error",
+          "message": {
+            "text": "ZERO WIDTH SPACE (zero_width) in ."
+          },
+          "locations": [
+            {
+              "physicalLocation": {
+                "artifactLocation": {
+                  "uri": "."
+                },
+                "region": {
+                  "startLine": 80,
+                  "startColumn": 259,
+                  "snippet": {
+                    "text": "U+200B"
+                  }
+                }
+              }
+            }
+          ],
+          "properties": {
+            "category": "hidden_char",
+            "confidence": "deterministic",
+            "source": "hiddenchars"
+          }
+        },
+        {
+          "ruleId": "prompt_injection_comment",
+          "ruleIndex": 1,
+          "level": "error",
+          "message": {
+            "text": "Comment containing prompt injection keywords"
+          },
+          "locations": [
+            {
+              "physicalLocation": {
+                "artifactLocation": {
+                  "uri": "."
+                },
+                "region": {
+                  "startLine": 81,
+                  "startColumn": 354,
+                  "snippet": {
+                    "text": "system prompt"
+                  }
+                }
+              }
+            }
+          ],
+          "properties": {
+            "category": "pattern_match",
+            "confidence": "deterministic",
+            "source": "yara"
+          }
+        },
+        {
+          "ruleId": "hidden_char_zero_width",
+          "ruleIndex": 0,
+          "level": "error",
+          "message": {
+            "text": "ZERO WIDTH SPACE (zero_width) in ."
+          },
+          "locations": [
+            {
+              "physicalLocation": {
+                "artifactLocation": {
+                  "uri": "."
+                },
+                "region": {
+                  "startLine": 83,
+                  "startColumn": 219,
+                  "snippet": {
+                    "text": "U+200B"
+                  }
+                }
+              }
+            }
+          ],
+          "properties": {
+            "category": "hidden_char",
+            "confidence": "deterministic",
+            "source": "hiddenchars"
+          }
+        },
+        {
+          "ruleId": "prompt_injection_comment",
+          "ruleIndex": 1,
+          "level": "error",
+          "message": {
+            "text": "Comment containing prompt injection keywords"
+          },
+          "locations": [
+            {
+              "physicalLocation": {
+                "artifactLocation": {
+                  "uri": "."
+                },
+                "region": {
+                  "startLine": 88,
+                  "startColumn": 68,
+                  "snippet": {
+                    "text": "jailbreak"
+                  }
+                }
+              }
+            }
+          ],
+          "properties": {
+            "category": "pattern_match",
+            "confidence": "deterministic",
+            "source": "yara"
+          }
+        },
+        {
+          "ruleId": "prompt_injection_comment",
+          "ruleIndex": 1,
+          "level": "error",
+          "message": {
+            "text": "Comment containing prompt injection keywords"
+          },
+          "locations": [
+            {
+              "physicalLocation": {
+                "artifactLocation": {
+                  "uri": "."
+                },
+                "region": {
+                  "startLine": 88,
+                  "startColumn": 94,
+                  "snippet": {
+                    "text": "jailbreak"
+                  }
+                }
+              }
+            }
+          ],
+          "properties": {
+            "category": "pattern_match",
+            "confidence": "deterministic",
+            "source": "yara"
+          }
+        },
+        {
+          "ruleId": "prompt_injection_comment",
+          "ruleIndex": 1,
+          "level": "error",
+          "message": {
+            "text": "Comment containing prompt injection keywords"
+          },
+          "locations": [
+            {
+              "physicalLocation": {
+                "artifactLocation": {
+                  "uri": "."
+                },
+                "region": {
+                  "startLine": 88,
+                  "startColumn": 128,
+                  "snippet": {
+                    "text": "jailbreak"
+                  }
+                }
+              }
+            }
+          ],
+          "properties": {
+            "category": "pattern_match",
+            "confidence": "deterministic",
+            "source": "yara"
+          }
+        },
+        {
+          "ruleId": "prompt_injection_comment",
+          "ruleIndex": 1,
+          "level": "error",
+          "message": {
+            "text": "Comment containing prompt injection keywords"
+          },
+          "locations": [
+            {
+              "physicalLocation": {
+                "artifactLocation": {
+                  "uri": "."
+                },
+                "region": {
+                  "startLine": 88,
+                  "startColumn": 199,
+                  "snippet": {
+                    "text": "jailbreak"
+                  }
+                }
+              }
+            }
+          ],
+          "properties": {
+            "category": "pattern_match",
+            "confidence": "deterministic",
+            "source": "yara"
+          }
+        },
+        {
+          "ruleId": "prompt_injection_comment",
+          "ruleIndex": 1,
+          "level": "error",
+          "message": {
+            "text": "Comment containing prompt injection keywords"
+          },
+          "locations": [
+            {
+              "physicalLocation": {
+                "artifactLocation": {
+                  "uri": "."
+                },
+                "region": {
+                  "startLine": 88,
+                  "startColumn": 247,
+                  "snippet": {
+                    "text": "jailbreak"
+                  }
+                }
+              }
+            }
+          ],
+          "properties": {
+            "category": "pattern_match",
+            "confidence": "deterministic",
+            "source": "yara"
+          }
+        },
+        {
+          "ruleId": "hidden_char_zero_width",
+          "ruleIndex": 0,
+          "level": "error",
+          "message": {
+            "text": "ZERO WIDTH SPACE (zero_width) in ."
+          },
+          "locations": [
+            {
+              "physicalLocation": {
+                "artifactLocation": {
+                  "uri": "."
+                },
+                "region": {
+                  "startLine": 88,
+                  "startColumn": 274,
+                  "snippet": {
+                    "text": "U+200B"
+                  }
+                }
+              }
+            }
+          ],
+          "properties": {
+            "category": "hidden_char",
+            "confidence": "deterministic",
+            "source": "hiddenchars"
+          }
+        },
+        {
+          "ruleId": "prompt_injection_comment",
+          "ruleIndex": 1,
+          "level": "error",
+          "message": {
+            "text": "Comment containing prompt injection keywords"
+          },
+          "locations": [
+            {
+              "physicalLocation": {
+                "artifactLocation": {
+                  "uri": "."
+                },
+                "region": {
+                  "startLine": 89,
+                  "startColumn": 75,
+                  "snippet": {
+                    "text": "jailbreak"
+                  }
+                }
+              }
+            }
+          ],
+          "properties": {
+            "category": "pattern_match",
+            "confidence": "deterministic",
+            "source": "yara"
+          }
+        },
+        {
+          "ruleId": "prompt_injection_comment",
+          "ruleIndex": 1,
+          "level": "error",
+          "message": {
+            "text": "Comment containing prompt injection keywords"
+          },
+          "locations": [
+            {
+              "physicalLocation": {
+                "artifactLocation": {
+                  "uri": "."
+                },
+                "region": {
+                  "startLine": 89,
+                  "startColumn": 126,
+                  "snippet": {
+                    "text": "jailbreak"
+                  }
+                }
+              }
+            }
+          ],
+          "properties": {
+            "category": "pattern_match",
+            "confidence": "deterministic",
+            "source": "yara"
+          }
+        },
+        {
+          "ruleId": "prompt_injection_comment",
+          "ruleIndex": 1,
+          "level": "error",
+          "message": {
+            "text": "Comment containing prompt injection keywords"
+          },
+          "locations": [
+            {
+              "physicalLocation": {
+                "artifactLocation": {
+                  "uri": "."
+                },
+                "region": {
+                  "startLine": 90,
+                  "startColumn": 2392,
+                  "snippet": {
+                    "text": "jailbreak"
+                  }
+                }
+              }
+            }
+          ],
+          "properties": {
+            "category": "pattern_match",
+            "confidence": "deterministic",
+            "source": "yara"
+          }
+        },
+        {
+          "ruleId": "prompt_injection_comment",
+          "ruleIndex": 1,
+          "level": "error",
+          "message": {
+            "text": "Comment containing prompt injection keywords"
+          },
+          "locations": [
+            {
+              "physicalLocation": {
+                "artifactLocation": {
+                  "uri": "."
+                },
+                "region": {
+                  "startLine": 91,
+                  "startColumn": 38,
+                  "snippet": {
+                    "text": "jailbreak"
+                  }
+                }
+              }
+            }
+          ],
+          "properties": {
+            "category": "pattern_match",
+            "confidence": "deterministic",
+            "source": "yara"
+          }
+        },
+        {
+          "ruleId": "prompt_injection_comment",
+          "ruleIndex": 1,
+          "level": "error",
+          "message": {
+            "text": "Comment containing prompt injection keywords"
+          },
+          "locations": [
+            {
+              "physicalLocation": {
+                "artifactLocation": {
+                  "uri": "."
+                },
+                "region": {
+                  "startLine": 92,
+                  "startColumn": 2550,
+                  "snippet": {
+                    "text": "jailbreak"
+                  }
+                }
+              }
+            }
+          ],
+          "properties": {
+            "category": "pattern_match",
+            "confidence": "deterministic",
+            "source": "yara"
+          }
+        },
+        {
+          "ruleId": "hidden_char_zero_width",
+          "ruleIndex": 0,
+          "level": "error",
+          "message": {
+            "text": "ZERO WIDTH SPACE (zero_width) in ."
+          },
+          "locations": [
+            {
+              "physicalLocation": {
+                "artifactLocation": {
+                  "uri": "."
+                },
+                "region": {
+                  "startLine": 93,
+                  "startColumn": 234,
+                  "snippet": {
+                    "text": "U+200B"
+                  }
+                }
+              }
+            }
+          ],
+          "properties": {
+            "category": "hidden_char",
+            "confidence": "deterministic",
+            "source": "hiddenchars"
+          }
+        },
+        {
+          "ruleId": "hidden_char_zero_width",
+          "ruleIndex": 0,
+          "level": "error",
+          "message": {
+            "text": "ZERO WIDTH SPACE (zero_width) in ."
+          },
+          "locations": [
+            {
+              "physicalLocation": {
+                "artifactLocation": {
+                  "uri": "."
+                },
+                "region": {
+                  "startLine": 103,
+                  "startColumn": 184,
+                  "snippet": {
+                    "text": "U+200B"
+                  }
+                }
+              }
+            }
+          ],
+          "properties": {
+            "category": "hidden_char",
+            "confidence": "deterministic",
+            "source": "hiddenchars"
+          }
+        },
+        {
+          "ruleId": "hidden_char_zero_width",
+          "ruleIndex": 0,
+          "level": "error",
+          "message": {
+            "text": "ZERO WIDTH SPACE (zero_width) in ."
+          },
+          "locations": [
+            {
+              "physicalLocation": {
+                "artifactLocation": {
+                  "uri": "."
+                },
+                "region": {
+                  "startLine": 112,
+                  "startColumn": 199,
+                  "snippet": {
+                    "text": "U+200B"
+                  }
+                }
+              }
+            }
+          ],
+          "properties": {
+            "category": "hidden_char",
+            "confidence": "deterministic",
+            "source": "hiddenchars"
+          }
+        },
+        {
+          "ruleId": "prompt_injection_comment",
+          "ruleIndex": 1,
+          "level": "error",
+          "message": {
+            "text": "Comment containing prompt injection keywords"
+          },
+          "locations": [
+            {
+              "physicalLocation": {
+                "artifactLocation": {
+                  "uri": "."
+                },
+                "region": {
+                  "startLine": 119,
+                  "startColumn": 2432,
+                  "snippet": {
+                    "text": "jailbreak"
+                  }
+                }
+              }
+            }
+          ],
+          "properties": {
+            "category": "pattern_match",
+            "confidence": "deterministic",
+            "source": "yara"
+          }
+        },
+        {
+          "ruleId": "prompt_injection_comment",
+          "ruleIndex": 1,
+          "level": "error",
+          "message": {
+            "text": "Comment containing prompt injection keywords"
+          },
+          "locations": [
+            {
+              "physicalLocation": {
+                "artifactLocation": {
+                  "uri": "."
+                },
+                "region": {
+                  "startLine": 119,
+                  "startColumn": 2504,
+                  "snippet": {
+                    "text": "jailbreak"
+                  }
+                }
+              }
+            }
+          ],
+          "properties": {
+            "category": "pattern_match",
+            "confidence": "deterministic",
+            "source": "yara"
+          }
+        }
+      ],
+      "invocations": [
+        {
+          "executionSuccessful": true,
+          "startTimeUtc": "2026-07-15T01:17:49.430Z",
+          "endTimeUtc": "2026-07-15T01:17:49.511Z"
+        }
+      ]
+    }
+  ]
+}
