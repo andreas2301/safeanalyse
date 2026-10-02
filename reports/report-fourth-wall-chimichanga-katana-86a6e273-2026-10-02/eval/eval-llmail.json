@@ -1,0 +1,138 @@
+{
+  "metadata": {
+    "dataset": "testdata/eval/llmail.jsonl",
+    "duration_ms": 2149,
+    "safeanalyze_version": "0.3.20",
+    "scan_mode": "fast"
+  },
+  "tp": 228,
+  "fp": 0,
+  "tn": 160,
+  "fn": 72,
+  "samples": 460,
+  "precision": 1,
+  "recall": 0.76,
+  "f1": 0.8636363636363636,
+  "by_source": {
+    "llmail/api_triggered": {
+      "tp": 42,
+      "fp": 0,
+      "tn": 0,
+      "fn": 3,
+      "samples": 45,
+      "precision": 1,
+      "recall": 0.9333333333333333,
+      "f1": 0.9655172413793104
+    },
+    "llmail/benign": {
+      "tp": 0,
+      "fp": 0,
+      "tn": 160,
+      "fn": 0,
+      "samples": 160,
+      "precision": 0,
+      "recall": 0,
+      "f1": 0
+    },
+    "llmail/direct instructions": {
+      "tp": 146,
+      "fp": 0,
+      "tn": 0,
+      "fn": 42,
+      "samples": 188,
+      "precision": 1,
+      "recall": 0.776595744680851,
+      "f1": 0.874251497005988
+    },
+    "llmail/direct instructions and obfuscation": {
+      "tp": 0,
+      "fp": 0,
+      "tn": 0,
+      "fn": 1,
+      "samples": 1,
+      "precision": 0,
+      "recall": 0,
+      "f1": 0
+    },
+    "llmail/obfuscation": {
+      "tp": 37,
+      "fp": 0,
+      "tn": 0,
+      "fn": 25,
+      "samples": 62,
+      "precision": 1,
+      "recall": 0.5967741935483871,
+      "f1": 0.7474747474747475
+    },
+    "llmail/social engineering": {
+      "tp": 3,
+      "fp": 0,
+      "tn": 0,
+      "fn": 1,
+      "samples": 4,
+      "precision": 1,
+      "recall": 0.75,
+      "f1": 0.8571428571428571
+    }
+  },
+  "rule_hits": {
+    "account_access_request": {
+      "injection": 2,
+      "benign": 0
+    },
+    "backdoor_indicator": {
+      "injection": 6,
+      "benign": 0
+    },
+    "chat_template_boundary": {
+      "injection": 60,
+      "benign": 0
+    },
+    "data_exfiltration_email": {
+      "injection": 189,
+      "benign": 0
+    },
+    "hidden_char_control": {
+      "injection": 14,
+      "benign": 0
+    },
+    "hidden_char_format": {
+      "injection": 3,
+      "benign": 0
+    },
+    "hidden_char_zero_width": {
+      "injection": 6,
+      "benign": 0
+    },
+    "indirect_prompt_injection": {
+      "injection": 10,
+      "benign": 0
+    },
+    "llm_tool_injection": {
+      "injection": 4,
+      "benign": 0
+    },
+    "multilingual_prompt_injection": {
+      "injection": 1,
+      "benign": 0
+    },
+    "obfuscated_javascript": {
+      "injection": 1,
+      "benign": 0
+    },
+    "output_constraint": {
+      "injection": 1,
+      "benign": 0
+    },
+    "prompt_injection_comment": {
+      "injection": 17,
+      "benign": 0
+    },
+    "system_boundary": {
+      "injection": 3,
+      "benign": 0
+    }
+  },
+  "latency_p50_ms": 4.406,
+  "latency_p95_ms": 6.423
+}
