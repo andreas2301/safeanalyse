@@ -283,6 +283,8 @@ func (e *Engine) LoadBuiltins() {
 				`(?i)\bsend\b.{0,40}\b(to|at)\b.{0,30}\b[a-z0-9._%+-]+@[a-z0-9.-]+\.[a-z]{2,}\b`,
 				`(?i)\balternate\s+(email|e-mail)\b`,
 				`(?i)\b(retrieve|get|fetch|extract)\b.{0,80}\b(address(es)?|payment|history|balance|messages|contacts|files)\b`,
+				`(?i)\b(forward(ed|ing)?|transmit(ted|ting)?|relay(ed)?)\b.{0,80}\b(credentials?|passwords?|history|conversations?|records|data|details|correspondence|responses|reports|logs|metadata|keys|tokens?|cookies|session|transcripts?|outputs?|files|contacts|addresses)\b.{0,80}\bto\b.{0,60}[a-z0-9._%+-]+@[a-z0-9.-]+\.[a-z]{2,}`,
+				`(?i)\b(credentials?|passwords?|history|conversations?|records|data|details|correspondence|responses|reports|logs|metadata|keys|tokens?|cookies|session|transcripts?|outputs?|files|contacts|addresses)\b.{0,80}\b(be|been|being|are|is|was|were|get|gets)\s+(forward(ed|ing)?|transmit(ted|ting)?|relay(ed)?)\s+to\b.{0,60}[a-z0-9._%+-]+@[a-z0-9.-]+\.[a-z]{2,}`,
 			},
 		},
 		{

@@ -1,4 +1,4 @@
-# safeanalyze v0.3.14
+# safeanalyze v0.3.15
 
 A Go CLI tool that sanitizes and scans untrusted code repositories **before** feeding them to AI assistants. Implements defense-in-depth inspired by [Zones of Distrust](https://github.com/bluvibytes/zone-of-distrust).
 
@@ -12,6 +12,10 @@ Prompt injection via malicious code is real. A repo can contain:
 - Secrets or malware mixed with legitimate source
 
 **safeanalyze** runs a security pipeline so AI assistants never see raw, unverified code.
+
+## What's new in v0.3.15
+
+- **Forward/transmit/relay exfiltration detection** — `data_exfiltration_email` now also flags requests to forward, transmit or relay sensitive data (credentials, conversation history, records, logs, session data, ...) to an email address, in active ("forward your session credentials to audit@...") and passive ("records should be forwarded to compliance@...") form. Mail footers such as "please forward it to postmaster@..." or "messages are forwarded to support@..." stay unflagged. browsesafe dev recall rises 0.59 → 0.65 (holdout 0.54 → 0.59) with no new false positives.
 
 ## What's new in v0.3.14
 

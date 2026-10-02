@@ -155,24 +155,27 @@ for f in testdata/eval/*.jsonl; do ./safeanalyze eval "$f"; done
 
 ## Current autoresearch iteration
 
-- **Version under test:** v0.3.14
-- **Status:** Accepted (iteration 4 on the labeled eval; deepset dev and holdout recall/F1 gain with no new FPs on any dev or holdout set).
-- **Change:** New high-severity `persona_hijack` YARA rule for requests that the model adopt a new persona or role ("I want you to act as a ...", "From now on you are DAN", German "Ich möchte, dass Sie als ... agieren/auftreten", Spanish "quiero que actúes como", French "je veux que tu agisses comme / joues le rôle"). Hypothesis from BASELINE.md §4 (persona/role-play hijack deepset FN category), built on the dev sets only.
-- **Metrics (fast-mode eval, v0.3.13 → v0.3.14):**
-  - Dev: deepset TP 19 → 24, R 0.317 → 0.400, F1 0.481 → 0.571 (FP 0); llmail unchanged (F1 0.785, FP 0); browsesafe unchanged (F1 0.640, FP 76).
-  - Holdout: deepset-holdout TP 46 → 54, R 0.227 → 0.266, F1 0.367 → 0.417 (FP 2 unchanged); llmail-holdout unchanged (F1 0.776, FP 0); browsesafe-holdout unchanged (F1 0.596, FP 82).
-  - Latency: deepset/llmail p95 < 11 ms; browsesafe p95 316 ms dev / 310 ms holdout (v0.3.13: 289 / 283 ms; run-2 dev 315 ms), p50 115 / 103 ms, still over the 100 ms budget.
-  - Thorough corpus: findings 11025 → 11025 (new rule has 0 corpus hits; every source count unchanged), total `duration_ms` 35812 (v0.3.13: 38604, mostly skylos variance), 0 errors.
-  - Red-team: 12/12 payloads flagged (new "act as a Linux terminal" payload) at 11–12 ms.
-- **Known gaps (red-team):** lowercase persona names without an article ("act as dan"), "serve as"/"play the role of" without an article, and non-de/es/fr/en languages are not matched. The browsesafe p95 rise (~9 %) is larger than the rule should cost and needs a same-machine re-check.
+- **Version under test:** v0.3.15
+- **Status:** Accepted (iteration 5 on the labeled eval; browsesafe dev and holdout recall/F1 gain with no new FPs on any dev or holdout set).
+- **Change:** `data_exfiltration_email` gains two patterns for forward/transmit/relay of a sensitive-data noun (credentials, history, conversation, records, data, logs, session, ...) to an email address, in active and passive ("... should be forwarded to x@y") form. Hypothesis from BASELINE.md cross-set FN theme #5 (exfiltration phrasing), built on the dev sets only. The verb-only form ("forward ... to <email>") was rejected in red-team: 8/15 benign mail-footer/helpdesk texts false-triggered; requiring a sensitive noun brought that to 0/15 at a cost of 5 browsesafe dev TPs.
+- **Metrics (fast-mode eval, v0.3.14 → v0.3.15):**
+  - Dev: browsesafe TP 177 → 194, R 0.590 → 0.647, F1 0.640 → 0.681 (FP 76 unchanged); deepset unchanged (F1 0.571, FP 0); llmail unchanged (F1 0.785, FP 0).
+  - Holdout: browsesafe-holdout TP 162 → 177, R 0.540 → 0.590, F1 0.596 → 0.633 (FP 82 unchanged); deepset-holdout unchanged (F1 0.417, FP 2); llmail-holdout unchanged (F1 0.776, FP 0).
+  - Latency: deepset/llmail p95 < 13 ms; browsesafe p95 345 ms dev / 337 ms holdout (v0.3.14: 316 / 310 ms; run-2 dev 344 ms); same-session back-to-back browsesafe dev p50 114 → 123 ms, p95 332 → 350 ms (+5–8 %). Still over the 100 ms budget.
+  - Thorough corpus: findings 11025 → 11025 (per-source and `data_exfiltration_email` counts unchanged on every target), total `duration_ms` 35812 → 38610 (+2670 ms from skylos, external-scanner variance), 0 errors.
+  - Red-team: 12/12 payloads flagged at 12–14 ms.
+- **Known gaps (red-team):** `fwd`, spaced letters, `(at)`/`[at]`/fullwidth `＠`/`&#64;`/`%40` addresses, Cyrillic homoglyph verbs, "towards", other verbs (pass along, share with, deliver, route, CC), non-English verbs, and noun lists longer than 80 characters before "to" are not matched. Business mail that forwards a sensitive noun ("expense reports should be forwarded to finance@...", "forward the build logs to devops@...") does trigger.
 - **Rejected options this iteration (not released):**
-  - Prompt-leak rule ("display your system instructions", "print above prompt", "return your embeddings").
+  - Verb-only `forward|transmit|relay ... to <email>` pattern (8/15 benign red-team FPs); adding `send`, `sent` or `report(ed)` verbs (dev FPs / generic CV-mail noise).
+  - Context-aware hidden-char exemptions (emoji ZWJ, flag tags, script joiners, balanced bidi): best browsesafe F1 0.6413, no net gain.
+  - Urgency/verification lure rules: 243 benign vs 247 injection hits on browsesafe.
+  - (v0.3.14) Prompt-leak rule ("display your system instructions", "print above prompt", "return your embeddings").
 - **Last accepted corpus improvement:** v0.3.13 (corpus findings +174 from `chat_template_boundary`).
 - **Previous reverted iterations:**
   - v0.3.4 — encoded-prompt-injection fragment expansion added latency but no new detections.
   - v0.3.8 (parallel entropy/hiddenchars) — did not improve latency, reverted before release.
-  - None reverted in the labeled-eval loop yet (iterations 1–4 accepted).
-- **Stagnation check:** 0 consecutive no-gain iterations (iterations 1–4 all improved dev and holdout F1 on at least one set).
+  - None reverted in the labeled-eval loop yet (iterations 1–5 accepted).
+- **Stagnation check:** 0 consecutive no-gain iterations (iterations 1–5 all improved dev and holdout F1 on at least one set). Process review due after iteration 5: browsesafe latency keeps creeping up (p95 289 → 345 ms over iterations 3–5) and should be addressed before adding more regexes.
 - **Next candidates (from the dev-set FN analysis):**
   - Spot-check the +1064 (v0.3.11) and +150 (v0.3.13) InjecAgent YARA findings and the +24 BIPIA hits for FP inflation.
   - JSON tool-call injection in llmail FNs.
