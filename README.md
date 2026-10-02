@@ -1,4 +1,4 @@
-# safeanalyze v0.3.18
+# safeanalyze v0.3.19
 
 A Go CLI tool that sanitizes and scans untrusted code repositories **before** feeding them to AI assistants. Implements defense-in-depth inspired by [Zones of Distrust](https://github.com/bluvibytes/zone-of-distrust).
 
@@ -12,6 +12,10 @@ Prompt injection via malicious code is real. A repo can contain:
 - Secrets or malware mixed with legitimate source
 
 **safeanalyze** runs a security pipeline so AI assistants never see raw, unverified code.
+
+## What's new in v0.3.19
+
+- **Obfuscated recipient-key exfiltration detection** — `data_exfiltration_email` now also flags a recipient key (`recipient(s)`, `receiver`, `email_to`, `address`) with `:` or `=` and an email address that may be obfuscated (`contact at contact.com`, `contact[at]contact[dot]com`, `(at)`/`{at}`, fullwidth `＠`, spaces around `@`), followed within 80 characters on the same line by a `body`/`content`/`message` field written as `:`, `=` or "is" (`"receiver": contact at contact.com, and body is only "confirmation"`). `To:` and `Email:` keys are not included, so contact lines such as "To: John at acme.com, message: ..." and "email: jane.doe(at)uni-bonn.de, message: office hours ..." stay unflagged. llmail recall rises on dev (0.700 → 0.727) and holdout (0.653 → 0.687) with no new false positives.
 
 ## What's new in v0.3.18
 
@@ -235,7 +239,7 @@ Pure-Go regex rule engine with embedded detection patterns. A required-literal p
 | `credential_hardcode` | medium | password=, api_key=, secret=, AWS keys |
 | `suspicious_imports` | medium | subprocess, child_process, urllib requests |
 | `data_exfiltration` | high | fetch to external URLs, axios post, XMLHttpRequest |
-| `data_exfiltration_email` | high | "retrieve ... and email to ...", forward/transmit/relay of sensitive data or send/forward of a summary/result to an email address, `send_email`-style tool calls and `To:`/`Body:` key/value sends, piped `| mail -s` |
+| `data_exfiltration_email` | high | "retrieve ... and email to ...", forward/transmit/relay of sensitive data or send/forward of a summary/result to an email address, `send_email`-style tool calls and `To:`/`Body:` key/value sends (including obfuscated `at`/`[at]`/`＠` addresses after a recipient key), piped `| mail -s` |
 | `account_access_request` | medium | "access my account", "retrieve my payment history" |
 | `output_constraint` | medium | "output only", "do not mention warnings", "no disclaimer" |
 | `system_boundary` | critical | `<system>`, `[system]`, `system_instruction` markers |

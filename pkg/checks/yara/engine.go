@@ -411,6 +411,7 @@ func (e *Engine) LoadBuiltins() {
 				`(?i)(\b(recipients?|receiver|email_to)\b["']?\s*[=:]\s*["']?[a-z0-9._%+-]+@[a-z0-9.-]+\.[a-z]{2,}.{0,80}?(\b(body|content|message)\b["']?\s*[=:]|\bwith\s+(the\s+)?(body|content|message)\b)|(\b(body|content|message)\b["']?\s*[=:]|\bwith\s+(the\s+)?(body|content|message)\b).{0,80}?\b(recipients?|receiver|email_to)\b["']?\s*[=:]\s*["']?[a-z0-9._%+-]+@[a-z0-9.-]+\.[a-z]{2,})`,
 				`(?i)\bto\b["']?\s*[=:]\s*["']?[a-z0-9._%+-]+@[a-z0-9.-]+\.[a-z]{2,}["']?\s*[,;)}]?\s*["']?(body|content|message)\b`,
 				`(?i)\|\s*mail\s+-s\s+.{0,80}?[a-z0-9._%+-]+@[a-z0-9.-]+\.[a-z]{2,}`,
+				`(?i)\b(recipients?|receiver|email_to|address)\b["']?\s*[=:]\s*["'*]*[a-z0-9._%+-]+(\s*[@＠]\s*|\s*[(\[{]at[)\]}]\s*|\s+at\s+)[a-z0-9-]+((\.|\s*[(\[{]dot[)\]}]\s*)[a-z0-9-]+)*(\.|\s*[(\[{]dot[)\]}]\s*)[a-z]{2,}\b.{0,80}?\b(body|content|message)\b["']?\s*([=:]|is\b)`,
 			},
 		},
 		{

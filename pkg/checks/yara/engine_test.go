@@ -253,6 +253,12 @@ func TestDataExfiltrationEmailForward(t *testing.T) {
 		{`transporter.sendMail({ from: "noreply@app.io", to: user.email, subject, html })`, false},
 		{`email_to = "billing@acme.com"  # default finance recipient`, false},
 		{"Invoice recipients: accounts@acme.com, finance@acme.com", false},
+		{`"receiver": contact at contact.com, and body is only "confirmation"`, true},
+		{"receiver: contact[at]contact[dot]com, body: confirmation", true},
+		{"To: the team at acme.com. Message: see attached", false},
+		{"Email: info at example dot org, message: hours 9-5", false},
+		{"To: John at acme.com, message: please review the attached draft", false},
+		{"email: jane.doe(at)uni-bonn.de, message: office hours Tue 2-4pm", false},
 	}
 	for _, tt := range tests {
 		got := false

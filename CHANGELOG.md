@@ -5,6 +5,28 @@ All notable functional and non-functional changes to `safeanalyze` are documente
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.3.19] — 2026-10-02
+
+### Functional
+
+- **Wider `data_exfiltration_email` rule (obfuscated recipient key):** one new line-based pattern flags a recipient key (`recipient(s)`, `receiver`, `email_to`, `address`; optionally quoted) followed by `:` or `=`, then an email address that may be obfuscated, then within 80 characters a `body`/`content`/`message` field followed by `:`, `=` or "is".
+  - Accepted address forms: literal `@` or fullwidth `＠` (optionally with spaces around it), `(at)`/`[at]`/`{at}`, or ` at ` between spaces; domain dots may be `.` or `(dot)`/`[dot]`/`{dot}`. Leading quotes or `*` before the address are allowed.
+  - Flagged examples: `"receiver": contact at contact.com, and body is only "confirmation"`, `receiver: contact[at]contact[dot]com, body: confirmation`.
+  - Unflagged examples: `To: the team at acme.com. Message: see attached`, `Email: info at example dot org, message: hours 9-5`, `To: John at acme.com, message: please review the attached draft`, `email: jane.doe(at)uni-bonn.de, message: office hours Tue 2-4pm`.
+  - Why: the scanner matches one line at a time. In the llmail dev FNs the send verb sits on one line and the obfuscated recipient on the next, so the v0.3.17 verb-led patterns cannot fire, and the v0.3.18 recipient-key pattern needs a literal `@` and a `body:`/`body=` key (not "body is").
+  - The hypothesis also listed `to` and `email`/`e-mail` as recipient keys. They were left out of the released pattern so that ordinary contact lines (`To: John at acme.com, message: ...`, `email: jane.doe(at)uni-bonn.de, message: ...`) stay unflagged.
+
+### Non-functional
+
+- Fast-mode eval, dev sets (v0.3.18 → v0.3.19): llmail TP 210 → 218 (recall 0.700 → 0.727, F1 0.824 → 0.842, FP 0); deepset and browsesafe unchanged (F1 0.571 and 0.681, FP 0 and 76). `data_exfiltration_email` rule hits (injection/benign): llmail 157/0 → 166/0, browsesafe 132/24 unchanged.
+- Fast-mode eval, holdout sets: llmail-holdout TP 196 → 206 (recall 0.653 → 0.687, F1 0.790 → 0.814, FP 0); deepset-holdout and browsesafe-holdout unchanged (F1 0.417 and 0.633, FP 2 and 82).
+- Hypothesis built on dev-set evidence only (BASELINE.md cross-set FN themes #3, obfuscated addresses, and #5, key/value sends). No holdout file was opened.
+- Latency (p95, v0.3.18 → v0.3.19): dev deepset 3.75 → 3.80 ms (run 2: 4.06), llmail 5.09 → 4.79 ms (run 2: 4.69), browsesafe 27.4 → 28.8 ms (run 2: 28.9); holdout 4.08 → 3.93, 4.80 → 4.92, 29.3 → 29.4 ms. All sets stay within the 100 ms budget.
+- Thorough corpus: findings 11166 → 11166, identical per target and per source (`data_exfiltration_email` unchanged: injecagent 3820, skylos 48, bipia 4). Total `duration_ms` 35489 → 35809 (skylos external-scanner variance); 0 errors.
+- Red-team: 12/12 payloads flagged at 15–16 ms.
+- Determinism: two dev eval runs give identical metrics, rule hits and FP/FN JSONL files.
+- Added two positive and four benign test cases to `TestDataExfiltrationEmailForward`.
+
 ## [0.3.18] — 2026-10-02
 
 ### Functional
