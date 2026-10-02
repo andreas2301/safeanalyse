@@ -1,4 +1,4 @@
-# safeanalyze v0.3.15
+# safeanalyze v0.3.16
 
 A Go CLI tool that sanitizes and scans untrusted code repositories **before** feeding them to AI assistants. Implements defense-in-depth inspired by [Zones of Distrust](https://github.com/bluvibytes/zone-of-distrust).
 
@@ -12,6 +12,10 @@ Prompt injection via malicious code is real. A repo can contain:
 - Secrets or malware mixed with legitimate source
 
 **safeanalyze** runs a security pipeline so AI assistants never see raw, unverified code.
+
+## What's new in v0.3.16
+
+- **Literal prefilter in the YARA engine** — each pattern now runs only on documents and lines that contain every literal it needs (case-folded the same way as `(?i)`). Findings are unchanged; fast-mode browsesafe p95 drops from ~345 ms to ~24 ms (dev) and from ~341 ms to ~27 ms (holdout), now inside the 100 ms budget. llmail p95 drops from ~12 ms to ~4 ms. No configuration change.
 
 ## What's new in v0.3.15
 
@@ -197,7 +201,7 @@ Install optional scanner/model dependencies from source:
 ### Fast mode (`--mode fast`)
 
 - **Checks:** built-in YARA rules + hidden Unicode characters only.
-- **Latency:** ~1 ms per typical HTTP request payload.
+- **Latency:** ~1 ms per typical HTTP request payload; p95 under 30 ms on large HTML pages (browsesafe eval).
 - **Use case:** inline reverse-proxy inspection (Squid external ACL helper), request/response filtering.
 - **No:** ML model, external scanners, entropy analysis, file walking beyond the given payload.
 
@@ -211,7 +215,7 @@ Install optional scanner/model dependencies from source:
 
 ### 1. Built-in YARA-like Rule Engine
 
-Pure-Go regex rule engine with embedded detection patterns:
+Pure-Go regex rule engine with embedded detection patterns. A required-literal prefilter skips patterns whose literals do not appear in the document or line, so only candidate lines reach the regex matcher:
 
 | Rule | Severity | Detects |
 |------|----------|---------|

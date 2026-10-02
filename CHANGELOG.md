@@ -5,6 +5,20 @@ All notable functional and non-functional changes to `safeanalyze` are documente
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.3.16] — 2026-10-02
+
+### Functional
+
+- **Literal prefilter in `yara.Engine.ScanFile`:** when a rule is added, each pattern is parsed with `regexp/syntax` and reduced to the literals (3 bytes or longer) that every match must contain, as an AND of OR-clauses. Literals and scanned text are case-folded with the same `unicode.SimpleFold` equivalence that `(?i)` uses. A pattern runs only if its literals appear in the whole document and then in the line; patterns with no derivable literals always run. Detection output is unchanged: the prototype compared old and new `[]Match` output with `reflect.DeepEqual` on every dev sample (0 differences), and the new `TestPrefilterEquivalence` test compares the prefiltered scan against an unfiltered scan for fold, invalid-UTF-8, CRLF and multi-line edge cases. Prefilters are memoized per pattern string, because a new engine is built for every payload.
+
+### Non-functional
+
+- Fast-mode eval: TP/FP/TN/FN, precision, recall, F1 and per-rule hits are identical to v0.3.15 on every dev and holdout set.
+- Latency (p95, v0.3.15 → v0.3.16): browsesafe 349 → 24 ms dev (p50 124 → 10.5 ms), browsesafe-holdout 341 → 27 ms (p50 114 → 10.2 ms); llmail 11.7 → 3.9 ms, llmail-holdout 12.1 → 3.9 ms; deepset 3.8 → 3.1 ms, deepset-holdout 3.8 → 3.4 ms. Fast mode is now inside the 100 ms budget on every labeled set.
+- Profile behind the change: regex backtracking was 95 % of fast-mode CPU on browsesafe (about 398k lines × 107 `(?i)` patterns). A document-level-only prefilter reached 129 ms p95; the per-line check is what brings it under budget.
+- Thorough corpus: 11025 findings, identical per target and per source; total `duration_ms` 35883 → 34247; 0 errors.
+- Red-team: 12/12 payloads flagged at 14–15 ms (process start-up dominated).
+
 ## [0.3.15] — 2026-10-02
 
 ### Functional

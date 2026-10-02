@@ -7,9 +7,11 @@ import (
 	"os"
 	"path/filepath"
 	"regexp"
+	"regexp/syntax"
 	"runtime"
 	"strings"
 	"sync"
+	"unicode"
 
 	"github.com/fatih/color"
 	"github.com/user/safeanalyze/pkg/report"
@@ -22,6 +24,9 @@ type Rule struct {
 	Severity    string   `json:"severity"` // low, medium, high, critical
 	Patterns    []string `json:"patterns"`
 	compiled    []*regexp.Regexp
+	// prefilter holds, per compiled pattern, an AND of ORs of case-folded
+	// literals that every match must contain; nil means "always run".
+	prefilter [][][]string
 }
 
 // Match represents a rule match.
@@ -56,19 +61,135 @@ func (e *Engine) AddRule(r Rule) error {
 			return fmt.Errorf("invalid pattern %q in rule %q: %w", p, r.Name, err)
 		}
 		r.compiled = append(r.compiled, re)
+		r.prefilter = append(r.prefilter, patternPrefilter(p))
 	}
 	e.rules = append(e.rules, r)
 	return nil
+}
+
+// prefilterCache memoizes patternPrefilter across engines, because a fresh
+// Engine is built for every scanned payload.
+var prefilterCache sync.Map // pattern string -> [][]string
+
+// patternPrefilter returns the required-literal clauses (all literals >= 3
+// bytes) for pattern p, or nil if none can be derived.
+func patternPrefilter(p string) [][]string {
+	if v, ok := prefilterCache.Load(p); ok {
+		return v.([][]string)
+	}
+	var pf [][]string
+	if sre, err := syntax.Parse(p, syntax.Perl); err == nil {
+		for _, clause := range requiredLiterals(sre.Simplify()) {
+			ok := true
+			for _, lit := range clause {
+				if len(lit) < 3 {
+					ok = false
+					break
+				}
+			}
+			if ok {
+				pf = append(pf, clause)
+			}
+		}
+	}
+	prefilterCache.Store(p, pf)
+	return pf
+}
+
+// foldRune maps r to the smallest rune of its unicode.SimpleFold orbit, the
+// same equivalence (?i) uses, so folded literals and folded text compare equal.
+func foldRune(r rune) rune {
+	m := r
+	for f := unicode.SimpleFold(r); f != r; f = unicode.SimpleFold(f) {
+		if f < m {
+			m = f
+		}
+	}
+	return m
+}
+
+func foldString(s string) string { return strings.Map(foldRune, s) }
+
+// requiredLiterals returns a conjunction of disjunctions of folded literals
+// that any match of re must contain. Unknown ops yield nil (no constraint).
+func requiredLiterals(re *syntax.Regexp) [][]string {
+	switch re.Op {
+	case syntax.OpLiteral:
+		return [][]string{{foldString(string(re.Rune))}}
+	case syntax.OpCapture, syntax.OpPlus:
+		return requiredLiterals(re.Sub[0])
+	case syntax.OpRepeat:
+		if re.Min >= 1 {
+			return requiredLiterals(re.Sub[0])
+		}
+	case syntax.OpConcat:
+		var out [][]string
+		for _, sub := range re.Sub {
+			out = append(out, requiredLiterals(sub)...)
+		}
+		return out
+	case syntax.OpAlternate:
+		var clause []string
+		for _, sub := range re.Sub {
+			cl := requiredLiterals(sub)
+			if len(cl) == 0 {
+				return nil
+			}
+			var best []string
+			bestLen := -1
+			for _, c := range cl {
+				shortest := int(^uint(0) >> 1)
+				for _, lit := range c {
+					if len(lit) < shortest {
+						shortest = len(lit)
+					}
+				}
+				if shortest > bestLen {
+					best, bestLen = c, shortest
+				}
+			}
+			clause = append(clause, best...)
+		}
+		return [][]string{clause}
+	}
+	return nil
+}
+
+// prefilterPass reports whether every clause has a literal contained in s.
+func prefilterPass(pf [][]string, s string) bool {
+	for _, clause := range pf {
+		ok := false
+		for _, lit := range clause {
+			if strings.Contains(s, lit) {
+				ok = true
+				break
+			}
+		}
+		if !ok {
+			return false
+		}
+	}
+	return true
 }
 
 // ScanFile scans a single file's content.
 func (e *Engine) ScanFile(content, filename string) []Match {
 	var matches []Match
 	lines := strings.Split(content, "\n")
+	// strings.Map never adds or removes '\n', so folded lines align with lines.
+	folded := foldString(content)
+	flines := strings.Split(folded, "\n")
 
 	for _, rule := range e.rules {
+		active := make([]bool, len(rule.compiled))
+		for i := range rule.compiled {
+			active[i] = prefilterPass(rule.prefilter[i], folded)
+		}
 		for lineNum, line := range lines {
-			for _, re := range rule.compiled {
+			for i, re := range rule.compiled {
+				if !active[i] || !prefilterPass(rule.prefilter[i], flines[lineNum]) {
+					continue
+				}
 				for _, loc := range re.FindAllStringIndex(line, -1) {
 					match := line[loc[0]:loc[1]]
 					matches = append(matches, Match{

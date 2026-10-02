@@ -155,30 +155,27 @@ for f in testdata/eval/*.jsonl; do ./safeanalyze eval "$f"; done
 
 ## Current autoresearch iteration
 
-- **Version under test:** v0.3.15 (last accepted; loop stopped at stagnation).
-- **Status:** Accepted (iteration 5 on the labeled eval; browsesafe dev and holdout recall/F1 gain with no new FPs on any dev or holdout set). Iterations 6 (context-aware zero-width exemptions) and 7 (`prompt_leak_request` rule) were reverted for no gain (dev F1 +0.008, holdout F1 +0.001), so the loop stopped.
-- **Change:** `data_exfiltration_email` gains two patterns for forward/transmit/relay of a sensitive-data noun (credentials, history, conversation, records, data, logs, session, ...) to an email address, in active and passive ("... should be forwarded to x@y") form. Hypothesis from BASELINE.md cross-set FN theme #5 (exfiltration phrasing), built on the dev sets only. The verb-only form ("forward ... to <email>") was rejected in red-team: 8/15 benign mail-footer/helpdesk texts false-triggered; requiring a sensitive noun brought that to 0/15 at a cost of 5 browsesafe dev TPs.
-- **Metrics (fast-mode eval, v0.3.14 → v0.3.15):**
-  - Dev: browsesafe TP 177 → 194, R 0.590 → 0.647, F1 0.640 → 0.681 (FP 76 unchanged); deepset unchanged (F1 0.571, FP 0); llmail unchanged (F1 0.785, FP 0).
-  - Holdout: browsesafe-holdout TP 162 → 177, R 0.540 → 0.590, F1 0.596 → 0.633 (FP 82 unchanged); deepset-holdout unchanged (F1 0.417, FP 2); llmail-holdout unchanged (F1 0.776, FP 0).
-  - Latency: deepset/llmail p95 < 13 ms; browsesafe p95 345 ms dev / 337 ms holdout (v0.3.14: 316 / 310 ms; run-2 dev 344 ms); same-session back-to-back browsesafe dev p50 114 → 123 ms, p95 332 → 350 ms (+5–8 %). Still over the 100 ms budget.
-  - Thorough corpus: findings 11025 → 11025 (per-source and `data_exfiltration_email` counts unchanged on every target), total `duration_ms` 35812 → 38610 (+2670 ms from skylos, external-scanner variance), 0 errors.
-  - Red-team: 12/12 payloads flagged at 12–14 ms.
-- **Known gaps (red-team):** `fwd`, spaced letters, `(at)`/`[at]`/fullwidth `＠`/`&#64;`/`%40` addresses, Cyrillic homoglyph verbs, "towards", other verbs (pass along, share with, deliver, route, CC), non-English verbs, and noun lists longer than 80 characters before "to" are not matched. Business mail that forwards a sensitive noun ("expense reports should be forwarded to finance@...", "forward the build logs to devops@...") does trigger.
+- **Version under test:** v0.3.16 (last accepted).
+- **Status:** Accepted (iteration 8, latency-only). Every labeled metric (TP/FP/TN/FN, P/R/F1, rule hits) is identical to v0.3.15 on all dev and holdout sets, and corpus findings are identical per target and per source. Fast-mode p95 dropped on every set, and browsesafe is now under the 100 ms budget. This is the first accepted iteration after the 6/7 stagnation stop, so the stagnation counter resets.
+- **Change:** `yara.Engine.ScanFile` gains an exact required-literal prefilter. `AddRule` parses each pattern with `regexp/syntax` into an AND of OR-clauses of literals of 3 bytes or longer, case-folded with the same `unicode.SimpleFold` orbit as `(?i)`, and memoizes the result per pattern string. A pattern runs only if its clauses pass on the folded document and then on the folded line. Patterns with no derivable literals always run. Profile: regex backtracking was 95 % of fast-mode CPU on browsesafe (about 398k lines × 107 patterns); compile was 0.6 %. A document-level-only filter reached 129 ms p95, and the per-line check is what brings it under budget. `TestPrefilterEquivalence` checks that prefiltered and unfiltered output are equal.
+- **Metrics (fast-mode eval, v0.3.15 → v0.3.16):**
+  - Dev: deepset F1 0.571 (FP 0), llmail F1 0.785 (FP 0), browsesafe F1 0.681 (FP 76), all unchanged.
+  - Holdout: deepset-holdout F1 0.417 (FP 2), llmail-holdout F1 0.776 (FP 0), browsesafe-holdout F1 0.633 (FP 82), all unchanged.
+  - Latency p95: browsesafe 349 → 23.9 ms dev (run 2: 25.9), 341 → 27.3 ms holdout; browsesafe p50 124 → 10.5 ms dev, 114 → 10.2 ms holdout; llmail 11.7 → 3.9 ms, llmail-holdout 12.1 → 3.9 ms; deepset 3.8 → 3.1 ms, deepset-holdout 3.8 → 3.4 ms.
+  - Thorough corpus: findings 11025 → 11025 (identical per target and per source), total `duration_ms` 35883 → 34247 (skylos 16835 → 15980 is mostly external-scanner variance), 0 errors.
+  - Red-team: 12/12 payloads flagged at 14–15 ms (dominated by process start-up).
+- **Known risks:** the prefilter is a necessary-condition check, so it is exact only while `requiredLiterals` stays sound. New regex constructs must either map to a sound clause or fall through to "no constraint" (nil). Any change to `ScanFile`, to line splitting, or to the case-folding must keep `TestPrefilterEquivalence` passing.
 - **Rejected options this iteration (not released):**
-  - Verb-only `forward|transmit|relay ... to <email>` pattern (8/15 benign red-team FPs); adding `send`, `sent` or `report(ed)` verbs (dev FPs / generic CV-mail noise).
-  - Context-aware hidden-char exemptions (emoji ZWJ, flag tags, script joiners, balanced bidi): best browsesafe F1 0.6413, no net gain.
-  - Urgency/verification lure rules: 243 benign vs 247 injection hits on browsesafe.
-  - (v0.3.14) Prompt-leak rule ("display your system instructions", "print above prompt", "return your embeddings").
+  - Document-level-only prefilter (browsesafe p95 129 ms, still over budget).
+  - Caching or precompiling the engine (compile is 0.6 % of CPU, so no gain).
 - **Last accepted corpus improvement:** v0.3.13 (corpus findings +174 from `chat_template_boundary`).
 - **Previous reverted iterations:**
   - v0.3.4 — encoded-prompt-injection fragment expansion added latency but no new detections.
   - v0.3.8 (parallel entropy/hiddenchars) — did not improve latency, reverted before release.
   - Iteration 6 (v0.3.16 candidate) — zero-width chars reported only inside Latin text or runs of 3+; no gain.
   - Iteration 7 (v0.3.16 candidate) — `prompt_leak_request` rule (en/de); no gain.
-- **Stagnation check:** 2 consecutive no-gain iterations (6, 7). Loop stopped; process review done (see below).
+- **Stagnation check:** 0 consecutive no-gain iterations (iteration 8 accepted for its latency gain).
 - **Next candidates (from the dev-set FN analysis):**
-  - First: fast-mode input cap or HTML pre-filter to bring browsesafe p95 under 100 ms (latency-only iteration, findings must stay unchanged).
   - Spot-check the +1064 (v0.3.11) and +150 (v0.3.13) InjecAgent YARA findings and the +24 BIPIA hits for FP inflation.
   - JSON tool-call injection in llmail FNs.
   - Evaluate `Llama-Prompt-Guard-2-86M-onnx` / `22M-onnx` for memory/latency/precision on the labeled sets.
