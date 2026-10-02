@@ -418,6 +418,14 @@ func (e *Engine) LoadBuiltins() {
 			},
 		},
 		{
+			Name:        "hidden_attribute_email",
+			Description: "Injection or sensitive-data prose with an email address hidden in a non-rendered HTML attribute (aria-label, title, alt, value, data-*)",
+			Severity:    report.SeverityHigh,
+			Patterns: []string{
+				`(?i)(?:^|\s)(?:aria-label|title|alt|value|data-[a-z0-9_-]+)\s*=\s*"[^"<>\n]{0,160}?\b(?:override|ignore|instructions?|instrucciones|anweisungen|system|directive|admin|bypass|restrictions|data|daten|données|datos|logs|logged|correspondence|communications|records|confidential|sensitive|private|credentials?|passwords?|session|collect(?:ing|ion)?|redirect(?:ed)?|support\s+staff)\b[^"<>\n]{0,160}?[\s:][a-z0-9._%+-]+@[a-z0-9.-]+\.[a-z]{2,}`,
+			},
+		},
+		{
 			Name:        "account_access_request",
 			Description: "Natural-language request to access a user account or service",
 			Severity:    report.SeverityMedium,
