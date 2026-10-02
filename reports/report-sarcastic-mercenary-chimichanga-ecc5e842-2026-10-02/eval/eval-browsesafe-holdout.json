@@ -1,0 +1,84 @@
+{
+  "metadata": {
+    "dataset": "testdata/eval/browsesafe-holdout.jsonl",
+    "duration_ms": 66218,
+    "safeanalyze_version": "0.3.12",
+    "scan_mode": "fast"
+  },
+  "tp": 162,
+  "fp": 82,
+  "tn": 218,
+  "fn": 138,
+  "samples": 600,
+  "precision": 0.6639344262295082,
+  "recall": 0.54,
+  "f1": 0.5955882352941176,
+  "by_source": {
+    "browsesafe": {
+      "tp": 162,
+      "fp": 82,
+      "tn": 218,
+      "fn": 138,
+      "samples": 600,
+      "precision": 0.6639344262295082,
+      "recall": 0.54,
+      "f1": 0.5955882352941176
+    }
+  },
+  "rule_hits": {
+    "account_access_request": {
+      "injection": 14,
+      "benign": 8
+    },
+    "backdoor_indicator": {
+      "injection": 0,
+      "benign": 2
+    },
+    "data_exfiltration_email": {
+      "injection": 91,
+      "benign": 25
+    },
+    "hidden_char_bidi": {
+      "injection": 8,
+      "benign": 10
+    },
+    "hidden_char_control": {
+      "injection": 4,
+      "benign": 0
+    },
+    "hidden_char_format": {
+      "injection": 5,
+      "benign": 8
+    },
+    "hidden_char_zero_width": {
+      "injection": 27,
+      "benign": 33
+    },
+    "indirect_prompt_injection": {
+      "injection": 1,
+      "benign": 0
+    },
+    "multilingual_prompt_injection": {
+      "injection": 12,
+      "benign": 0
+    },
+    "obfuscated_javascript": {
+      "injection": 0,
+      "benign": 1
+    },
+    "output_constraint": {
+      "injection": 1,
+      "benign": 4
+    },
+    "prompt_injection_comment": {
+      "injection": 104,
+      "benign": 2
+    },
+    "template_injection": {
+      "injection": 2,
+      "benign": 0
+    }
+  },
+  "latency_p50_ms": 95.353,
+  "latency_p95_ms": 283.457
+}
