@@ -131,6 +131,18 @@ func (e *Engine) LoadBuiltins() {
 			},
 		},
 		{
+			Name:        "persona_hijack",
+			Description: "Request that the model adopt a new persona or role (\"I want you to act as\")",
+			Severity:    report.SeverityHigh,
+			Patterns: []string{
+				`\b(?i:i\s*(?:'d|’d|\s+(?:want|need|would))\s+(?:like\s+)?(?:you|u)\s+to\s+(?:(?:act|behave|pose|respond|roleplay|role-play|pretend)\s+(?:as|like|to\s+be)|(?:take\s+on|assume|play)\s+the\s+(?:role|persona)\s+of))\s+(?:(?i:a|an|the|my)\b|\p{Lu})`,
+				`\b(?i:(?:from\s+now\s+on|henceforth|from\s+this\s+(?:point|moment)\s+on(?:wards?)?),?\s+you)(?:(?i:(?:'re|’re|\s+are|\s+will|\s+must)?\s+(?:going\s+to\s+)?act\s+as\s+)(?:(?i:an?|my)\b|\p{Lu})|(?i:'re|’re|\s+are|\s+will\s+be)\s+(?i:now\s+)?(?:\p{Lu}\p{Lu}|(?i:(?:an?|my)\s+(?:\pL+\s+)?(?:ai|assistant|chatbot|bot|model|llm|terminal)\b)))`,
+				`(?i)\bich\s+(möchte|will|wünsche\s+mir),?\s+dass\s+(sie|du)\s+(als|wie)\s+((ein|eine|einen|mein|meine)\s+)?\pL[\pL-]*\s+(agier|auftr|fungier|handel|tätig)`,
+				`(?i)\b(quiero|necesito)\s+que\s+(actúes|actues|actúe|actue|te\s+comportes|se\s+comporte)\s+como\b`,
+				`(?i)\bje\s+(veux|voudrais)\s+que\s+((tu\s+agisses|vous\s+agissiez)\s+(comme|en\s+tant\s+que)\b|(tu\s+joues|vous\s+jouiez)\s+le\s+rôle\b)`,
+			},
+		},
+		{
 			Name:        "chat_template_boundary",
 			Description: "Fake chat-template special token or forged role-boundary tag",
 			Severity:    report.SeverityHigh,

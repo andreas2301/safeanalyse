@@ -5,6 +5,24 @@ All notable functional and non-functional changes to `safeanalyze` are documente
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.3.14] — 2026-10-02
+
+### Functional
+
+- **New `persona_hijack` YARA rule (high):** detects requests that the model adopt a new persona or role:
+  - English "I want / need / would like / 'd like you (or u) to act / behave / pose / respond / roleplay / pretend as / like / to be ..." and "... to take on / assume / play the role of ...", followed by an article (`a`, `an`, `the`, `my`) or a capitalised name (`act as DAN`, `act as Linux terminal`);
+  - "From now on / Henceforth / From this point on, you (will / are going to) act as ...", plus "you are / you're / you will be" followed by an all-caps persona (`DAN`, `AIM`) or "a/an/my ... AI / assistant / chatbot / bot / model / LLM / terminal";
+  - German "Ich möchte / will / wünsche mir, dass Sie/du als [ein] <Rolle> agieren / auftreten / fungieren / handeln / tätig sind", Spanish "quiero/necesito que actúes / te comportes como", French "je veux/voudrais que tu agisses / vous agissiez comme / en tant que" and "... que tu joues le rôle".
+  Benign prose such as "the cache acts as a buffer", "I want you to review this", "From now on, you will be billed monthly", "From now on you are responsible for ...", "I would like you to serve as Chair" and "Quiero que actúes de buena fe" stays unflagged.
+
+### Non-functional
+
+- Fast-mode eval, dev sets (v0.3.13 → v0.3.14): deepset TP 19 → 24 (recall 0.317 → 0.400, F1 0.481 → 0.571, FP 0); llmail and browsesafe unchanged (F1 0.785 and 0.640, FP 0 and 76). The new rule has 5 injection hits and 0 benign hits on dev.
+- Fast-mode eval, holdout sets (v0.3.13 → v0.3.14): deepset-holdout TP 46 → 54 (recall 0.227 → 0.266, F1 0.367 → 0.417, FP 2 unchanged); llmail-holdout and browsesafe-holdout unchanged (F1 0.776 and 0.596, FP 0 and 82). The rule has 9 injection and 0 benign hits on deepset-holdout and 1 injection hit (already detected by other rules) on browsesafe-holdout.
+- Latency: deepset and llmail p95 stay under 11 ms; browsesafe p95 rises about 9 % (290 → 317 ms, same-session re-runs), still over the 100 ms budget.
+- Thorough corpus: the new rule has 0 hits across the 7 corpus targets.
+- Added a table-driven test with positive and benign cases for the new rule; `scripts/redteam.sh` gains an "act as a Linux terminal" payload (12/12 flagged).
+
 ## [0.3.13] — 2026-10-02
 
 ### Functional

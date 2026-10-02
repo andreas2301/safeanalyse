@@ -155,26 +155,24 @@ for f in testdata/eval/*.jsonl; do ./safeanalyze eval "$f"; done
 
 ## Current autoresearch iteration
 
-- **Version under test:** v0.3.13
-- **Status:** Accepted (iteration 3 on the labeled eval; llmail dev and holdout recall/F1 gain with no new FPs on any dev or holdout set).
-- **Change:** New high-severity `chat_template_boundary` YARA rule for fake chat-template special tokens (`<|im_start|>`, `<|im_end|>`, `<|endoftext|>`, `<|start user prompt|>`, fullwidth/look-alike pipes) and forged role-boundary tags (`</email><user>`, a bare `<user>`/`<human>`/`<assistant>` line). Hypothesis from BASELINE.md cross-set FN theme #4, built on the dev sets only.
-- **Metrics (fast-mode eval, v0.3.12 → v0.3.13):**
-  - Dev: llmail TP 168 → 194, R 0.560 → 0.647, F1 0.718 → 0.785 (FP 0); deepset unchanged (F1 0.481, FP 0); browsesafe unchanged (F1 0.640, FP 76).
-  - Holdout: llmail-holdout TP 164 → 190, R 0.547 → 0.633, F1 0.707 → 0.776 (FP 0); deepset-holdout unchanged (F1 0.367, FP 2); browsesafe-holdout unchanged (F1 0.596, FP 82).
-  - Latency: rule cost < 1 ms; deepset/llmail p95 < 10 ms; browsesafe p95 289 ms dev / 283 ms holdout, still over the 100 ms budget.
-  - Thorough corpus: findings 10851 → 11025 (+24 BIPIA, +150 InjecAgent, all `chat_template_boundary`; every other rule count unchanged), total `duration_ms` 38604 (v0.3.12: 36646, mostly skylos variance), 0 errors.
-  - Red-team: 11/11 payloads flagged (three new chat-template payloads) at 10–12 ms.
-  - Report branch: `report-sarcastic-mercenary-chimichanga-ecc5e842-2026-10-02`.
-- **Known gaps (red-team):** tokens split across lines, HTML-entity or base64-encoded tokens, role tags with attributes (`<user id=1>`), and role tags inline with other text after a non-listed closing tag are not matched. The 174 new corpus hits on BIPIA/InjecAgent have not been spot-checked for FP inflation yet.
+- **Version under test:** v0.3.14
+- **Status:** Accepted (iteration 4 on the labeled eval; deepset dev and holdout recall/F1 gain with no new FPs on any dev or holdout set).
+- **Change:** New high-severity `persona_hijack` YARA rule for requests that the model adopt a new persona or role ("I want you to act as a ...", "From now on you are DAN", German "Ich möchte, dass Sie als ... agieren/auftreten", Spanish "quiero que actúes como", French "je veux que tu agisses comme / joues le rôle"). Hypothesis from BASELINE.md §4 (persona/role-play hijack deepset FN category), built on the dev sets only.
+- **Metrics (fast-mode eval, v0.3.13 → v0.3.14):**
+  - Dev: deepset TP 19 → 24, R 0.317 → 0.400, F1 0.481 → 0.571 (FP 0); llmail unchanged (F1 0.785, FP 0); browsesafe unchanged (F1 0.640, FP 76).
+  - Holdout: deepset-holdout TP 46 → 54, R 0.227 → 0.266, F1 0.367 → 0.417 (FP 2 unchanged); llmail-holdout unchanged (F1 0.776, FP 0); browsesafe-holdout unchanged (F1 0.596, FP 82).
+  - Latency: deepset/llmail p95 < 11 ms; browsesafe p95 316 ms dev / 310 ms holdout (v0.3.13: 289 / 283 ms; run-2 dev 315 ms), p50 115 / 103 ms, still over the 100 ms budget.
+  - Thorough corpus: findings 11025 → 11025 (new rule has 0 corpus hits; every source count unchanged), total `duration_ms` 35812 (v0.3.13: 38604, mostly skylos variance), 0 errors.
+  - Red-team: 12/12 payloads flagged (new "act as a Linux terminal" payload) at 11–12 ms.
+- **Known gaps (red-team):** lowercase persona names without an article ("act as dan"), "serve as"/"play the role of" without an article, and non-de/es/fr/en languages are not matched. The browsesafe p95 rise (~9 %) is larger than the rule should cost and needs a same-machine re-check.
 - **Rejected options this iteration (not released):**
-  - Hidden-char FP narrowing (emoji ZWJ exemption + flag-tag sequences): browsesafe F1 0.6401 → 0.6396.
-  - Dropping hidden-char-only hits: browsesafe F1 0.6401 → 0.6426 but llmail F1 0.7179 → 0.6928.
-- **Last accepted corpus improvement:** v0.3.13 (corpus findings +174 from the new rule).
+  - Prompt-leak rule ("display your system instructions", "print above prompt", "return your embeddings").
+- **Last accepted corpus improvement:** v0.3.13 (corpus findings +174 from `chat_template_boundary`).
 - **Previous reverted iterations:**
   - v0.3.4 — encoded-prompt-injection fragment expansion added latency but no new detections.
   - v0.3.8 (parallel entropy/hiddenchars) — did not improve latency, reverted before release.
-  - None reverted in the labeled-eval loop yet (iterations 1–3 accepted); the hidden-char variants above were rejected before implementation.
-- **Stagnation check:** 0 consecutive no-gain iterations (iterations 1, 2 and 3 all improved dev and holdout F1).
+  - None reverted in the labeled-eval loop yet (iterations 1–4 accepted).
+- **Stagnation check:** 0 consecutive no-gain iterations (iterations 1–4 all improved dev and holdout F1 on at least one set).
 - **Next candidates (from the dev-set FN analysis):**
   - Spot-check the +1064 (v0.3.11) and +150 (v0.3.13) InjecAgent YARA findings and the +24 BIPIA hits for FP inflation.
   - JSON tool-call injection in llmail FNs.
