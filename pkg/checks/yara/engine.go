@@ -407,6 +407,10 @@ func (e *Engine) LoadBuiltins() {
 				`(?i)\b(forward(ed|ing)?|transmit(ted|ting)?|relay(ed)?)\b.{0,80}\b(credentials?|passwords?|history|conversations?|records|data|details|correspondence|responses|reports|logs|metadata|keys|tokens?|cookies|session|transcripts?|outputs?|files|contacts|addresses)\b.{0,80}\bto\b.{0,60}[a-z0-9._%+-]+@[a-z0-9.-]+\.[a-z]{2,}`,
 				`(?i)\b(credentials?|passwords?|history|conversations?|records|data|details|correspondence|responses|reports|logs|metadata|keys|tokens?|cookies|session|transcripts?|outputs?|files|contacts|addresses)\b.{0,80}\b(be|been|being|are|is|was|were|get|gets)\s+(forward(ed|ing)?|transmit(ted|ting)?|relay(ed)?)\s+to\b.{0,60}[a-z0-9._%+-]+@[a-z0-9.-]+\.[a-z]{2,}`,
 				`(?i)\b(send(ing)?|forward(ing)?|dispatch(ing)?)\s[^<>=.;?!]{0,80}?\b(summary|confirmation|keyword|body|contents?|outputs?|results?|repl(y|ies)|responses?|transcripts?)\b[^<>=.;?!]{0,120}?\bto\b.{0,40}?[a-z0-9._%+-]+@[a-z0-9.-]+\.[a-z]{2,}`,
+				`(?i)\b(send_?e?mail|send_?message|mail_?send|api_call)\b(.{0,80}?[a-z0-9._%+-]+@[a-z0-9.-]+\.[a-z]{2,}.{0,80}?(\b(body|content|message)\b["']?\s*[=:]|\bwith\s+(the\s+)?(body|content|message)\b)|.{0,80}?(\b(body|content|message)\b["']?\s*[=:]|\bwith\s+(the\s+)?(body|content|message)\b).{0,80}?[a-z0-9._%+-]+@[a-z0-9.-]+\.[a-z]{2,})`,
+				`(?i)(\b(recipients?|receiver|email_to)\b["']?\s*[=:]\s*["']?[a-z0-9._%+-]+@[a-z0-9.-]+\.[a-z]{2,}.{0,80}?(\b(body|content|message)\b["']?\s*[=:]|\bwith\s+(the\s+)?(body|content|message)\b)|(\b(body|content|message)\b["']?\s*[=:]|\bwith\s+(the\s+)?(body|content|message)\b).{0,80}?\b(recipients?|receiver|email_to)\b["']?\s*[=:]\s*["']?[a-z0-9._%+-]+@[a-z0-9.-]+\.[a-z]{2,})`,
+				`(?i)\bto\b["']?\s*[=:]\s*["']?[a-z0-9._%+-]+@[a-z0-9.-]+\.[a-z]{2,}["']?\s*[,;)}]?\s*["']?(body|content|message)\b`,
+				`(?i)\|\s*mail\s+-s\s+.{0,80}?[a-z0-9._%+-]+@[a-z0-9.-]+\.[a-z]{2,}`,
 			},
 		},
 		{
