@@ -155,22 +155,21 @@ for f in testdata/eval/*.jsonl; do ./safeanalyze eval "$f"; done
 
 ## Current autoresearch iteration
 
-- **Version under test:** v0.3.10
-- **Status:** Accepted (measurement infrastructure, no detection-logic change).
-- **Change:** Added the `safeanalyze eval` command, pinned labeled dev + holdout sets via `scripts/fetch_eval.sh`, and the trufflehog `no_verification` option. Corpus re-baselined on 2026-10-02 at the upstream SHAs in `testdata/eval/SOURCES.md`.
-- **Current baseline (v0.3.9 detection logic, fast-mode eval, dev sets):**
-  - deepset: P n/a (0 predicted positives), R 0.000, F1 0.000
-  - llmail: P 1.000, R 0.550, F1 0.710
-  - browsesafe: P 0.648, R 0.467, F1 0.543 (p95 ≈ 240 ms on full HTML pages, over the 100 ms fast-mode budget)
-  - Thorough corpus: 9751 findings, about 37 s in total. This is the new corpus baseline and replaces the v0.3.7 numbers.
-  - Holdout (fast-mode eval, same logic): deepset-holdout P 0.800 / R 0.039 / F1 0.075 (TP 8, FP 2); llmail-holdout P 1.000 / R 0.547 / F1 0.707; browsesafe-holdout P 0.642 / R 0.490 / F1 0.556 (p95 ≈ 238 ms).
-- **Last accepted corpus improvement:** v0.3.7 parallel YARA scanning (`report-boom-zany-sarcasm-cd4dee48-2026-07-15`). It is not comparable to the re-baselined corpus.
+- **Version under test:** v0.3.11
+- **Status:** Accepted (iteration 1 on the labeled eval; detection gain with no new FPs on the dev sets).
+- **Change:** Widened override verb/object coverage of the `prompt_injection_comment` YARA rule: `ignore|disregard|forget` + previous/prior/above/everything/instructions/tasks/rules/context variants, upper-case `SYSTEM|ADMIN OVERRIDE`, and `New directive:` / line-start `New instructions:`.
+- **Metrics (fast-mode eval, v0.3.10 → v0.3.11):**
+  - Dev: deepset P n/a → 1.000, R 0.000 → 0.167, F1 0.000 → 0.286 (TP 10, FP 0); llmail P 1.000, R 0.550 → 0.560, F1 0.710 → 0.718; browsesafe P 0.648 → 0.697, R 0.467 → 0.583, F1 0.543 → 0.635 (FP unchanged at 76; p95 ≈ 257 ms, still over the 100 ms budget).
+  - Holdout: deepset-holdout F1 0.075 → 0.255 (TP 8 → 30, FP 2 → 2); llmail-holdout unchanged (F1 0.707); browsesafe-holdout F1 0.556 → 0.593 (TP 147 → 161, FP 82 → 82).
+  - Thorough corpus: 9751 → 10851 findings (InjecAgent +1064 from YARA), total `duration_ms` 35925 (baseline 36078–38015), 0 errors. The extra corpus findings have not yet been checked for FP inflation.
+- **Last accepted corpus improvement:** v0.3.11 (this iteration).
 - **Previous reverted iterations:**
   - v0.3.4 — encoded-prompt-injection fragment expansion added latency but no new detections.
   - v0.3.8 (parallel entropy/hiddenchars) — did not improve latency, reverted before release.
-- **Stagnation check:** reset. The loop now measures labeled F1/precision, so the earlier no-gain streak (which measured raw corpus counts) no longer applies.
+- **Stagnation check:** 0 consecutive no-gain iterations (iteration 1 improved dev and holdout F1).
 - **Next candidates (from the dev-set FN analysis):**
-  - Override phrasing and non-English (German/Spanish) override/prompt-leak rules (deepset recall is 0).
+  - Non-English (German/Spanish) override/prompt-leak rules (deepset recall is still 0.167).
+  - Spot-check the +1064 InjecAgent YARA findings for FP inflation.
   - Chat-template boundary tokens (`<|im_start|>`, `</tool>`) and JSON tool-call injection (llmail FNs).
   - Fast-mode input cap or HTML pre-filter to bring browsesafe p95 under 100 ms.
   - Evaluate `Llama-Prompt-Guard-2-86M-onnx` / `22M-onnx` for memory/latency/precision on the labeled sets.

@@ -113,6 +113,9 @@ func (e *Engine) LoadBuiltins() {
 				`(?i)override\s+(your\s+)?(safety|guidelines|filters|rules|instructions)`,
 				`(?i)disable\s+(your\s+)?(safety|filters|content\s+filter)`,
 				`(?i)bypass\s+(your\s+)?(safety|guidelines|filters|rules)`,
+				`(?i)\b(ignore|disregard|forget)\s+((all\s+|any\s+|every\s+|the\s+|your\s+|my\s+)?(of\s+)?(the\s+|your\s+)?(previous|prior|above|earlier|preceding|everything)(\s+(said|stated|written|mentioned|before|above|so\s+far))*(\s*([.,;:!?)"'<]|$)|\s+and\b|\s+i\s*n\s*s\s*t\s*r\s*u\s*c\s*t)|everything(\s+[\w']+){0,4}?\s+(told|said|talked|discussed|before|so\s+far|above|previously|earlier)\b|((all|every|the|your|my|of|previous|prior|above|earlier|preceding|former|original|existing|old|current|given|provided|these|those|other|system|safety|initial|security)\s+){0,3}(instructions?|directions?|tasks?|commands?|directives?|prompts?)\b|((all|every|the|your|my|of|previous|prior|above|earlier|preceding|former|original|existing|old|current|given|provided|these|those|other|system|safety|initial|security)\s+){0,3}(restrictions?|rules|guidelines|context)(\s*([.,;:!?)"'<]|$)|\s+and\b))`,
+				`\b(SYSTEM|ADMIN)[\s_-]+OVERRIDE\b`,
+				`(?i)\bnew\s+directive\s*[:\-]|^\W*new\s+instructions?\s*[:\-]`,
 			},
 		},
 		{

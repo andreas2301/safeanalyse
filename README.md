@@ -1,4 +1,4 @@
-# safeanalyze v0.3.10
+# safeanalyze v0.3.11
 
 A Go CLI tool that sanitizes and scans untrusted code repositories **before** feeding them to AI assistants. Implements defense-in-depth inspired by [Zones of Distrust](https://github.com/bluvibytes/zone-of-distrust).
 
@@ -12,6 +12,10 @@ Prompt injection via malicious code is real. A repo can contain:
 - Secrets or malware mixed with legitimate source
 
 **safeanalyze** runs a security pipeline so AI assistants never see raw, unverified code.
+
+## What's new in v0.3.11
+
+- **Wider override detection in `prompt_injection_comment`** — catches "disregard prior tasks", "forget everything I told you", "ignore the above and ...", "SYSTEM OVERRIDE" and "New directive:" style injections while leaving benign phrases such as "ignore all whitespace" or "ignore the above warning" unflagged. Dev-set recall rises (deepset 0.00 → 0.17, browsesafe 0.47 → 0.58) with no new false positives.
 
 ## What's new in v0.3.10
 

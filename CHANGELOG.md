@@ -5,6 +5,22 @@ All notable functional and non-functional changes to `safeanalyze` are documente
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.3.11] — 2026-10-02
+
+### Functional
+
+- **Wider override coverage in the `prompt_injection_comment` YARA rule:** three new patterns detect
+  - `ignore|disregard|forget` followed by `previous/prior/above/earlier/preceding/everything` (with an optional quantifier/article) when the phrase ends a clause or continues with "and ...", "everything ... told/said/before/so far", and up to three modifiers before `instructions/directions/tasks/commands/directives/prompts`, or before `restrictions/rules/guidelines/context` at a clause end. Also catches spaced-out "in structions" after an override verb;
+  - upper-case `SYSTEM OVERRIDE` / `ADMIN OVERRIDE` (also with `_` or `-`);
+  - `New directive:` anywhere and `New instruction(s):` at line start.
+  Benign phrasings such as "ignore all whitespace", "ignore the above warning", "forget everything you know about ...", "ignore these rules in .eslintrc" and "admin override button" stay unflagged.
+
+### Non-functional
+
+- Fast-mode eval on the dev sets: deepset recall 0.000 → 0.167 (TP 0 → 10, FP 0), llmail TP 165 → 168 (FP 0), browsesafe TP 140 → 175 with FP unchanged at 76 (F1 0.543 → 0.635). Holdout: deepset-holdout F1 0.075 → 0.255, browsesafe-holdout F1 0.556 → 0.593, llmail-holdout unchanged.
+- Thorough corpus findings 9751 → 10851, almost all from YARA on InjecAgent (+1064). Total corpus `duration_ms` is 35925, against 36078–38015 for the baseline runs. Fast-mode latency is unchanged: browsesafe p95 is about 257 ms, still over the 100 ms budget.
+- Added a table-driven test with positive and benign cases for the new override patterns.
+
 ## [0.3.10] — 2026-10-02
 
 ### Functional
