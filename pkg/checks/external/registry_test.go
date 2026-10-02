@@ -30,3 +30,20 @@ func TestRegisterAll(t *testing.T) {
 		}
 	}
 }
+
+func TestRegisterAllTrufflehogNoVerification(t *testing.T) {
+	cfg := &config.Config{
+		Scanners: []config.ScannerConfig{{Name: "trufflehog", Enabled: true, NoVerification: true}},
+	}
+	r := pipeline.NewRegistry()
+	if err := RegisterAll(r, cfg); err != nil {
+		t.Fatalf("RegisterAll failed: %v", err)
+	}
+	stages, err := r.Build([]string{"trufflehog"})
+	if err != nil {
+		t.Fatalf("Build failed: %v", err)
+	}
+	if s, ok := stages[0].(*trufflehogStage); !ok || !s.noVerification {
+		t.Fatalf("expected trufflehog stage with noVerification, got %#v", stages[0])
+	}
+}

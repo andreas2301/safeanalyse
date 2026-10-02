@@ -5,6 +5,18 @@ All notable functional and non-functional changes to `safeanalyze` are documente
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.3.10] — 2026-10-02
+
+### Functional
+
+- **`safeanalyze eval <file.jsonl>`:** New command that runs the fast-mode check suite (yara + hiddenchars) on every sample of a labeled JSONL dataset (`{"text", "label", "source"}`) and reports TP/FP/TN/FN, precision, recall, F1, per-rule hit counts and per-sample latency (p50/p95). `--json` writes metrics with `safeanalyze_version`, `scan_mode` and `duration_ms` metadata; `--fp-out`/`--fn-out` write misclassified samples as JSONL.
+- **TruffleHog `no_verification` scanner option:** `no_verification: true` on the `trufflehog` scanner entry runs the `scan` stage with `--no-verification`, so corpus results do not depend on network access to credential providers.
+
+### Non-functional
+
+- **Reproducible labeled benchmarks:** `scripts/fetch_eval.sh` downloads pinned Hugging Face revisions of deepset/prompt-injections, LLMail-Inject (phase 2) and BrowseSafe-Bench, verifies sha256, and writes byte-identical seeded dev sets (`deepset`, `llmail`, `browsesafe`) plus disjoint holdout sets (`*-holdout.jsonl`). Disjointness from dev is checked by the script. Datasets are not committed; sources, licenses, sampling rules and output hashes are in `testdata/eval/SOURCES.md`.
+- **Corpus re-baselined 2026-10-02:** thorough-mode corpus targets are pinned to the upstream HEAD SHAs and file hashes recorded in `testdata/eval/SOURCES.md`.
+
 ## [0.3.9] — 2026-07-15
 
 ### Functional

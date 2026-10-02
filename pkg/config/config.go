@@ -25,6 +25,10 @@ type ScannerConfig struct {
 	Command        string `yaml:"command"`
 	Enabled        bool   `yaml:"enabled"`
 	FailOnFindings bool   `yaml:"fail_on_findings"`
+	// NoVerification disables live credential verification for scanners that
+	// support it (currently the trufflehog `scan` pipeline stage only; ingest
+	// runs Command verbatim), keeping corpus runs deterministic.
+	NoVerification bool `yaml:"no_verification,omitempty"`
 }
 
 // SanitizationConfig controls how files are cleaned before AI ingestion.

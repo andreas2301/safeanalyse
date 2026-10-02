@@ -18,9 +18,11 @@ var (
 // A scanner is registered only if it appears in cfg.Scanners with Enabled=true.
 func RegisterAll(r *pipeline.Registry, cfg *config.Config) error {
 	enabled := make(map[string]bool)
+	noVerification := make(map[string]bool)
 	for _, s := range cfg.Scanners {
 		if s.Enabled {
 			enabled[s.Name] = true
+			noVerification[s.Name] = s.NoVerification
 		}
 	}
 
@@ -29,7 +31,7 @@ func RegisterAll(r *pipeline.Registry, cfg *config.Config) error {
 		"bumblebee":                func() pipeline.Stage { return NewBumblebeeStage() },
 		"prompt-injection-scanner": func() pipeline.Stage { return NewPromptInjectionScannerStage() },
 		"gitleaks":                 func() pipeline.Stage { return NewGitleaksStage() },
-		"trufflehog":               func() pipeline.Stage { return NewTrufflehogStage() },
+		"trufflehog":               func() pipeline.Stage { return NewTrufflehogStage(noVerification["trufflehog"]) },
 	}
 
 	for name, factory := range factories {

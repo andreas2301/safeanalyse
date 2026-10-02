@@ -13,10 +13,16 @@ import (
 )
 
 // trufflehogStage runs TruffleHog filesystem scanner.
-type trufflehogStage struct{}
+type trufflehogStage struct {
+	noVerification bool
+}
 
-// NewTrufflehogStage creates a TruffleHog pipeline stage.
-func NewTrufflehogStage() *trufflehogStage { return &trufflehogStage{} }
+// NewTrufflehogStage creates a TruffleHog pipeline stage. When noVerification
+// is true, trufflehog is run with --no-verification so results do not depend on
+// network access to credential providers.
+func NewTrufflehogStage(noVerification bool) *trufflehogStage {
+	return &trufflehogStage{noVerification: noVerification}
+}
 
 // Name returns the stage name.
 func (s *trufflehogStage) Name() string { return "trufflehog" }
@@ -32,6 +38,9 @@ func (s *trufflehogStage) Run(ctx context.Context, target string, input *report.
 		return missingBinary(out, s.Name()), nil
 	}
 	args := []string{"filesystem", target, "--json"}
+	if s.noVerification {
+		args = append(args, "--no-verification")
+	}
 	cmd := exec.CommandContext(ctx, binary, args...)
 	output, err := cmd.Output()
 	if err != nil {

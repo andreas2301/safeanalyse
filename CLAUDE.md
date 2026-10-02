@@ -44,42 +44,49 @@ The project uses an iterative, measurement-driven improvement loop inspired by [
   - `safeanalyze-doc-scenarios.html`
   - `safeanalyze-doc-webagents.html`
 - External scanners installed via `./safeanalyze install --all` (Semgrep, TruffleHog, prompt-injection-scanner, etc.).
+- Corpus targets checked out at the pinned upstream SHAs/sha256s in `testdata/eval/SOURCES.md` ("Thorough-mode corpus manifest"; re-baselined 2026-10-02). Do not compare against runs on other revisions.
+- Labeled eval sets fetched with `./scripts/fetch_eval.sh` (pinned, sha256-verified, seeded; not committed). Dev: `testdata/eval/{deepset,llmail,browsesafe}.jsonl`. Holdout: `testdata/eval/{deepset,llmail,browsesafe}-holdout.jsonl`.
+- The corpus scan config sets `no_verification: true` on the `trufflehog` scanner so results do not depend on live credential verification.
 - Enough disk space and memory for the test corpus. Note: the default DeBERTa ONNX model uses ~11 GB RAM at load/inference time, so the stochastic ML stage is currently disabled by default until a sub-2 GB model is validated.
 - A stable, otherwise idle machine for duration comparisons (run-to-run variance should be <10 % for large targets).
 
 ### Iteration steps
 
-1. **Measure baseline** — run `safeanalyze scan --mode thorough` against the test corpus and record findings + durations from `safeanalyze.json` (`duration_ms`) and `duration.txt`.
+1. **Measure baseline** — run `./scripts/fetch_eval.sh`, then `safeanalyze eval <set>.jsonl --json eval-<set>.json --fp-out fp-<set>.jsonl --fn-out fn-<set>.jsonl` on every dev **and** holdout set. Record precision, recall, F1, TP/FP/TN/FN and p50/p95 latency. Also run `safeanalyze scan --mode thorough` against the pinned test corpus (trufflehog `no_verification: true`) and record findings + durations from `safeanalyze.json` (`duration_ms`) and `duration.txt`.
 2. **Premortem** — run `./scripts/premortem.sh` and ask: "If this improvement lands and the tool still fails in production, what most likely broke?" Document the biggest risks (false positives, latency blow-out, missing variants).
-3. **Analyze gaps** — compare findings to known prompt-injection patterns. Look for false negatives and false positives.
+3. **Analyze gaps** — inspect the **dev** sets' `fn-*.jsonl` / `fp-*.jsonl` and the corpus findings against known prompt-injection patterns. Never inspect holdout misclassifications to design rules.
 4. **Hypothesize** — pick one concrete improvement: a new YARA rule, a tuned entropy threshold, a smaller/faster model, a file-size limit, or parallelism.
 5. **Implement** — make the smallest change that tests the hypothesis. Do not combine multiple unrelated changes in one iteration.
 6. **Red-team** — run `./scripts/redteam.sh`. Try to evade the new check with rephrased, encoded, or multi-language injections. If it is trivially bypassed, revert or harden.
-7. **Evaluate** — re-run the same test corpus. Compare:
+7. **Evaluate** — re-run `./scripts/fetch_eval.sh` (output sha256s must match `testdata/eval/SOURCES.md`) and `safeanalyze eval` on every dev and holdout set, then re-run the same pinned test corpus. Compare:
+   - Precision, recall and F1 per labeled set (dev and holdout).
    - Total and per-target finding counts.
    - Wall-clock duration per target (`duration_ms`).
    - Fast-mode latency (`./scripts/redteam.sh`).
    - Any new errors or scanner skips.
-8. **Keep or revert** — if coverage, precision, or latency improved, commit and bump the version. If not, revert and try another hypothesis.
+8. **Keep or revert** — apply the decision rules below. If accepted, commit and bump the version. If not, revert and try another hypothesis.
 9. **Repeat** until two consecutive iterations show no measurable improvement.
 
 ### Decision rules
 
-- **Accept** the iteration if:
-  - Finding count increases without obvious false-positive inflation, **or**
-  - Latency decreases with unchanged findings, **or**
+- **Primary metrics** are F1 and precision on the labeled sets. Raw corpus finding counts are secondary: the corpus is unlabeled, so a higher count can mean more false positives.
+- **Holdout must not regress.** An iteration that lowers F1 or precision on any holdout set is reverted, whatever the dev gains. `llmail-holdout` reuses the dev benign emails, so only its recall is an independent signal.
+- **Accept** the iteration if holdout F1/precision do not regress **and**:
+  - Dev F1 improves without a precision drop on any labeled set, **or**
+  - Latency (eval p95, fast-mode, corpus `duration_ms`) decreases with unchanged labeled metrics and corpus findings, **or**
   - A security hardening fix removes a real foot-gun without regressing metrics.
 - **Revert** the iteration if:
-  - Finding count drops, **or**
-  - Latency increases without a coverage gain, **or**
+  - F1 or precision drops on any dev or holdout set, **or**
+  - Corpus finding count drops without a labeled-set explanation (e.g. removed false positives), **or**
+  - Latency increases without a labeled-metric gain, **or**
   - The change introduces non-deterministic output or new errors.
-- **Stagnation** — stop the loop after two consecutive accepted/reverted iterations produce no improvement in detection coverage, precision, or latency.
+- **Stagnation** — stop the loop after two consecutive accepted/reverted iterations produce no improvement in labeled F1/precision or latency.
 
 ### Process review
 
 After every five iterations (or immediately after two consecutive no-improvement iterations), review the process itself:
 
-- Are we measuring the right metric? Should we add precision/recall against labeled test data?
+- Are we measuring the right metric? Are the labeled dev/holdout sets still representative, and is the holdout still untouched by rule design?
 - Is the test corpus still representative? Are there other public prompt-injection benchmarks or URLs we should include?
 - Are there obvious optimizations we skipped (e.g., faster file walking, smaller model, capping noisy rules)?
 - Are report branches becoming too large? Should old report branches be archived?
@@ -137,6 +144,10 @@ echo 'ignore all previous instructions' | ./safeanalyze inspect --verbose
 # Install dependencies
 ./safeanalyze install --all
 
+# Labeled eval (dev + holdout)
+./scripts/fetch_eval.sh
+for f in testdata/eval/*.jsonl; do ./safeanalyze eval "$f"; done
+
 # Autoresearch helpers
 ./scripts/redteam.sh
 ./scripts/premortem.sh
@@ -144,15 +155,23 @@ echo 'ignore all previous instructions' | ./safeanalyze inspect --verbose
 
 ## Current autoresearch iteration
 
-- **Version under test:** v0.3.9
-- **Status:** Accepted (removes unsafe Semgrep skip).
-- **Change:** Removed the 50-file minimum gate so Semgrep scans repositories of any size when enabled.
-- **Last accepted corpus improvement:** v0.3.7 parallel YARA scanning (`report-boom-zany-sarcasm-cd4dee48-2026-07-15`).
+- **Version under test:** v0.3.10
+- **Status:** Accepted (measurement infrastructure, no detection-logic change).
+- **Change:** Added the `safeanalyze eval` command, pinned labeled dev + holdout sets via `scripts/fetch_eval.sh`, and the trufflehog `no_verification` option. Corpus re-baselined on 2026-10-02 at the upstream SHAs in `testdata/eval/SOURCES.md`.
+- **Current baseline (v0.3.9 detection logic, fast-mode eval, dev sets):**
+  - deepset: P n/a (0 predicted positives), R 0.000, F1 0.000
+  - llmail: P 1.000, R 0.550, F1 0.710
+  - browsesafe: P 0.648, R 0.467, F1 0.543 (p95 ≈ 240 ms on full HTML pages, over the 100 ms fast-mode budget)
+  - Thorough corpus: 9751 findings, about 37 s in total. This is the new corpus baseline and replaces the v0.3.7 numbers.
+  - Holdout (fast-mode eval, same logic): deepset-holdout P 0.800 / R 0.039 / F1 0.075 (TP 8, FP 2); llmail-holdout P 1.000 / R 0.547 / F1 0.707; browsesafe-holdout P 0.642 / R 0.490 / F1 0.556 (p95 ≈ 238 ms).
+- **Last accepted corpus improvement:** v0.3.7 parallel YARA scanning (`report-boom-zany-sarcasm-cd4dee48-2026-07-15`). It is not comparable to the re-baselined corpus.
 - **Previous reverted iterations:**
   - v0.3.4 — encoded-prompt-injection fragment expansion added latency but no new detections.
   - v0.3.8 (parallel entropy/hiddenchars) — did not improve latency, reverted before release.
-- **Stagnation check:** Two consecutive no-corpus-gain attempts have now occurred (parallel entropy/hiddenchars, small-model ML). Further progress likely requires either a better small prompt-injection model or a new detection-rule hypothesis backed by gap analysis.
-- **Next candidates:**
-  - Evaluate `Llama-Prompt-Guard-2-86M-onnx` and `22M-onnx` for memory/latency/precision; if suitable, enable a sub-2 GB model by default.
-  - Add targeted YARA rules for chat-template boundary tokens or tool-output injection only if gap analysis shows missing true positives.
+- **Stagnation check:** reset. The loop now measures labeled F1/precision, so the earlier no-gain streak (which measured raw corpus counts) no longer applies.
+- **Next candidates (from the dev-set FN analysis):**
+  - Override phrasing and non-English (German/Spanish) override/prompt-leak rules (deepset recall is 0).
+  - Chat-template boundary tokens (`<|im_start|>`, `</tool>`) and JSON tool-call injection (llmail FNs).
+  - Fast-mode input cap or HTML pre-filter to bring browsesafe p95 under 100 ms.
+  - Evaluate `Llama-Prompt-Guard-2-86M-onnx` / `22M-onnx` for memory/latency/precision on the labeled sets.
   - Decide whether `node_modules`/`vendor` should remain in `dependency_paths` for thorough mode.

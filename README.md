@@ -1,4 +1,4 @@
-# safeanalyze v0.3.9
+# safeanalyze v0.3.10
 
 A Go CLI tool that sanitizes and scans untrusted code repositories **before** feeding them to AI assistants. Implements defense-in-depth inspired by [Zones of Distrust](https://github.com/bluvibytes/zone-of-distrust).
 
@@ -12,6 +12,12 @@ Prompt injection via malicious code is real. A repo can contain:
 - Secrets or malware mixed with legitimate source
 
 **safeanalyze** runs a security pipeline so AI assistants never see raw, unverified code.
+
+## What's new in v0.3.10
+
+- **`safeanalyze eval`** — measures fast-mode precision, recall, F1 and latency on labeled JSONL datasets.
+- **Reproducible benchmarks** — `./scripts/fetch_eval.sh` fetches pinned, sha256-verified deepset, LLMail-Inject and BrowseSafe-Bench samples as dev sets plus disjoint holdout sets (see `testdata/eval/SOURCES.md`).
+- **TruffleHog `no_verification`** — optional scanner setting that adds `--no-verification` for deterministic offline corpus runs.
 
 ## What's new in v0.3.9
 
@@ -159,6 +165,7 @@ Install optional scanner/model dependencies from source:
 | `install --all` | Clone/build external scanners and download ML model |
 | `install model` | Download the prompt-injection ONNX model |
 | `inspect` | Fast stdin/file inspection for reverse proxies (Squid helper) |
+| `eval <file.jsonl>` | Measure fast-mode precision/recall/F1/latency on a labeled dataset |
 | `scan <path>` | Run security checks and emit SARIF/Markdown/HTML/JSON reports |
 | `sanitize <src> [dst]` | Strip comments (AST-aware), remove non-ASCII, enforce limits |
 | `ingest <path>` | Full pipeline: scan → sanitize → format for AI |
@@ -248,11 +255,26 @@ Every scan produces a unified `Report` with findings and writes:
 
 Reports include `safeanalyze_version`, `scan_mode`, and `duration_ms` metadata.
 
-### 7. AST-Aware Comment Stripping
+### 7. Labeled Evaluation
+
+`safeanalyze eval` scores the fast-mode checks against labeled JSONL datasets
+(`{"text": ..., "label": 1|0, "source": ...}`, 1 = injection):
+
+```bash
+./scripts/fetch_eval.sh   # pinned, sha256-verified, seeded; writes testdata/eval/*.jsonl
+./safeanalyze eval testdata/eval/llmail.jsonl --json eval-llmail.json --fn-out fn-llmail.jsonl
+./safeanalyze eval testdata/eval/llmail-holdout.jsonl
+```
+
+Dev sets: `deepset`, `llmail`, `browsesafe`. Holdout sets (`*-holdout.jsonl`) share no
+text with dev (except the reused LLMail benign emails). Sources, licenses and hashes are in
+[`testdata/eval/SOURCES.md`](testdata/eval/SOURCES.md).
+
+### 8. AST-Aware Comment Stripping
 
 For **Go files**, uses `go/ast` to precisely remove comments without touching string literals. For other languages, uses an enhanced regex fallback.
 
-### 8. Sandbox Launch
+### 9. Sandbox Launch
 
 Launch Claude or another AI assistant in an isolated environment after ingestion:
 ```bash
@@ -273,6 +295,11 @@ scanners:
     command: "semgrep --config=p/security-audit {path} --json"
     enabled: false
     fail_on_findings: false
+  - name: trufflehog
+    command: "trufflehog filesystem {path} --json"
+    enabled: true
+    fail_on_findings: false
+    no_verification: false  # true adds --no-verification (offline, deterministic)
 
 sanitization:
   strip_comments: true
@@ -363,6 +390,7 @@ pkg/
   sanitize/       Comment stripper + ASCII enforcer + limits
   sandbox/        Cross-platform sandbox abstraction
   ingest/         Markdown/JSON/plain formatter for AI consumption
+  eval/           Labeled-dataset metrics for `safeanalyze eval`
   config/         YAML configuration loading
   version/        Release version constant
   utils/          Filesystem helpers
