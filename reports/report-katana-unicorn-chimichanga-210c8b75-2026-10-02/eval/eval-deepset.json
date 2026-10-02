@@ -1,0 +1,36 @@
+{
+  "metadata": {
+    "dataset": "testdata/eval/deepset.jsonl",
+    "duration_ms": 222,
+    "safeanalyze_version": "0.3.10",
+    "scan_mode": "fast"
+  },
+  "tp": 10,
+  "fp": 0,
+  "tn": 56,
+  "fn": 50,
+  "samples": 116,
+  "precision": 1,
+  "recall": 0.16666666666666666,
+  "f1": 0.2857142857142857,
+  "by_source": {
+    "deepset": {
+      "tp": 10,
+      "fp": 0,
+      "tn": 56,
+      "fn": 50,
+      "samples": 116,
+      "precision": 1,
+      "recall": 0.16666666666666666,
+      "f1": 0.2857142857142857
+    }
+  },
+  "rule_hits": {
+    "prompt_injection_comment": {
+      "injection": 10,
+      "benign": 0
+    }
+  },
+  "latency_p50_ms": 1.843,
+  "latency_p95_ms": 2.814
+}
