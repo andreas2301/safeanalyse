@@ -155,19 +155,19 @@ for f in testdata/eval/*.jsonl; do ./safeanalyze eval "$f"; done
 
 ## Current autoresearch iteration
 
-- **Version under test:** v0.3.19 (last accepted).
-- **Status:** Accepted (iteration 13). llmail dev F1 rises (0.824 → 0.842) and llmail-holdout F1 rises (0.790 → 0.814), with no FP change on any dev or holdout set. Every other labeled metric and every corpus count is identical to v0.3.18. Stagnation counter stays at 0.
-- **Change:** `data_exfiltration_email` gains one line-based pattern: a recipient key (`recipient(s)`, `receiver`, `email_to`, `address`) with `:`/`=` and an email address that may be obfuscated (`at`, `(at)`/`[at]`/`{at}`, `＠`, spaces around `@`, `(dot)`/`[dot]`/`{dot}`), then within 80 characters a `body`/`content`/`message` field followed by `:`, `=` or "is". Hypothesis from BASELINE.md cross-set themes #3 (obfuscated addresses) and #5 (key/value sends), built on dev sets only. In the llmail dev FNs the send verb and the obfuscated recipient are on different lines, so verb-led patterns (iteration 9) cannot fire; the v0.3.18 recipient-key pattern needs a literal `@` and `body:`/`body=`. No holdout file was opened.
-- **Metrics (fast-mode eval, v0.3.18 → v0.3.19):**
-  - Dev: llmail TP 210 → 218, R 0.700 → 0.727, F1 0.824 → 0.842 (FP 0); deepset F1 0.571 (FP 0) and browsesafe F1 0.681 (FP 76) unchanged. `data_exfiltration_email` hits: llmail injection 157 → 166, browsesafe 132/24 (injection/benign) unchanged.
-  - Holdout: llmail-holdout TP 196 → 206, R 0.653 → 0.687, F1 0.790 → 0.814 (FP 0); deepset-holdout F1 0.417 (FP 2) and browsesafe-holdout F1 0.633 (FP 82) unchanged.
-  - Latency p95: dev deepset 3.75 → 3.80 ms (run 2: 4.06), llmail 5.09 → 4.79 ms (run 2: 4.69), browsesafe 27.4 → 28.8 ms (run 2: 28.9); holdout 4.08 → 3.93, 4.80 → 4.92, 29.3 → 29.4 ms. All within the 100 ms budget.
-  - Thorough corpus: findings 11166 → 11166, identical per target, per source and per rule. Total `duration_ms` 35489 → 35809 (skylos external-scanner variance), 0 errors.
-  - Red-team: 12/12 payloads flagged at 15–16 ms.
-  - Determinism: two dev eval runs give identical metrics, rule hits and FP/FN JSONL files.
-- **Known gaps:** `to:` and `email:` keys with an obfuscated address are not matched by design; `&#64;`, `%40`, spelled-out "dot" without brackets (`example dot org`) and spaced letters are not matched; the body/content/message field must follow the address within 80 characters on the same line. Known benign trigger from v0.3.18: Ruby `mailer.send_email(to: "dev@example.com", body: render(:welcome))`.
+- **Version under test:** v0.3.20 (last accepted).
+- **Status:** Accepted (iteration 14). llmail dev F1 rises (0.842 → 0.864) and llmail-holdout F1 rises (0.814 → 0.833), with no FP change on any dev or holdout set. Every other labeled metric and every corpus count is identical to v0.3.19. Stagnation counter stays at 0.
+- **Change:** `data_exfiltration_email` gains one line-based pattern for notify-style verbs (`notify(ing)`, `inform(ing)`, `ping`, `reply(ing)`, `convey(ing)`, `communicate(d)`, `emailing`) aimed at an email address, or `email`/`e-mail`/`emailing` followed by a quoted or `*`-bolded address. An output/secret noun (confirmation, body, content, summary, result, response, password, token, credentials, history, conversation, transcript, keyword, word, secret) must appear before the verb, between verb and address, or within 80 characters after the address. No `<>=.?!;`, line break, or (before the address) `:` may appear between the parts. Hypothesis from BASELINE.md cross-set FN theme #5 (exfiltration phrasing), built on the iteration-13 dev FN/FP files and per-pattern hit dumps only. No holdout file was opened.
+- **Metrics (fast-mode eval, v0.3.19 → v0.3.20):**
+  - Dev: llmail TP 218 → 228, R 0.727 → 0.760, F1 0.842 → 0.864 (FP 0); deepset F1 0.571 (FP 0) and browsesafe F1 0.681 (FP 76) unchanged. `data_exfiltration_email` hits: llmail injection 166 → 189, browsesafe 132/24 (injection/benign) unchanged. Predicted +13 llmail TPs; measured +10.
+  - Holdout: llmail-holdout TP 206 → 214, R 0.687 → 0.713, F1 0.814 → 0.833 (FP 0); deepset-holdout F1 0.417 (FP 2) and browsesafe-holdout F1 0.633 (FP 82) unchanged.
+  - Latency p95: dev deepset 3.80 → 4.21 ms (run 2: 4.57), llmail 4.79 → 5.95 ms (run 2: 6.07), browsesafe 28.8 → 33.0 ms (run 2: 32.7); holdout 3.93 → 4.45, 4.92 → 6.17, 29.4 → 33.2 ms. Every set is slower (+0.4 to +4.2 ms; browsesafe +15 %), but all stay within the 100 ms budget. The latency rise is accepted for the labeled gain.
+  - Thorough corpus: findings 11166 → 11166, identical per target, per source and per rule. Total `duration_ms` 35809 → 32405 (skylos 17568 → 14255, external-scanner variance), 0 errors.
+  - Red-team: 12/12 payloads flagged at 16–17 ms.
+  - Determinism: two dev eval runs match once latency fields are removed; FP/FN JSONL files are byte-identical.
+- **Known gaps:** `contact`/`message`/`tell`/`share`/`let ... know` verbs are not matched; a notify verb needs an output/secret noun in the same sentence ("inform contact@contact.com" alone is not flagged); "email" without a quote or `*` before the address is not matched; `&#64;`, `%40`, unbracketed "dot" and spaced letters are still not matched. Known benign trigger from v0.3.18: Ruby `mailer.send_email(to: "dev@example.com", body: render(:welcome))`.
 - **Rejected options this iteration (not released):**
-  - `to` and `email`/`e-mail` recipient keys from the hypothesis: they match ordinary contact lines ("To: John at acme.com, message: ...", "email: jane.doe(at)uni-bonn.de, message: ...").
+  - `contact` and `message` as verbs: 22 new browsesafe dev benign FPs ("Contact us at security@...").
 - **Last accepted corpus improvement:** v0.3.17 (corpus findings +141 from `data_exfiltration_email`, all InjecAgent attacker strings in a spot check).
 - **Previous reverted iterations:**
   - v0.3.4 — encoded-prompt-injection fragment expansion added latency but no new detections.
@@ -176,9 +176,9 @@ for f in testdata/eval/*.jsonl; do ./safeanalyze eval "$f"; done
   - Iteration 7 (v0.3.16 candidate) — `prompt_leak_request` rule (en/de); no gain.
   - Iteration 9 (v0.3.17 candidate) — labeled metrics identical to v0.3.16; not released.
   - Iteration 11 (v0.3.18 candidate) — not released. Measured browsesafe dev TP 194 → 188 / FP 76 → 62 (`account_access_request` and `data_exfiltration_email` benign hits down); llmail and deepset unchanged.
-- **Stagnation check:** 0 consecutive no-gain iterations (iteration 13 accepted for its llmail F1 gain). Six iterations (8–13) have run since the 2026-10-02 process review, so the next process review is due.
+- **Stagnation check:** 0 consecutive no-gain iterations (iteration 14 accepted for its llmail F1 gain). Seven iterations (8–14) have run since the 2026-10-02 process review, so the next process review is overdue. Iterations 12–14 all widened `data_exfiltration_email` for llmail and each added fast-mode latency.
 - **Next candidates (from the dev-set FN analysis):**
-  - Remaining llmail FNs (82 dev): "notify ... mail to me", address far from "to", other verbs, and `&#64;`/`%40`/"dot" obfuscations.
+  - Remaining llmail FNs (72 dev): address far from the verb or on another line, other verbs (tell, share, let ... know), and `&#64;`/`%40`/"dot" obfuscations.
   - browsesafe precision (76 dev FPs; `account_access_request`, hidden-char and `data_exfiltration_email` benign hits).
   - Spot-check the +1064 (v0.3.11) and +150 (v0.3.13) InjecAgent YARA findings and the +24 BIPIA hits for FP inflation.
   - Evaluate `Llama-Prompt-Guard-2-86M-onnx` / `22M-onnx` for memory/latency/precision on the labeled sets.
