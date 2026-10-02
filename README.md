@@ -1,4 +1,4 @@
-# safeanalyze v0.3.12
+# safeanalyze v0.3.13
 
 A Go CLI tool that sanitizes and scans untrusted code repositories **before** feeding them to AI assistants. Implements defense-in-depth inspired by [Zones of Distrust](https://github.com/bluvibytes/zone-of-distrust).
 
@@ -12,6 +12,10 @@ Prompt injection via malicious code is real. A repo can contain:
 - Secrets or malware mixed with legitimate source
 
 **safeanalyze** runs a security pipeline so AI assistants never see raw, unverified code.
+
+## What's new in v0.3.13
+
+- **Chat-template boundary detection** — new `chat_template_boundary` rule flags fake chat-template special tokens (`<|im_start|>`, `<|im_end|>`, `<|endoftext|>`, `<|start user prompt|>`, fullwidth-pipe variants) and forged role-boundary tags (`</email><user>`, a bare `<user>` line after tool output) that try to end the data section and open a new user or system turn. llmail recall rises on dev (0.56 → 0.65) and holdout (0.55 → 0.63) with no new false positives.
 
 ## What's new in v0.3.12
 
@@ -205,6 +209,7 @@ Pure-Go regex rule engine with embedded detection patterns:
 |------|----------|---------|
 | `prompt_injection_comment` | critical | "ignore previous instructions", "system prompt", "DAN mode", "jailbreak", "override your safety" |
 | `multilingual_prompt_injection` | critical | German/Spanish/French/Portuguese/Italian "ignore/forget all previous instructions" ("Vergiss alles", "Ignorieren Sie die obigen Anweisungen", "olvida todo", "Ignorez toutes les instructions", "IGNORE TODAS AS INSTRUÇÕES") |
+| `chat_template_boundary` | high | Fake chat-template special tokens (`<\|im_start\|>`, `<\|im_end\|>`, `<\|endoftext\|>`, `<\|eot_id\|>`, `<\|start user prompt\|>`, fullwidth-pipe look-alikes) and forged role-boundary tags (`</email><user>`, bare `<user>`/`<assistant>` lines) |
 | `obfuscated_javascript` | high | eval(Function(...)), String.fromCharCode, atob, hex escapes |
 | `suspicious_shell` | high | curl \| bash, wget \| bash, netcat reverse shells |
 | `credential_hardcode` | medium | password=, api_key=, secret=, AWS keys |

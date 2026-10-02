@@ -155,25 +155,29 @@ for f in testdata/eval/*.jsonl; do ./safeanalyze eval "$f"; done
 
 ## Current autoresearch iteration
 
-- **Version under test:** v0.3.12
-- **Status:** Accepted (iteration 2 on the labeled eval; dev and holdout recall/F1 gain with no new FPs on any dev or holdout set).
-- **Change:** New `multilingual_prompt_injection` YARA rule for German/Spanish/French/Portuguese/Italian "ignore/forget all previous instructions" phrasing. Bare `alles`/`todo`/`tout` objects need a clause end or a conversational follow-up, so headline idioms ("Vergiss alles, was du über X weißt") stay unflagged.
-- **Metrics (fast-mode eval, v0.3.11 → v0.3.12):**
-  - Dev: deepset TP 10 → 19, R 0.167 → 0.317, F1 0.286 → 0.481 (FP 0); browsesafe TP 175 → 177, F1 0.635 → 0.640 (FP 76); llmail unchanged (F1 0.718).
-  - Holdout: deepset-holdout TP 30 → 46, F1 0.255 → 0.367 (FP 2 → 2); browsesafe-holdout TP 161 → 162, F1 0.593 → 0.596 (FP 82 → 82); llmail-holdout unchanged (F1 0.707).
-  - Latency: browsesafe p95 287–300 ms (v0.3.11 ≈ 257 ms), still over the 100 ms budget; deepset/llmail p95 < 10 ms.
-  - Thorough corpus: findings unchanged at 10851, total `duration_ms` 36646 (v0.3.11: 35925), 0 errors.
-  - Report branch: `report-fourth-wall-chimichanga-ec260996-2026-10-02`.
-- **Known gaps (red-team):** homoglyphs, fullwidth letters, letter spacing and base64 bypass the rule (as they bypass the English rule); periphrastic forms ("Haz caso omiso de", "No sigas", "Ne tenez pas compte de") and other languages (pl/nl/ru/zh) are not covered. Residual benign hits: descriptive "Der Parser ignoriert die vorherigen Eingaben", "El parser ignora las instrucciones no soportadas", "Oublie tout."
-- **Last accepted corpus improvement:** v0.3.11 (v0.3.12 is a labeled-eval gain; corpus counts unchanged).
+- **Version under test:** v0.3.13
+- **Status:** Accepted (iteration 3 on the labeled eval; llmail dev and holdout recall/F1 gain with no new FPs on any dev or holdout set).
+- **Change:** New high-severity `chat_template_boundary` YARA rule for fake chat-template special tokens (`<|im_start|>`, `<|im_end|>`, `<|endoftext|>`, `<|start user prompt|>`, fullwidth/look-alike pipes) and forged role-boundary tags (`</email><user>`, a bare `<user>`/`<human>`/`<assistant>` line). Hypothesis from BASELINE.md cross-set FN theme #4, built on the dev sets only.
+- **Metrics (fast-mode eval, v0.3.12 → v0.3.13):**
+  - Dev: llmail TP 168 → 194, R 0.560 → 0.647, F1 0.718 → 0.785 (FP 0); deepset unchanged (F1 0.481, FP 0); browsesafe unchanged (F1 0.640, FP 76).
+  - Holdout: llmail-holdout TP 164 → 190, R 0.547 → 0.633, F1 0.707 → 0.776 (FP 0); deepset-holdout unchanged (F1 0.367, FP 2); browsesafe-holdout unchanged (F1 0.596, FP 82).
+  - Latency: rule cost < 1 ms; deepset/llmail p95 < 10 ms; browsesafe p95 289 ms dev / 283 ms holdout, still over the 100 ms budget.
+  - Thorough corpus: findings 10851 → 11025 (+24 BIPIA, +150 InjecAgent, all `chat_template_boundary`; every other rule count unchanged), total `duration_ms` 38604 (v0.3.12: 36646, mostly skylos variance), 0 errors.
+  - Red-team: 11/11 payloads flagged (three new chat-template payloads) at 10–12 ms.
+  - Report branch: `report-sarcastic-mercenary-chimichanga-ecc5e842-2026-10-02`.
+- **Known gaps (red-team):** tokens split across lines, HTML-entity or base64-encoded tokens, role tags with attributes (`<user id=1>`), and role tags inline with other text after a non-listed closing tag are not matched. The 174 new corpus hits on BIPIA/InjecAgent have not been spot-checked for FP inflation yet.
+- **Rejected options this iteration (not released):**
+  - Hidden-char FP narrowing (emoji ZWJ exemption + flag-tag sequences): browsesafe F1 0.6401 → 0.6396.
+  - Dropping hidden-char-only hits: browsesafe F1 0.6401 → 0.6426 but llmail F1 0.7179 → 0.6928.
+- **Last accepted corpus improvement:** v0.3.13 (corpus findings +174 from the new rule).
 - **Previous reverted iterations:**
   - v0.3.4 — encoded-prompt-injection fragment expansion added latency but no new detections.
   - v0.3.8 (parallel entropy/hiddenchars) — did not improve latency, reverted before release.
-  - None reverted in the labeled-eval loop yet (iterations 1 and 2 accepted).
-- **Stagnation check:** 0 consecutive no-gain iterations (iterations 1 and 2 both improved dev and holdout F1).
+  - None reverted in the labeled-eval loop yet (iterations 1–3 accepted); the hidden-char variants above were rejected before implementation.
+- **Stagnation check:** 0 consecutive no-gain iterations (iterations 1, 2 and 3 all improved dev and holdout F1).
 - **Next candidates (from the dev-set FN analysis):**
-  - Spot-check the +1064 InjecAgent YARA findings for FP inflation.
-  - Chat-template boundary tokens (`<|im_start|>`, `</tool>`) and JSON tool-call injection (llmail FNs; simulated +23 llmail TP, 0 benign hits — top candidate for iteration 3).
+  - Spot-check the +1064 (v0.3.11) and +150 (v0.3.13) InjecAgent YARA findings and the +24 BIPIA hits for FP inflation.
+  - JSON tool-call injection in llmail FNs.
   - Fast-mode input cap or HTML pre-filter to bring browsesafe p95 under 100 ms.
   - Evaluate `Llama-Prompt-Guard-2-86M-onnx` / `22M-onnx` for memory/latency/precision on the labeled sets.
   - Decide whether `node_modules`/`vendor` should remain in `dependency_paths` for thorough mode.

@@ -5,6 +5,24 @@ All notable functional and non-functional changes to `safeanalyze` are documente
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.3.13] — 2026-10-02
+
+### Functional
+
+- **New `chat_template_boundary` YARA rule (high):** detects fake chat-template special tokens and forged role-boundary tags in untrusted text:
+  - pipe-delimited special tokens such as `<|im_start|>`, `<|im_end|>`, `<|endoftext|>`, `<|eot_id|>`, `<|start_header_id|>`, `<|system|>`, `<|assistant|>`, and free-form variants like `<|start user prompt|>`, `<|end tool output|>` or the leetspeak `<|user pr0mp7|>`. Fullwidth `｜`, `∣` and `ǀ` pipe look-alikes and a single space inside the angle brackets (`< |im_start| >`) are also matched;
+  - a closing context tag immediately followed by a role tag, e.g. `</email><user>`, `</message> <User>`, `</tool_output><system>`;
+  - a bare `<user>`, `<human>` or `<assistant>` tag on its own line.
+  Benign text such as Haskell `<|>`, bra-ket notation `<|x| , |y|>`, F# pipes `<| y |>`, ordinary HTML (`</div><span>`, `<td>user</td>`) and inline placeholders (`<user> is the placeholder ...`) stays unflagged.
+
+### Non-functional
+
+- Fast-mode eval, dev sets (v0.3.12 → v0.3.13): llmail TP 168 → 194 (recall 0.560 → 0.647, F1 0.718 → 0.785, FP 0); deepset and browsesafe unchanged (F1 0.481 and 0.640, FP 0 and 76).
+- Fast-mode eval, holdout sets: llmail-holdout TP 164 → 190 (recall 0.547 → 0.633, F1 0.707 → 0.776, FP 0); deepset-holdout and browsesafe-holdout unchanged (F1 0.367 and 0.596, FP 2 and 82).
+- Latency cost is under 1 ms per payload: deepset and llmail p95 stay under 10 ms; browsesafe p95 is 289 ms dev / 283 ms holdout (v0.3.12: 300 / 287 ms), still over the 100 ms budget.
+- Thorough corpus: findings 10851 → 11025, all from the new rule (+24 BIPIA, +150 InjecAgent); every other rule count is unchanged. Total `duration_ms` 38604 (v0.3.12: 36646; skylos accounts for +1939 ms, within run-to-run variance for that target), 0 errors.
+- Added a table-driven test with positive and benign cases for the new rule; `scripts/redteam.sh` gains three chat-template payloads (11/11 flagged).
+
 ## [0.3.12] — 2026-10-02
 
 ### Functional

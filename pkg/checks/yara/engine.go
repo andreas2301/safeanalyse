@@ -131,6 +131,16 @@ func (e *Engine) LoadBuiltins() {
 			},
 		},
 		{
+			Name:        "chat_template_boundary",
+			Description: "Fake chat-template special token or forged role-boundary tag",
+			Severity:    report.SeverityHigh,
+			Patterns: []string{
+				`<\s?[|\x{FF5C}\x{2223}\x{01C0}]\s*(?i:im_start|im_end|im_sep|endoftext|eot_id|eom_id|start_header_id|end_header_id|begin_of_text|start|end|eot|system|user|assistant)\b[^|\x{FF5C}\x{2223}\x{01C0}<>\n]{0,40}[|\x{FF5C}\x{2223}\x{01C0}]\s?>`,
+				`</(?i:message|tool|tool_output|email|context|document|data|function_results?|assistant|system)>\s*<(?i:user|system|assistant|human)>`,
+				`^\s*<(?i:user|human|assistant)\s*>\s*$`,
+			},
+		},
+		{
 			Name:        "obfuscated_javascript",
 			Description: "Obfuscated or packed JavaScript patterns",
 			Severity:    report.SeverityHigh,
