@@ -1,4 +1,4 @@
-# safeanalyze v0.3.11
+# safeanalyze v0.3.12
 
 A Go CLI tool that sanitizes and scans untrusted code repositories **before** feeding them to AI assistants. Implements defense-in-depth inspired by [Zones of Distrust](https://github.com/bluvibytes/zone-of-distrust).
 
@@ -12,6 +12,10 @@ Prompt injection via malicious code is real. A repo can contain:
 - Secrets or malware mixed with legitimate source
 
 **safeanalyze** runs a security pipeline so AI assistants never see raw, unverified code.
+
+## What's new in v0.3.12
+
+- **Multilingual override detection** — new `multilingual_prompt_injection` rule catches German, Spanish, French, Portuguese and Italian "ignore/forget all previous instructions" phrasing while leaving idioms such as "Vergiss alles, was du über X weißt" unflagged. deepset recall rises on dev (0.17 → 0.32) and holdout (0.15 → 0.23) with no new false positives.
 
 ## What's new in v0.3.11
 
@@ -200,6 +204,7 @@ Pure-Go regex rule engine with embedded detection patterns:
 | Rule | Severity | Detects |
 |------|----------|---------|
 | `prompt_injection_comment` | critical | "ignore previous instructions", "system prompt", "DAN mode", "jailbreak", "override your safety" |
+| `multilingual_prompt_injection` | critical | German/Spanish/French/Portuguese/Italian "ignore/forget all previous instructions" ("Vergiss alles", "Ignorieren Sie die obigen Anweisungen", "olvida todo", "Ignorez toutes les instructions", "IGNORE TODAS AS INSTRUÇÕES") |
 | `obfuscated_javascript` | high | eval(Function(...)), String.fromCharCode, atob, hex escapes |
 | `suspicious_shell` | high | curl \| bash, wget \| bash, netcat reverse shells |
 | `credential_hardcode` | medium | password=, api_key=, secret=, AWS keys |

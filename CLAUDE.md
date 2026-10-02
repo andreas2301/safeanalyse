@@ -155,22 +155,25 @@ for f in testdata/eval/*.jsonl; do ./safeanalyze eval "$f"; done
 
 ## Current autoresearch iteration
 
-- **Version under test:** v0.3.11
-- **Status:** Accepted (iteration 1 on the labeled eval; detection gain with no new FPs on the dev sets).
-- **Change:** Widened override verb/object coverage of the `prompt_injection_comment` YARA rule: `ignore|disregard|forget` + previous/prior/above/everything/instructions/tasks/rules/context variants, upper-case `SYSTEM|ADMIN OVERRIDE`, and `New directive:` / line-start `New instructions:`.
-- **Metrics (fast-mode eval, v0.3.10 → v0.3.11):**
-  - Dev: deepset P n/a → 1.000, R 0.000 → 0.167, F1 0.000 → 0.286 (TP 10, FP 0); llmail P 1.000, R 0.550 → 0.560, F1 0.710 → 0.718; browsesafe P 0.648 → 0.697, R 0.467 → 0.583, F1 0.543 → 0.635 (FP unchanged at 76; p95 ≈ 257 ms, still over the 100 ms budget).
-  - Holdout: deepset-holdout F1 0.075 → 0.255 (TP 8 → 30, FP 2 → 2); llmail-holdout unchanged (F1 0.707); browsesafe-holdout F1 0.556 → 0.593 (TP 147 → 161, FP 82 → 82).
-  - Thorough corpus: 9751 → 10851 findings (InjecAgent +1064 from YARA), total `duration_ms` 35925 (baseline 36078–38015), 0 errors. The extra corpus findings have not yet been checked for FP inflation.
-- **Last accepted corpus improvement:** v0.3.11 (this iteration).
+- **Version under test:** v0.3.12
+- **Status:** Accepted (iteration 2 on the labeled eval; dev and holdout recall/F1 gain with no new FPs on any dev or holdout set).
+- **Change:** New `multilingual_prompt_injection` YARA rule for German/Spanish/French/Portuguese/Italian "ignore/forget all previous instructions" phrasing. Bare `alles`/`todo`/`tout` objects need a clause end or a conversational follow-up, so headline idioms ("Vergiss alles, was du über X weißt") stay unflagged.
+- **Metrics (fast-mode eval, v0.3.11 → v0.3.12):**
+  - Dev: deepset TP 10 → 19, R 0.167 → 0.317, F1 0.286 → 0.481 (FP 0); browsesafe TP 175 → 177, F1 0.635 → 0.640 (FP 76); llmail unchanged (F1 0.718).
+  - Holdout: deepset-holdout TP 30 → 46, F1 0.255 → 0.367 (FP 2 → 2); browsesafe-holdout TP 161 → 162, F1 0.593 → 0.596 (FP 82 → 82); llmail-holdout unchanged (F1 0.707).
+  - Latency: browsesafe p95 287–300 ms (v0.3.11 ≈ 257 ms), still over the 100 ms budget; deepset/llmail p95 < 10 ms.
+  - Thorough corpus: findings unchanged at 10851, total `duration_ms` 36646 (v0.3.11: 35925), 0 errors.
+  - Report branch: `report-fourth-wall-chimichanga-ec260996-2026-10-02`.
+- **Known gaps (red-team):** homoglyphs, fullwidth letters, letter spacing and base64 bypass the rule (as they bypass the English rule); periphrastic forms ("Haz caso omiso de", "No sigas", "Ne tenez pas compte de") and other languages (pl/nl/ru/zh) are not covered. Residual benign hits: descriptive "Der Parser ignoriert die vorherigen Eingaben", "El parser ignora las instrucciones no soportadas", "Oublie tout."
+- **Last accepted corpus improvement:** v0.3.11 (v0.3.12 is a labeled-eval gain; corpus counts unchanged).
 - **Previous reverted iterations:**
   - v0.3.4 — encoded-prompt-injection fragment expansion added latency but no new detections.
   - v0.3.8 (parallel entropy/hiddenchars) — did not improve latency, reverted before release.
-- **Stagnation check:** 0 consecutive no-gain iterations (iteration 1 improved dev and holdout F1).
+  - None reverted in the labeled-eval loop yet (iterations 1 and 2 accepted).
+- **Stagnation check:** 0 consecutive no-gain iterations (iterations 1 and 2 both improved dev and holdout F1).
 - **Next candidates (from the dev-set FN analysis):**
-  - Non-English (German/Spanish) override/prompt-leak rules (deepset recall is still 0.167).
   - Spot-check the +1064 InjecAgent YARA findings for FP inflation.
-  - Chat-template boundary tokens (`<|im_start|>`, `</tool>`) and JSON tool-call injection (llmail FNs).
+  - Chat-template boundary tokens (`<|im_start|>`, `</tool>`) and JSON tool-call injection (llmail FNs; simulated +23 llmail TP, 0 benign hits — top candidate for iteration 3).
   - Fast-mode input cap or HTML pre-filter to bring browsesafe p95 under 100 ms.
   - Evaluate `Llama-Prompt-Guard-2-86M-onnx` / `22M-onnx` for memory/latency/precision on the labeled sets.
   - Decide whether `node_modules`/`vendor` should remain in `dependency_paths` for thorough mode.

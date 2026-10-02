@@ -119,6 +119,18 @@ func (e *Engine) LoadBuiltins() {
 			},
 		},
 		{
+			Name:        "multilingual_prompt_injection",
+			Description: "Non-English instruction-override phrasing (de/es/fr/pt/it)",
+			Severity:    report.SeverityCritical,
+			Patterns: []string{
+				`(?im)\b(vergi(ss|ß)|vergesst|vergessen\s+sie|ignorier(e|t)?|ignorieren\s+sie|missachte|missachtet|missachten\s+sie)\s+(\pL+\s+){0,3}?(alles(\s*([.!;:]|$)|\s+und\b|,?\s+(was\s+(wir|ich|oben|davor|zuvor|bisher)\b|bisher|davor|zuvor|vorher|oben|bis\s+(jetzt|hierhin)))|alle\s+(\pL+\s+)?(anweisungen|befehle|aufträge|instruktionen|vorgaben)|((alle|das|die|den)\s+)?(bisherigen?|vorherigen?|vorigen?|früheren?|obigen?|vorangegangenen?)\s+(anweisungen|befehle|aufträge|aufgaben|regeln|instruktionen|vorgaben|angaben|nachrichten|eingaben|prompts?)|das\s+obige(\s*([.!;:,]|$)|\s+und\b))`,
+				`(?i)\b(hör|höre|hört|hören\s+sie)\s+nicht\s+(mehr\s+)?auf\s+(alles|das|die)\s+(zuvor|bisher|vorher|oben|obige)`,
+				`(?im)\b(olvida|olvide|olviden|olvidar|olvídate\s+de|olvidate\s+de|ignora|ignore|ignoren|ignorar|omite|omita|omitir)\s+(todo(\s*([.!;:]|$)|\s+y\b|\s+(lo\s+)?(anterior|previo|que\s+(te\s+|le\s+)?(dije|dijimos|he\s+dicho|hemos\s+(dicho|hablado)|se\s+(dijo|ha\s+dicho))))|(todas?\s+)?las?\s+(instrucciones|indicaciones|órdenes|ordenes|restricciones)\b|(todas?\s+)?las?\s+(reglas|normas)\s+(previas|anteriores)|(instrucciones|indicaciones|órdenes|reglas|restricciones)\s+(previas|anteriores))`,
+				`(?im)\b(oublie|oubliez|ignore|ignorez)\s+(tout(\s*([.!;:]|$)|\s+et\b|\s+ce\s+qui\s+(précède|precede|a\s+été\s+dit|est\s+(au-dessus|ci-dessus))|\s+ce\s+que\s+(je\s+t'ai|je\s+vous\s+ai|j'ai|nous\s+avons|on\s+a)\b)|toutes?\s+(les\s+)?(instructions|consignes|ordres|directives)|toutes?\s+(les\s+)?règles\s+(précédentes|antérieures|ci-dessus)|les\s+(instructions|consignes|règles|ordres|directives)\s+(précédentes|precedentes|antérieures|ci-dessus))`,
+				`(?im)\b(esqueça|esqueca|ignore|ignora|desconsidere|desconsidera|dimentica|dimenticate|ignorate)\s+((todas?\s+as|tutte\s+le|le|as)\s+((instruções|instrucoes|istruzioni)\b|(regras|regole)\s+(anteriores|precedentes|precedenti|acima|sopra)\b)|tutto(\s*([.!;:]|$)|\s+quello\s+che\s+(ti|vi)\s+ho\s+detto)|tudo(\s*([.!;:]|$)|\s+o\s+que\s+(eu\s+)?(te\s+|lhe\s+)?(disse|falei)))`,
+			},
+		},
+		{
 			Name:        "obfuscated_javascript",
 			Description: "Obfuscated or packed JavaScript patterns",
 			Severity:    report.SeverityHigh,

@@ -5,6 +5,20 @@ All notable functional and non-functional changes to `safeanalyze` are documente
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.3.12] — 2026-10-02
+
+### Functional
+
+- **New `multilingual_prompt_injection` YARA rule (critical):** detects German, Spanish, French, Portuguese and Italian forms of "ignore/forget all previous instructions", e.g. "Vergiss alles, was wir bisher besprochen haben", "Ignorieren Sie die obigen Angaben", "Höre nicht auf alles zuvor gesagte", "olvide todo que dije", "Ignorez toutes les instructions précédentes", "IGNORE TODAS AS INSTRUÇÕES". Bare "alles"/"todo"/"tout" objects only fire at a clause end or with a conversational follow-up ("was wir", "davor", "lo anterior", "ce qui précède"), so headline idioms such as "Vergiss alles, was du über X weißt", "Olvida todo lo que sabías" and "Oubliez tout ce que vous savez" stay unflagged; "reglas"/"regole"/"regras" need a "previous/above" qualifier, so linter text like "ignora todas las reglas en ..." stays unflagged.
+
+### Non-functional
+
+- Fast-mode eval, dev sets (v0.3.11 → v0.3.12): deepset TP 10 → 19 (recall 0.167 → 0.317, F1 0.286 → 0.481, FP 0); browsesafe TP 175 → 177 (F1 0.635 → 0.640, FP unchanged at 76); llmail unchanged (F1 0.718).
+- Fast-mode eval, holdout sets: deepset-holdout TP 30 → 46 (F1 0.255 → 0.367, FP unchanged at 2); browsesafe-holdout TP 161 → 162 (F1 0.593 → 0.596, FP unchanged at 82); llmail-holdout unchanged (F1 0.707).
+- browsesafe fast-mode p95 is 287–300 ms (v0.3.11: about 257 ms), still over the 100 ms budget. deepset and llmail p95 stay under 10 ms.
+- Thorough corpus: findings unchanged at 10851 across the seven targets, total `duration_ms` 36646 (v0.3.11: 35925), 0 errors.
+- Added a table-driven test with positive and benign cases for the new rule.
+
 ## [0.3.11] — 2026-10-02
 
 ### Functional
