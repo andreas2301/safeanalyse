@@ -1,4 +1,4 @@
-# safeanalyze v0.3.16
+# safeanalyze v0.3.17
 
 A Go CLI tool that sanitizes and scans untrusted code repositories **before** feeding them to AI assistants. Implements defense-in-depth inspired by [Zones of Distrust](https://github.com/bluvibytes/zone-of-distrust).
 
@@ -12,6 +12,10 @@ Prompt injection via malicious code is real. A repo can contain:
 - Secrets or malware mixed with legitimate source
 
 **safeanalyze** runs a security pipeline so AI assistants never see raw, unverified code.
+
+## What's new in v0.3.17
+
+- **Send/forward-a-summary exfiltration detection** — `data_exfiltration_email` now also flags a send / forward / dispatch verb followed, within the same sentence, by an output noun (summary, confirmation, keyword, body, contents, output, result, reply, response, transcript) and then "to" an email address ("forward the summary containing the keyword "confirmation" to contact@...", "send the result to amy.watson@..."). Text with `<`, `>` or `=` between the verb and the address (HTML labels and attributes) and ordinary support footers ("send any questions ... to support@...") stay unflagged. llmail recall rises on dev (0.647 → 0.663) and holdout (0.633 → 0.637) with no new false positives.
 
 ## What's new in v0.3.16
 
@@ -227,7 +231,7 @@ Pure-Go regex rule engine with embedded detection patterns. A required-literal p
 | `credential_hardcode` | medium | password=, api_key=, secret=, AWS keys |
 | `suspicious_imports` | medium | subprocess, child_process, urllib requests |
 | `data_exfiltration` | high | fetch to external URLs, axios post, XMLHttpRequest |
-| `data_exfiltration_email` | high | "retrieve ... and email to ...", exfiltration via email |
+| `data_exfiltration_email` | high | "retrieve ... and email to ...", forward/transmit/relay of sensitive data or send/forward of a summary/result to an email address |
 | `account_access_request` | medium | "access my account", "retrieve my payment history" |
 | `output_constraint` | medium | "output only", "do not mention warnings", "no disclaimer" |
 | `system_boundary` | critical | `<system>`, `[system]`, `system_instruction` markers |

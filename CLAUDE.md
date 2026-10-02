@@ -155,27 +155,31 @@ for f in testdata/eval/*.jsonl; do ./safeanalyze eval "$f"; done
 
 ## Current autoresearch iteration
 
-- **Version under test:** v0.3.16 (last accepted).
-- **Status:** Accepted (iteration 8, latency-only). Every labeled metric (TP/FP/TN/FN, P/R/F1, rule hits) is identical to v0.3.15 on all dev and holdout sets, and corpus findings are identical per target and per source. Fast-mode p95 dropped on every set, and browsesafe is now under the 100 ms budget. This is the first accepted iteration after the 6/7 stagnation stop, so the stagnation counter resets.
-- **Change:** `yara.Engine.ScanFile` gains an exact required-literal prefilter. `AddRule` parses each pattern with `regexp/syntax` into an AND of OR-clauses of literals of 3 bytes or longer, case-folded with the same `unicode.SimpleFold` orbit as `(?i)`, and memoizes the result per pattern string. A pattern runs only if its clauses pass on the folded document and then on the folded line. Patterns with no derivable literals always run. Profile: regex backtracking was 95 % of fast-mode CPU on browsesafe (about 398k lines × 107 patterns); compile was 0.6 %. A document-level-only filter reached 129 ms p95, and the per-line check is what brings it under budget. `TestPrefilterEquivalence` checks that prefiltered and unfiltered output are equal.
-- **Metrics (fast-mode eval, v0.3.15 → v0.3.16):**
-  - Dev: deepset F1 0.571 (FP 0), llmail F1 0.785 (FP 0), browsesafe F1 0.681 (FP 76), all unchanged.
-  - Holdout: deepset-holdout F1 0.417 (FP 2), llmail-holdout F1 0.776 (FP 0), browsesafe-holdout F1 0.633 (FP 82), all unchanged.
-  - Latency p95: browsesafe 349 → 23.9 ms dev (run 2: 25.9), 341 → 27.3 ms holdout; browsesafe p50 124 → 10.5 ms dev, 114 → 10.2 ms holdout; llmail 11.7 → 3.9 ms, llmail-holdout 12.1 → 3.9 ms; deepset 3.8 → 3.1 ms, deepset-holdout 3.8 → 3.4 ms.
-  - Thorough corpus: findings 11025 → 11025 (identical per target and per source), total `duration_ms` 35883 → 34247 (skylos 16835 → 15980 is mostly external-scanner variance), 0 errors.
-  - Red-team: 12/12 payloads flagged at 14–15 ms (dominated by process start-up).
-- **Known risks:** the prefilter is a necessary-condition check, so it is exact only while `requiredLiterals` stays sound. New regex constructs must either map to a sound clause or fall through to "no constraint" (nil). Any change to `ScanFile`, to line splitting, or to the case-folding must keep `TestPrefilterEquivalence` passing.
+- **Version under test:** v0.3.17 (last accepted).
+- **Status:** Accepted (iteration 10). llmail dev F1 rises (0.785 → 0.798) and llmail-holdout F1 rises (0.776 → 0.778), with no FP change on any dev or holdout set. Every other labeled metric is identical to v0.3.16. Stagnation counter stays at 0.
+- **Change:** `data_exfiltration_email` gains one pattern: a send / forward / dispatch verb (with -ing forms) followed by whitespace, then within the same sentence an output noun (summary, confirmation, keyword, body, content(s), output(s), result(s), reply/replies, response(s), transcript(s)), then "to" and an email address within 40 characters. No `<`, `>`, `=`, `.`, `;`, `?` or `!` may appear between the verb and "to". Hypothesis from the llmail dev FNs, built on dev sets only: 66 of 106 llmail dev FNs contain a plain email address, and the existing `send ... to <email>` pattern misses them because the verb is too far from the address. A bare verb-then-address pattern added 30–35 browsesafe dev FPs (HTML labels and attributes such as `Email: no-reply@...`); excluding `<`, `>` and `=` between the verb and the address removed them.
+- **Metrics (fast-mode eval, v0.3.16 → v0.3.17):**
+  - Dev: llmail TP 194 → 199, R 0.647 → 0.663, F1 0.785 → 0.798 (FP 0); deepset F1 0.571 (FP 0) and browsesafe F1 0.681 (FP 76) unchanged. `data_exfiltration_email` hits: llmail injection 134 → 142, browsesafe injection 130 → 132, benign unchanged (browsesafe 24, all already FPs through other rules).
+  - Holdout: llmail-holdout TP 190 → 191, R 0.633 → 0.637, F1 0.776 → 0.778 (FP 0); deepset-holdout F1 0.417 (FP 2) and browsesafe-holdout F1 0.633 (FP 82) unchanged.
+  - The hypothesis expected +11 dev TPs (8 llmail, 3 browsesafe). The released pattern requires an output noun, and it gave +5 llmail and 0 browsesafe.
+  - Latency p95: deepset 3.07 → 3.44 ms, llmail 3.88 → 4.02 ms, browsesafe 23.9 → 25.4 ms (run 2: 24.7); holdout 3.43 → 3.65, 3.87 → 4.22, 27.3 → 26.4 ms. All within the 100 ms budget.
+  - Thorough corpus: findings 11025 → 11166 (+141). All of the increase is new `data_exfiltration_email` findings on uiuc-injecagent (8138 → 8279). A spot check shows they are InjecAgent `Attacker Instruction` and attacker tool-response strings ("send a summary to amy.watson@..."). Other targets are unchanged per source. Total `duration_ms` 34247 → 35582 (skylos 15980 → 17361, external-scanner variance), 0 errors.
+  - Red-team: 12/12 payloads flagged at 14–15 ms.
+  - Determinism: two dev eval runs match once latency fields are removed; FP/FN JSONL files are byte-identical.
+- **Known gaps:** verbs other than send/forward/dispatch ("notify using mail to me", "e-mail"), addresses more than 40 characters after "to", obfuscated addresses (`(at)`, `[at]`, `＠`, `&#64;`, `%40`), and requests split over several sentences are not matched. `e-?mail` as a verb was dropped: it added only 1 llmail TP and opened a path to HTML-label FPs.
 - **Rejected options this iteration (not released):**
-  - Document-level-only prefilter (browsesafe p95 129 ms, still over budget).
-  - Caching or precompiling the engine (compile is 0.6 % of CPU, so no gain).
-- **Last accepted corpus improvement:** v0.3.13 (corpus findings +174 from `chat_template_boundary`).
+  - Bare verb-then-address pattern (30–35 new browsesafe dev FPs).
+  - `e-?mail` as a verb (+1 llmail TP, FP risk on HTML labels).
+- **Last accepted corpus improvement:** v0.3.17 (corpus findings +141 from `data_exfiltration_email`, all InjecAgent attacker strings in a spot check).
 - **Previous reverted iterations:**
   - v0.3.4 — encoded-prompt-injection fragment expansion added latency but no new detections.
   - v0.3.8 (parallel entropy/hiddenchars) — did not improve latency, reverted before release.
   - Iteration 6 (v0.3.16 candidate) — zero-width chars reported only inside Latin text or runs of 3+; no gain.
   - Iteration 7 (v0.3.16 candidate) — `prompt_leak_request` rule (en/de); no gain.
-- **Stagnation check:** 0 consecutive no-gain iterations (iteration 8 accepted for its latency gain).
+  - Iteration 9 (v0.3.17 candidate) — labeled metrics identical to v0.3.16; not released.
+- **Stagnation check:** 0 consecutive no-gain iterations (iteration 10 accepted for its llmail F1 gain).
 - **Next candidates (from the dev-set FN analysis):**
+  - Remaining llmail FNs with a plain email address: "notify ... mail to me", address far from "to", and other verbs.
   - Spot-check the +1064 (v0.3.11) and +150 (v0.3.13) InjecAgent YARA findings and the +24 BIPIA hits for FP inflation.
   - JSON tool-call injection in llmail FNs.
   - Evaluate `Llama-Prompt-Guard-2-86M-onnx` / `22M-onnx` for memory/latency/precision on the labeled sets.
