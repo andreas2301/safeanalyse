@@ -175,8 +175,9 @@ for f in testdata/eval/*.jsonl; do ./safeanalyze eval "$f"; done
   - Iteration 7 (v0.3.16 candidate) — `prompt_leak_request` rule (en/de); no gain.
   - Iteration 9 (v0.3.17 candidate) — labeled metrics identical to v0.3.16; not released.
   - Iteration 11 (v0.3.18 candidate) — not released. Measured browsesafe dev TP 194 → 188 / FP 76 → 62 (`account_access_request` and `data_exfiltration_email` benign hits down); llmail and deepset unchanged.
-- **Stagnation check:** 0 consecutive no-gain iterations (iteration 17 accepted for its browsesafe F1 gain). Ten iterations (8–17) have run since the 2026-10-02 process review, so the next process review is overdue. Iterations 12–16 widened `data_exfiltration_email`; iteration 17 added a separate rule.
-- **Next candidates (from the dev-set FN analysis):**
+- **Stagnation check:** 0 consecutive no-gain iterations (iteration 17 accepted for its browsesafe F1 gain). Iterations 12–16 widened `data_exfiltration_email`; iteration 17 added a separate rule. The process review for iterations 8–17 is done (see "Process review 2026-10-02 (round 2)").
+- **Next candidates (from the dev-set FN analysis and the round-2 process review):**
+  - First: browsesafe precision (76 dev / 82 holdout FPs, unchanged since v0.3.14). It is the only set with FPs and now the main F1 limit.
   - Remaining llmail FNs (64 dev): address far from the verb or on another line, other verbs (tell, share, let ... know), unquoted obfuscated addresses and `&#64;`/`%40` encodings.
   - browsesafe precision (76 dev FPs; `account_access_request`, hidden-char and `data_exfiltration_email` benign hits) and the remaining 91 browsesafe dev FNs (CSS-hidden text, attribute prose without the listed keywords).
   - Spot-check the +1064 (v0.3.11) and +150 (v0.3.13) InjecAgent YARA findings and the +24 BIPIA hits for FP inflation.
@@ -192,3 +193,11 @@ Done after 7 labeled-eval iterations (5 accepted, then 2 with no gain).
 - **Skipped optimizations:** Browsesafe fast-mode p95 is 345 ms dev / 337 ms holdout, over 3x the 100 ms budget, and it grew with each regex added (240 ms baseline → 345 ms). An input-size cap or HTML pre-filter was never tried. That is the next iteration and it is latency-only.
 - **Report branches:** 19 local `report-*` branches (11 on origin) and 18 worktrees using about 775 MB under `.worktrees/`. That is too many. Archive the July 2026 ones (keep the last accepted ones), remove stale worktrees with `git worktree remove`, and stop creating one report branch per rejected iteration.
 
+## Process review 2026-10-02 (round 2)
+
+Done after 17 labeled-eval iterations (12 accepted, 5 reverted; iterations 8–17 since the first review: 7 accepted, 3 reverted). Loop not stagnant (iteration 17 accepted).
+
+- **Metric:** Still the right one (per-set P/R/F1 on dev and holdout). Dev and holdout moved together in iterations 10–17 (browsesafe dev F1 0.681 → 0.715, holdout 0.633 → 0.671; llmail dev 0.785 → 0.881, holdout 0.776 → 0.835), so there are no signs of dev overfitting. deepset has not moved since the first review (dev F1 0.571, holdout 0.417, recall 0.27). Six of the ten iterations widened one rule (`data_exfiltration_email`) for llmail-style exfiltration, so gains are concentrated on one attack family.
+- **Corpus:** Still not representative. FPs exist only on browsesafe (76 dev / 82 holdout, unchanged since v0.3.14) and on deepset-holdout (2). There is still no labeled JSON tool-call/agent-trace benign set and no multilingual set. Iteration 12 tool-call patterns were checked only against llmail benign mail. InjecAgent is 8279 of 11166 corpus findings (74 %, 7968 YARA). Corpus counts stay a regression/error check only.
+- **Skipped optimizations:** Resolved. The iteration 8 literal prefilter brought browsesafe p95 from 349 ms to 24 ms. It is now 36.9 ms dev / 37.4 ms holdout, within the 100 ms budget, but it has risen about 1–4 ms per added pattern (+13 ms over iterations 10–17). Watch it, and check each new pattern has a literal the prefilter can use. Still open: the ML stage (Prompt-Guard-2 22M/86M), the InjecAgent FP spot-check, and `node_modules`/`vendor` in `dependency_paths`.
+- **Report branches:** Too many, and worse than at the first review. The archive step was not carried out: 27 local `report-*` branches (14 from 2026-07, 13 from 2026-10), 16 on origin, 26 worktrees using about 1.2 GB under `.worktrees/`. Action (needs owner approval; nothing deleted in this review): remove the 2026-07 worktrees with `git worktree remove`, archive the July branches as tags or delete them, keep only the report branch of the last accepted version (v0.3.23), and from now on write reverted-iteration results only to `/tmp/safeanalyze-iter/`, with no report branch.
