@@ -155,8 +155,8 @@ for f in testdata/eval/*.jsonl; do ./safeanalyze eval "$f"; done
 
 ## Current autoresearch iteration
 
-- **Version under test:** v0.3.15
-- **Status:** Accepted (iteration 5 on the labeled eval; browsesafe dev and holdout recall/F1 gain with no new FPs on any dev or holdout set).
+- **Version under test:** v0.3.15 (last accepted; loop stopped at stagnation).
+- **Status:** Accepted (iteration 5 on the labeled eval; browsesafe dev and holdout recall/F1 gain with no new FPs on any dev or holdout set). Iterations 6 (context-aware zero-width exemptions) and 7 (`prompt_leak_request` rule) were reverted for no gain (dev F1 +0.008, holdout F1 +0.001), so the loop stopped.
 - **Change:** `data_exfiltration_email` gains two patterns for forward/transmit/relay of a sensitive-data noun (credentials, history, conversation, records, data, logs, session, ...) to an email address, in active and passive ("... should be forwarded to x@y") form. Hypothesis from BASELINE.md cross-set FN theme #5 (exfiltration phrasing), built on the dev sets only. The verb-only form ("forward ... to <email>") was rejected in red-team: 8/15 benign mail-footer/helpdesk texts false-triggered; requiring a sensitive noun brought that to 0/15 at a cost of 5 browsesafe dev TPs.
 - **Metrics (fast-mode eval, v0.3.14 → v0.3.15):**
   - Dev: browsesafe TP 177 → 194, R 0.590 → 0.647, F1 0.640 → 0.681 (FP 76 unchanged); deepset unchanged (F1 0.571, FP 0); llmail unchanged (F1 0.785, FP 0).
@@ -174,11 +174,22 @@ for f in testdata/eval/*.jsonl; do ./safeanalyze eval "$f"; done
 - **Previous reverted iterations:**
   - v0.3.4 — encoded-prompt-injection fragment expansion added latency but no new detections.
   - v0.3.8 (parallel entropy/hiddenchars) — did not improve latency, reverted before release.
-  - None reverted in the labeled-eval loop yet (iterations 1–5 accepted).
-- **Stagnation check:** 0 consecutive no-gain iterations (iterations 1–5 all improved dev and holdout F1 on at least one set). Process review due after iteration 5: browsesafe latency keeps creeping up (p95 289 → 345 ms over iterations 3–5) and should be addressed before adding more regexes.
+  - Iteration 6 (v0.3.16 candidate) — zero-width chars reported only inside Latin text or runs of 3+; no gain.
+  - Iteration 7 (v0.3.16 candidate) — `prompt_leak_request` rule (en/de); no gain.
+- **Stagnation check:** 2 consecutive no-gain iterations (6, 7). Loop stopped; process review done (see below).
 - **Next candidates (from the dev-set FN analysis):**
+  - First: fast-mode input cap or HTML pre-filter to bring browsesafe p95 under 100 ms (latency-only iteration, findings must stay unchanged).
   - Spot-check the +1064 (v0.3.11) and +150 (v0.3.13) InjecAgent YARA findings and the +24 BIPIA hits for FP inflation.
   - JSON tool-call injection in llmail FNs.
-  - Fast-mode input cap or HTML pre-filter to bring browsesafe p95 under 100 ms.
   - Evaluate `Llama-Prompt-Guard-2-86M-onnx` / `22M-onnx` for memory/latency/precision on the labeled sets.
   - Decide whether `node_modules`/`vendor` should remain in `dependency_paths` for thorough mode.
+
+## Process review 2026-10-02
+
+Done after 7 labeled-eval iterations (5 accepted, then 2 with no gain).
+
+- **Metric:** Per-set precision/recall/F1 on labeled dev and holdout sets (deepset, llmail, browsesafe) is the right main metric and should stay. Raw corpus finding count is not a quality signal: InjecAgent makes up 8138 of 11025 findings (74 %), and rules can inflate it without anyone checking. From now on, treat corpus counts only as a regression and error check.
+- **Corpus:** Not fully representative. Recall is stuck around 0.27–0.65 (deepset-holdout 0.27). Browsesafe is the only set with false positives (76 dev / 82 holdout), so precision is tested mainly on HTML. The sets have no JSON tool-call or agent-trace benign/injection samples, and there is no labeled multilingual set.
+- **Skipped optimizations:** Browsesafe fast-mode p95 is 345 ms dev / 337 ms holdout, over 3x the 100 ms budget, and it grew with each regex added (240 ms baseline → 345 ms). An input-size cap or HTML pre-filter was never tried. That is the next iteration and it is latency-only.
+- **Report branches:** 19 local `report-*` branches (11 on origin) and 18 worktrees using about 775 MB under `.worktrees/`. That is too many. Archive the July 2026 ones (keep the last accepted ones), remove stale worktrees with `git worktree remove`, and stop creating one report branch per rejected iteration.
+
