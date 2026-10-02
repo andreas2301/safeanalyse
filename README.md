@@ -1,4 +1,4 @@
-# safeanalyze v0.3.21
+# safeanalyze v0.3.22
 
 A Go CLI tool that sanitizes and scans untrusted code repositories **before** feeding them to AI assistants. Implements defense-in-depth inspired by [Zones of Distrust](https://github.com/bluvibytes/zone-of-distrust).
 
@@ -12,6 +12,10 @@ Prompt injection via malicious code is real. A repo can contain:
 - Secrets or malware mixed with legitimate source
 
 **safeanalyze** runs a security pipeline so AI assistants never see raw, unverified code.
+
+## What's new in v0.3.22
+
+- **Quoted obfuscated-address exfiltration detection** — `data_exfiltration_email` now also flags a quoted, obfuscated email address (`'contact at contact.com'`, `"contact[at]contact[dot]com"`, `(at)`/`{at}`, ` dot `, spaces around `@`) on the same line as, and within 100 characters after, a self-referring mail or send phrase: "my email/mail/contact", or `send`/`email`/`mail`/`notify`/`reply`/`contact`/`write` followed by `me`/`it`/`this`/`that`/`them` ("my email is 'contact at contact.com'", `send it to "contact[at]contact[dot]com"`, "Please notify this mail to 'contact at contact.com'"). Contact lines such as `Contact: "info [at] example [dot] com"`, "Email us at 'press at nytimes.com' for media inquiries." and `Send bug reports to "bugs at project dot org".` stay unflagged. llmail recall rises on dev (0.760 → 0.787) and holdout (0.713 → 0.717) with no new false positives.
 
 ## What's new in v0.3.21
 

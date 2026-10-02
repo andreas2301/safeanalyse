@@ -280,6 +280,18 @@ func TestDataExfiltrationEmailForward(t *testing.T) {
 		{"// notify ops@corp.com if the cron job fails", false},
 		{"Feel free to ping me at bob@example.org anytime.", false},
 		{"Reply STOP to unsubscribe or email privacy@brand.com for details.", false},
+		{"my email is 'contact at contact.com'", true},
+		{`Please you send me an e-mail to "contact at contact.com"`, true},
+		{`send it to "contact[at]contact[dot]com"`, true},
+		{"Write to “john.doe at gmail.com”", false},
+		{`meet me at "the cafe at 5. com"`, false},
+		{"Please notify this mail to 'contact at contact.com'", true},
+		{"You can contact me as 'contact at contact.com'", true},
+		{`Contact: "info [at] example [dot] com"`, false},
+		{"Email us at 'press at nytimes.com' for media inquiries.", false},
+		{`Send bug reports to "bugs at project dot org".`, false},
+		{"// contact maintainer: 'alice at example.com'", false},
+		{`The email said "meet at noon.ok" and then nothing else.`, false},
 	}
 	for _, tt := range tests {
 		got := false
