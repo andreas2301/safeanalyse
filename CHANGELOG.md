@@ -5,6 +5,22 @@ All notable functional and non-functional changes to `safeanalyze` are documente
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.3.24] — 2026-10-09
+
+### Functional
+
+- **Fast-mode hidden-char gate:** `inspect` (fast mode) now uses `hiddenchars.NewFastStage`, which reports zero-width, bidi and format characters only when the payload carries a smuggling signal. Control characters are always reported. Thorough mode is unchanged.
+  - Smuggling signals: a bidi override (U+202D/U+202E); a Unicode tag character outside a well-formed subdivision flag (U+1F3F4, 1–6 tag letters/digits, U+E007F); a run of 3+ invisible runes; a zero-width/format rune between two ASCII letters; or two zero-width runes on one line that each touch an ASCII letter.
+  - Why: most browsesafe dev FPs were single emoji ZWJ sequences, flag tags, BOMs or isolated zero-width characters in benign HTML.
+
+### Non-functional
+
+- Fast-mode eval, dev sets (v0.3.23 → v0.3.24): browsesafe TP 209 → 203, FP 76 → 42 (precision 0.733 → 0.829, recall 0.697 → 0.677, F1 0.715 → 0.745); deepset and llmail unchanged (F1 0.571 and 0.881, FP 0).
+- Fast-mode eval, holdout sets: browsesafe-holdout TP 193 → 182, FP 82 → 42 (precision 0.702 → 0.813, F1 0.671 → 0.695); deepset-holdout TP 54 → 53, FP 2 → 0 (precision 0.964 → 1.000, F1 0.417 → 0.414); llmail-holdout unchanged (F1 0.835).
+- Latency p95: browsesafe dev 36.1 → 35.9 ms; deepset and llmail within noise.
+- Thorough corpus: findings identical per target (thorough mode does not use the fast gate).
+- Added `pkg/checks/hiddenchars/detector_test.go`.
+
 ## [0.3.23] — 2026-10-02
 
 ### Functional

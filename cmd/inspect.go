@@ -112,7 +112,7 @@ Example Squid external_acl helper usage:
 func inspectPayload(payload string) (*report.Report, error) {
 	stages := []pipeline.Stage{
 		yara.NewStage(nil),
-		hiddenchars.NewStage([]string{"zero_width", "bidi", "control"}, nil),
+		hiddenchars.NewFastStage([]string{"zero_width", "bidi", "control"}),
 	}
 
 	engine := pipeline.NewEngine(stages, 4)

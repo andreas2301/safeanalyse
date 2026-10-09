@@ -1,4 +1,4 @@
-# safeanalyze v0.3.23
+# safeanalyze v0.3.24
 
 A Go CLI tool that sanitizes and scans untrusted code repositories **before** feeding them to AI assistants. Implements defense-in-depth inspired by [Zones of Distrust](https://github.com/bluvibytes/zone-of-distrust).
 
@@ -12,6 +12,10 @@ Prompt injection via malicious code is real. A repo can contain:
 - Secrets or malware mixed with legitimate source
 
 **safeanalyze** runs a security pipeline so AI assistants never see raw, unverified code.
+
+## What's new in v0.3.24
+
+- **Fast-mode hidden-char gate** — `inspect` reports zero-width, bidi and format characters only when the payload shows a smuggling signal (bidi override, stray Unicode tag characters, a run of 3+ invisible runes, a zero-width rune splitting ASCII letters, or two letter-adjacent zero-width runes on one line); control characters are always reported. Emoji ZWJ sequences, subdivision flags and lone BOMs no longer flag. browsesafe dev FPs drop 76 → 42 (precision 0.733 → 0.829, F1 0.715 → 0.745). Thorough mode is unchanged.
 
 ## What's new in v0.3.23
 

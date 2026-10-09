@@ -169,13 +169,116 @@ func truncateContext(line string, center int) string {
 
 // Stage wraps the hidden char detector as a pipeline stage.
 type Stage struct {
-	categories    []string
-	excludedPaths []string
+	categories     []string
+	excludedPaths  []string
+	highSignalOnly bool
 }
 
 // NewStage creates a hidden-char pipeline stage.
 func NewStage(categories, excludedPaths []string) *Stage {
 	return &Stage{categories: categories, excludedPaths: excludedPaths}
+}
+
+// NewFastStage creates a hidden-char stage for fast mode that reports
+// zero-width/bidi/format characters only when the payload carries a
+// smuggling signal; control characters are always reported.
+func NewFastStage(categories []string) *Stage {
+	return &Stage{categories: categories, highSignalOnly: true}
+}
+
+// isInvisible reports whether r is a zero-width, bidi, format or
+// non-whitespace control rune.
+func isInvisible(r rune) bool {
+	switch r {
+	case '\u200B', '\u200C', '\u200D', '\uFEFF', '\u2060', '\u180E',
+		'\u202A', '\u202B', '\u202C', '\u202D', '\u202E',
+		'\u2066', '\u2067', '\u2068', '\u2069':
+		return true
+	case '\t', '\n', '\r':
+		return false
+	}
+	return unicode.Is(unicode.Cf, r) || unicode.IsControl(r)
+}
+
+func isASCIILetter(r rune) bool {
+	return (r >= 'a' && r <= 'z') || (r >= 'A' && r <= 'Z')
+}
+
+func isZeroWidthOrFormat(r rune) bool {
+	return isZeroWidth(r) || unicode.Is(unicode.Cf, r)
+}
+
+func isZeroWidth(r rune) bool {
+	switch r {
+	case '\u200B', '\u200C', '\u200D', '\uFEFF', '\u2060', '\u180E':
+		return true
+	}
+	return false
+}
+
+// hasSmugglingSignal reports whether content shows a real invisible-character
+// smuggling signal: a bidi override; a Unicode tag character outside a
+// well-formed subdivision flag (U+1F3F4, 1-6 tag letters/digits, U+E007F);
+// a run of 3+ invisible runes; a zero-width/format rune splitting two ASCII
+// letters; or two zero-width runes on one line that each touch an ASCII
+// letter.
+func hasSmugglingSignal(content string) bool {
+	p2, p1 := rune(-1), rune(-1)
+	run, flagLen := 0, -1 // flagLen >= 0 while inside a black-flag tag sequence
+	lineZWLetter := 0
+	for _, r := range content {
+		if r == '\u202D' || r == '\u202E' {
+			return true
+		}
+		flagTag := false
+		if r >= 0xE0000 && r <= 0xE007F {
+			if flagLen < 0 {
+				return true
+			}
+			if r == 0xE007F {
+				if flagLen == 0 {
+					return true
+				}
+				flagLen = -1
+			} else if flagLen >= 6 || !((r >= 0xE0030 && r <= 0xE0039) || (r >= 0xE0061 && r <= 0xE007A)) {
+				return true
+			} else {
+				flagLen++
+			}
+			flagTag = true
+		} else {
+			if flagLen > 0 {
+				return true // unterminated flag tag sequence
+			}
+			flagLen = -1
+			if r == 0x1F3F4 {
+				flagLen = 0
+			}
+		}
+		if r == '\n' {
+			lineZWLetter = 0
+		}
+		if isInvisible(r) && !flagTag {
+			run++
+			if run >= 3 {
+				return true
+			}
+		} else {
+			run = 0
+		}
+		if isZeroWidthOrFormat(p1) && isASCIILetter(p2) && isASCIILetter(r) {
+			return true
+		}
+		// Count each zero-width rune once when it touches an ASCII letter.
+		if (isZeroWidth(r) && isASCIILetter(p1)) || (isZeroWidth(p1) && isASCIILetter(r) && !isASCIILetter(p2)) {
+			lineZWLetter++
+			if lineZWLetter >= 2 {
+				return true
+			}
+		}
+		p2, p1 = p1, r
+	}
+	return flagLen > 0
 }
 
 // Name returns the stage name.
@@ -199,11 +302,19 @@ func (s *Stage) Run(ctx context.Context, target string, input *report.Report) (*
 		default:
 		}
 
+		gate := true
+		if s.highSignalOnly {
+			gate = hasSmugglingSignal(string(content))
+		}
 		lines := strings.Split(string(content), "\n")
 		for lineIdx, line := range lines {
 			col := 0
 			for _, r := range line {
 				if cat, name, ok := det.IsSuspicious(r); ok {
+					if !gate && (cat == "zero_width" || cat == "bidi" || cat == "format") {
+						col += utf8.RuneLen(r)
+						continue
+					}
 					sev := report.SeverityHigh
 					if cat == "whitespace" {
 						sev = report.SeverityLow
