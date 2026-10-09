@@ -264,6 +264,15 @@ func (e *Engine) LoadBuiltins() {
 			},
 		},
 		{
+			Name:        "task_switch_announcement",
+			Description: "Praise or override followed by an announcement of a new or next task/test (en/de)",
+			Severity:    report.SeverityHigh,
+			Patterns: []string{
+				`(?i)(\b(well|superbly|nicely)\s+done\b|\bgood\s+job\b|\b(great|excellent|perfect|very\s+good)\s*[.!]|\bpassed\s+the\s+\w+\s+(test|task|round)\b|\b(forget|ignore|disregard)\b)[^\n]{0,120}?(\b(now|here)\s+(there\s+)?(comes?|follows?|is|are)|\bnext\s+up\s+(is|are))\s+((a|an|the|your|my)\s+)?(brand\s+)?(new|next|second|third|2nd|3rd|real|actual|final|last|other)\s+(task|test|assignment|instruction|order|job|challenge)s?\b`,
+				`(?i)(\b(sehr\s+gut|gut\s+gemacht|super|toll|prima|ausgezeichnet|perfekt|bestanden)\b|\b(vergiss|vergessen\s+sie|ignorier\w*)\b)[^\n]{0,120}?\b(jetzt|nun|hier)\s+(kommt|kommen|folgt|folgen|ist)\s+((eine?|die|der|den|deine?|ihre?)\s+)?(neue[nrs]?|nächste[nr]?|naechste[nr]?|zweite[nr]?|dritte[nr]?|eigentliche[nr]?|richtige[nr]?|letzte[nr]?|andere[nr]?)\s+(aufgaben?|test|anweisung(en)?|auftrag|befehl)\b`,
+			},
+		},
+		{
 			Name:        "chat_template_boundary",
 			Description: "Fake chat-template special token or forged role-boundary tag",
 			Severity:    report.SeverityHigh,

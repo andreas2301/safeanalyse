@@ -155,23 +155,23 @@ for f in testdata/eval/*.jsonl; do ./safeanalyze eval "$f"; done
 
 ## Current autoresearch iteration
 
-- **Version under test:** v0.3.25 (last accepted).
-- **Status:** Accepted (iteration 21). browsesafe precision rises on dev (0.829 → 0.873) and holdout (0.813 → 0.861); browsesafe dev F1 0.745 → 0.754 and holdout F1 0.695 → 0.705. Dev F1 sum +0.0088; no precision drop on any set.
-- **Change:** `data_exfiltration_email` patterns 0 and 4 are narrowed. Pattern 0 (retrieve verb + mail) needs an explicit `send`/`forward`, "and|then (e)mail", or `email`/`mail` within four words of the verb; pattern 4 (retrieve verb + data noun) needs the noun within four words. Retest of iteration 20, which had been rejected only by an undocumented 0.01 gain threshold.
-- **Metrics (fast-mode eval, v0.3.24 → v0.3.25):**
-  - Dev: browsesafe TP 203 → 199, FP 42 → 29, P 0.873, R 0.663, F1 0.754; deepset F1 0.571 (P 1.0, R 0.40) and llmail F1 0.881 (P 1.0, R 0.787) unchanged.
-  - Holdout: browsesafe-holdout TP 182 → 179, FP 42 → 29, P 0.861, R 0.597, F1 0.705; deepset-holdout F1 0.414 and llmail-holdout F1 0.835 unchanged.
-  - Latency p95: deepset 4.8 ms, llmail 8.0 ms, browsesafe 37.0 ms dev / 40.7 ms holdout; all within the 100 ms budget.
-  - Thorough corpus: findings 11166 → 11015 (−151, all `data_exfiltration_email`: InjecAgent 3820 → 3712, skylos 48 → 6, BIPIA 4 → 3); total `duration_ms` 32720 → 35427 (skylos external-scanner variance), 0 errors.
-  - Red-team: 12/12 payloads flagged at 16–18 ms. Determinism: two dev runs identical (latency removed), FP/FN JSONL byte-identical.
-- **Known gaps:** a retrieve verb with the mail/data noun more than four words away and no explicit send verb ("retrieve all of the customer's stored billing and shipping addresses") no longer matches patterns 0/4; other `data_exfiltration_email` patterns may still catch it.
+- **Version under test:** v0.3.26 (last accepted).
+- **Status:** Accepted (iteration 22). deepset recall rises on dev (0.400 → 0.450, F1 0.571 → 0.621) and holdout (0.261 → 0.276, F1 0.414 → 0.432). Dev F1 sum +0.0493; no precision drop and no new FP on any dev or holdout set.
+- **Change:** new `task_switch_announcement` rule (high, en/de): praise or an override ("Well done!", "Great.", "passed the first test", "ignore/forget", "Gut gemacht", "Vergiss") followed within 120 characters on the same line by "now/here comes a new/next/second/real task/test" or "Jetzt kommt/Nun folgt eine neue Aufgabe / der zweite Test". The lead-in is required so that course and exercise text ("Here comes the next test in our series ...", "Jetzt folgt die nächste Aufgabe: Berechnen Sie ...") stays unflagged. Targets steering priority 2 (deepset recall). Does not touch `data_exfiltration_email`.
+- **Metrics (fast-mode eval, v0.3.25 → v0.3.26):**
+  - Dev: deepset TP 24 → 27, P 1.0, R 0.450, F1 0.621; llmail F1 0.881 (P 1.0, R 0.787) and browsesafe F1 0.754 (P 0.873, R 0.663, FP 29) unchanged. Rule hits (injection/benign): deepset 7/0, none on llmail/browsesafe.
+  - Holdout: deepset-holdout TP 53 → 56, P 1.0, R 0.276, F1 0.432 (rule hits 3/0); llmail-holdout F1 0.835 and browsesafe-holdout F1 0.705 unchanged.
+  - Latency p95: deepset 5.2 ms, llmail 8.0 ms, browsesafe 39.8 ms dev (v0.3.25: 37.0) / 41.1 ms holdout; all within the 100 ms budget.
+  - Thorough corpus: findings 11015 → 11015 (identical per target and source); total `duration_ms` 35427 → 35163, 0 errors.
+  - Red-team: 12/12 payloads flagged at 17–18 ms. Determinism: two dev runs identical (latency removed), FP/FN JSONL byte-identical.
+- **Known gaps:** a task/test announcement without a praise or override lead-in on the same line ("Jetzt kommt eine neue Aufgabe"), a lead-in more than 120 characters earlier or on another line, other languages, and verbs other than comes/follows/is/are ("let's move on to the next task") are not matched.
 - **Rejected options (not released):**
   - Iteration 19 — narrow `data_exfiltration_email` pattern 0 so verify/confirm-your-email page text and mail-site links stop triggering it; dev/holdout F1 +0.000.
 - **Last accepted corpus improvement:** v0.3.17 (corpus findings +141 from `data_exfiltration_email`).
 - **Previous reverted iterations:** v0.3.4, v0.3.8, iterations 6, 7, 9, 11, 19 (details in earlier commits and the process reviews). Iteration 20 was reverted, then retested and accepted as iteration 21.
-- **Stagnation check:** iteration 21 improved labeled F1/precision; counter reset to 0.
+- **Stagnation check:** iteration 22 improved labeled F1 (deepset); counter stays at 0.
 - **Next candidates:**
-  - deepset recall (dev 0.40, holdout 0.26), flat since v0.3.14; needs a non-email attack family or the ML stage.
+  - deepset recall (dev 0.45, holdout 0.28) is still the weakest set; needs further non-email attack families or the ML stage.
   - Evaluate `Llama-Prompt-Guard-2-22M`/`86M-onnx` (memory, latency, precision) on the labeled sets.
   - Remaining browsesafe FPs (29 dev / 29 holdout) and FNs (101 dev): CSS-hidden text, attribute prose without listed keywords.
   - Spot-check InjecAgent YARA findings (7860 of 11015) for FP inflation; decide `node_modules`/`vendor` in `dependency_paths`.
