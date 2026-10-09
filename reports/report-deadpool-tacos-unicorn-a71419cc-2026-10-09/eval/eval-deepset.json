@@ -1,0 +1,48 @@
+{
+  "metadata": {
+    "dataset": "testdata/eval/deepset.jsonl",
+    "duration_ms": 523,
+    "safeanalyze_version": "0.3.25",
+    "scan_mode": "fast"
+  },
+  "tp": 27,
+  "fp": 0,
+  "tn": 56,
+  "fn": 33,
+  "samples": 116,
+  "precision": 1,
+  "recall": 0.45,
+  "f1": 0.6206896551724138,
+  "by_source": {
+    "deepset": {
+      "tp": 27,
+      "fp": 0,
+      "tn": 56,
+      "fn": 33,
+      "samples": 116,
+      "precision": 1,
+      "recall": 0.45,
+      "f1": 0.6206896551724138
+    }
+  },
+  "rule_hits": {
+    "multilingual_prompt_injection": {
+      "injection": 9,
+      "benign": 0
+    },
+    "persona_hijack": {
+      "injection": 5,
+      "benign": 0
+    },
+    "prompt_injection_comment": {
+      "injection": 10,
+      "benign": 0
+    },
+    "task_switch_announcement": {
+      "injection": 7,
+      "benign": 0
+    }
+  },
+  "latency_p50_ms": 4.464,
+  "latency_p95_ms": 5.214
+}

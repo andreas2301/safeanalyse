@@ -1,0 +1,92 @@
+{
+  "metadata": {
+    "dataset": "testdata/eval/browsesafe-holdout.jsonl",
+    "duration_ms": 10794,
+    "safeanalyze_version": "0.3.25",
+    "scan_mode": "fast"
+  },
+  "tp": 179,
+  "fp": 29,
+  "tn": 271,
+  "fn": 121,
+  "samples": 600,
+  "precision": 0.8605769230769231,
+  "recall": 0.5966666666666667,
+  "f1": 0.7047244094488189,
+  "by_source": {
+    "browsesafe": {
+      "tp": 179,
+      "fp": 29,
+      "tn": 271,
+      "fn": 121,
+      "samples": 600,
+      "precision": 0.8605769230769231,
+      "recall": 0.5966666666666667,
+      "f1": 0.7047244094488189
+    }
+  },
+  "rule_hits": {
+    "account_access_request": {
+      "injection": 14,
+      "benign": 8
+    },
+    "backdoor_indicator": {
+      "injection": 0,
+      "benign": 2
+    },
+    "data_exfiltration_email": {
+      "injection": 119,
+      "benign": 12
+    },
+    "hidden_attribute_email": {
+      "injection": 47,
+      "benign": 0
+    },
+    "hidden_char_bidi": {
+      "injection": 1,
+      "benign": 0
+    },
+    "hidden_char_control": {
+      "injection": 4,
+      "benign": 0
+    },
+    "hidden_char_format": {
+      "injection": 2,
+      "benign": 1
+    },
+    "hidden_char_zero_width": {
+      "injection": 5,
+      "benign": 3
+    },
+    "indirect_prompt_injection": {
+      "injection": 1,
+      "benign": 0
+    },
+    "multilingual_prompt_injection": {
+      "injection": 12,
+      "benign": 0
+    },
+    "obfuscated_javascript": {
+      "injection": 0,
+      "benign": 1
+    },
+    "output_constraint": {
+      "injection": 1,
+      "benign": 4
+    },
+    "persona_hijack": {
+      "injection": 1,
+      "benign": 0
+    },
+    "prompt_injection_comment": {
+      "injection": 104,
+      "benign": 2
+    },
+    "template_injection": {
+      "injection": 2,
+      "benign": 0
+    }
+  },
+  "latency_p50_ms": 14.795,
+  "latency_p95_ms": 41.099
+}
