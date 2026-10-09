@@ -261,6 +261,8 @@ func (e *Engine) LoadBuiltins() {
 				`(?i)\bich\s+(möchte|will|wünsche\s+mir),?\s+dass\s+(sie|du)\s+(als|wie)\s+((ein|eine|einen|mein|meine)\s+)?\pL[\pL-]*\s+(agier|auftr|fungier|handel|tätig)`,
 				`(?i)\b(quiero|necesito)\s+que\s+(actúes|actues|actúe|actue|te\s+comportes|se\s+comporte)\s+como\b`,
 				`(?i)\bje\s+(veux|voudrais)\s+que\s+((tu\s+agisses|vous\s+agissiez)\s+(comme|en\s+tant\s+que)\b|(tu\s+joues|vous\s+jouiez)\s+le\s+rôle\b)`,
+				`(?i)(^|[.!?:;,\n"]\s*|\byou\s+((must|will|shall|should|need\s+to|have\s+to)\s+)?(always\s+)?|\b(always|please)\s+)(stay|remain|keep)\s+in[\s-]character(\s*$|\s*[^\s\pL]|\s+(as|no|at|throughout|until|for|whatever|regardless|even|and|while|during|from|now|or|always|if|when|in|with|unless|forever|anymore|again|under|but|because|so|the|all|every)\b)|\b(always|forever)\s+(stay|remain|keep)\s+in\s+(their|your)\s+(roles?|characters?|personas?)(\s*$|\s*[^\s\pL]|\s+(without|and|no|at|even|throughout|whatever|regardless|until|while|the|all|every)\b)|\b(without|never|don['’]?t|do\s+not|must\s+not)\s+(ever\s+)?(even\s+)?(for\s+a\s+moment\s+)?break(ing)?\s+(out\s+of\s+)?((the|their|your)\s+)?(character|role|persona)s?(\s*$|\s*[^\s\pL]|\s+(as|no|at|throughout|until|for|whatever|regardless|even|and|while|during|from|now|or|always|if|when|in|with|unless|forever|anymore|again|under|but|because|so|the|all|every)\b)`,
+				`(?i)\b(verharr|bleib)\w*\s+(stets|immer|jederzeit)\s+in\s+(ihren|ihrer|deiner|deinen|eurer|euren)\s+(Rollen?|Charakter\w*|Figur\w*)(\s*$|\s*[^\s\pL]|\s+(und|ohne|egal|bis|während|auch|immer|stets)\b)|\baus\s+(ihren|ihrer|deiner|deinen|eurer|euren)\s+(Rollen?|Charakter\w*|Figur\w*)\s+(auszubrechen|ausbrechen|herauszufallen|zu\s+fallen|fallen)\b`,
 			},
 		},
 		{
