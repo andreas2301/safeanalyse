@@ -456,6 +456,9 @@ func (e *Engine) LoadBuiltins() {
 				`(?i)\bdo\s+not\s+(mention|include|add|say|write|display|show)\b.{0,30}\b(warning|disclaimer|note|caveat|apology)\b`,
 				`(?i)\bno\s+(warning|disclaimer|apology|explanation|preamble|introduction)\b`,
 				`(?i)\b(start|begin)\s+(your\s+)?(response|answer|reply)\s+(with|by)\b`,
+				`(?i)\blet['’]?s\s+play\s+a\s+game\s+(where|in\s+which)\s+(you|u)\s+((must|will|have\s+to|can|should)\s+)?(only\s+)?(answer|respond|reply|say|pretend|act)\b`,
+				`(?i)(\b(you|u)\s+(must|will|shall|have\s+to|need\s+to)\s+(only\s+)?|\bfrom\s+now\s+on,?\s+((you|u)\s+(must|will|shall)\s+)?)(answer|respond\s+to|reply\s+to)\s+(every|each|any)\s+(of\s+my\s+)?(questions?|messages?|prompts?|quer(y|ies)|requests?)\s+(only\s+)?with\s+(only\s+)?(the\s+(word|phrase|sentence|text|string)\s+)?["'“„«]`,
+				`(?i)\b(if|when|whenever)\s+i\s+say\s+\S.{0,40}?\s+(you|u)\s+(say|answer|respond|reply|write)\s+(with\s+)?["'“„«]|\bsi\s+(yo\s+)?digo\s+\S.{0,40}?\s+(t[uú]\s+)?(dices|respondes|contestas|escribes)\s+["'“„«]|\bwenn\s+ich\s+\S.{0,40}?\s+sage,?\s+(sagst|antwortest|schreibst)\s+du\s+["'“„«]`,
 			},
 		},
 		{

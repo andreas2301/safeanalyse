@@ -155,23 +155,23 @@ for f in testdata/eval/*.jsonl; do ./safeanalyze eval "$f"; done
 
 ## Current autoresearch iteration
 
-- **Version under test:** v0.3.29 (last accepted).
-- **Status:** Accepted (iteration 25). browsesafe precision rises on dev 0.873 → 0.884 (FP 29 → 26, F1 0.754 → 0.758) and holdout 0.861 → 0.869 (FP 29 → 27, F1 0.705 → 0.708) with no browsesafe TP lost. Dev F1 sum +0.0043. llmail-holdout loses one TP (F1 0.835 → 0.833, precision 1.0), within the single-sample holdout tolerance.
-- **Change:** `data_exfiltration_email` pattern 0, third alternative only (retrieve verb `retrieve`/`get`/`fetch`/`extract`/`download`/`access`/`view`/`check` with `email`/`mail` within four words): the verb must now open an instruction, i.e. follow the start of text, a newline, `.`/`!`/`?`/`:`/`;`/`,`, a bullet (`*`/`-`/`•`) or `>`, optionally after quotes/brackets, one softener (please, kindly, now, then, also, and, first, next, "go ahead and") or a short "... you to" lead-in. The send/forward and "and/then (e)mail" alternatives are unchanged. Narrows the rule only. Targets steering priority 1 (browsesafe precision); built on dev-set evidence only.
-- **Metrics (fast-mode eval, v0.3.28 → v0.3.29):**
-  - Dev: browsesafe TP 199, FP 29 → 26, P 0.884, R 0.663, F1 0.758 (`data_exfiltration_email` benign hits 9 → 5); deepset F1 0.696 and llmail F1 0.881 unchanged (FP 0).
-  - Holdout: browsesafe-holdout TP 179, FP 29 → 27, P 0.869, F1 0.708; llmail-holdout TP 215 → 214, R 0.713, F1 0.833 (FP 0); deepset-holdout F1 0.468 unchanged.
-  - Latency p95: deepset 6.9 ms, llmail 8.5 ms, browsesafe 43.7 ms dev (v0.3.28: 41.0; run 2: 42.8) / 44.4 ms holdout (v0.3.28: 39.8); all within the 100 ms budget.
-  - Thorough corpus: findings 11015 → 11015 (identical per target and source); total `duration_ms` 32769 → 36896 (external-scanner variance), 0 errors.
-  - Red-team: 12/12 payloads flagged at 18–20 ms. Determinism: two dev runs identical (latency removed), FP/FN JSONL byte-identical.
-- **Known gaps:** a retrieve-and-mail instruction in the middle of a sentence without a listed softener or "you to" lead-in ("so the bot should check my email") is now caught only by the other `data_exfiltration_email` alternatives; one llmail-holdout injection is no longer flagged.
+- **Version under test:** v0.3.30 (last accepted).
+- **Status:** Accepted (iteration 26). deepset dev recall rises 0.533 → 0.600 (TP 32 → 36, F1 0.696 → 0.750, FP 0). Dev F1 sum +0.0543. All holdout sets unchanged; no precision change on any set.
+- **Change:** three new patterns in the existing `output_constraint` rule for output-hijack game rules: (a) "let's play a game where/in which you (must/will/...) (only) answer/respond/reply/say/pretend/act"; (b) "answer/respond to/reply to every/each/any question/message/prompt/query/request ... with" a quoted reply, only after "you must/will/shall/have to/need to" or "from now on"; (c) call-and-response "if/when/whenever I say X, you say "Y"" in English, Spanish ("si yo digo X, tú dices") and German ("wenn ich X sage, sagst du"), with the reply starting with a quote character. Targets steering priority 2 (deepset recall, refusal/output suppression); built on dev-set evidence only. No new rule name; `data_exfiltration_email` untouched.
+- **Metrics (fast-mode eval, v0.3.29 → v0.3.30):**
+  - Dev: deepset TP 32 → 36, R 0.600, F1 0.750, FP 0 (`output_constraint` hits 0/0 → 4/0); llmail F1 0.881 and browsesafe F1 0.758 unchanged (FP 0 / 26).
+  - Holdout: deepset-holdout F1 0.468, llmail-holdout F1 0.833, browsesafe-holdout F1 0.708, all unchanged.
+  - Latency p95: deepset 5.6 ms, llmail 8.5 ms, browsesafe 45.8 ms dev (v0.3.29: 43.7; run 2: 45.2) / 46.1 ms holdout (v0.3.29: 44.4); all within the 100 ms budget.
+  - Thorough corpus: findings 11015 → 11015 (identical per target and source); total `duration_ms` 36896 → 37217 (external-scanner variance), 0 errors.
+  - Red-team: 12/12 payloads flagged at 18–19 ms. Determinism: two dev runs identical (latency removed), FP/FN JSONL byte-identical.
+- **Known gaps:** game rules with an unquoted reply ("when I say jump, you say how high"), answer-every-question instructions without a "you must"/"from now on" lead-in, and call-and-response rules in other languages are not matched. The gain is deepset dev only; no holdout set moved.
 - **Rejected options (not released):**
   - Iteration 19 — narrow `data_exfiltration_email` pattern 0 so verify/confirm-your-email page text and mail-site links stop triggering it; dev/holdout F1 +0.000.
 - **Last accepted corpus improvement:** v0.3.17 (corpus findings +141 from `data_exfiltration_email`).
 - **Previous reverted iterations:** v0.3.4, v0.3.8, iterations 6, 7, 9, 11, 19 (details in earlier commits and the process reviews). Iteration 20 was reverted, then retested and accepted as iteration 21.
-- **Stagnation check:** iteration 25 improved labeled F1/precision (browsesafe dev and holdout); counter stays at 0.
+- **Stagnation check:** iteration 26 improved labeled F1 (deepset dev); counter stays at 0.
 - **Next candidates:**
-  - deepset recall (dev 0.53, holdout 0.31) is still the weakest set; needs further non-email attack families or the ML stage.
+  - deepset recall (dev 0.60, holdout 0.31) is still the weakest set; the dev/holdout gap is growing, so prefer attack families that generalize over sample-shaped phrasings.
   - Evaluate `Llama-Prompt-Guard-2-22M`/`86M-onnx` (memory, latency, precision) on the labeled sets.
   - Remaining browsesafe FPs (26 dev / 27 holdout) and FNs (101 dev): CSS-hidden text, attribute prose without listed keywords.
   - Spot-check InjecAgent YARA findings (7860 of 11015) for FP inflation; decide `node_modules`/`vendor` in `dependency_paths`.
