@@ -155,26 +155,26 @@ for f in testdata/eval/*.jsonl; do ./safeanalyze eval "$f"; done
 
 ## Current autoresearch iteration
 
-- **Version under test:** v0.3.24 (last accepted; loop stopped at stagnation after iterations 19 and 20).
-- **Status:** Accepted (iteration 18). browsesafe precision rises on dev (0.733 → 0.829) and holdout (0.702 → 0.813); browsesafe dev F1 0.715 → 0.745 and holdout F1 0.671 → 0.695. Iterations 19 and 20 were reverted for no gain, so the loop stopped; process review round 3 is done (see below).
-- **Change:** in fast mode only (`inspect`/`eval`), the `hiddenchars` stage reports zero-width, bidi and format characters only when the payload shows a smuggling signal. Thorough mode is unchanged.
-- **Metrics (fast-mode eval, v0.3.23 → v0.3.24):**
-  - Dev: browsesafe TP 209 → 203, FP 76 → 42, P 0.829, R 0.677, F1 0.745; deepset F1 0.571 (P 1.0, R 0.40) and llmail F1 0.881 (P 1.0, R 0.787) unchanged.
-  - Holdout: browsesafe-holdout TP 193 → 182, FP 82 → 42, P 0.813, R 0.607, F1 0.695; deepset-holdout TP 54 → 53, FP 2 → 0, P 1.0, F1 0.4170 → 0.4141 (small F1 drop, precision up); llmail-holdout F1 0.835 unchanged.
-  - Latency p95: deepset 5.0 ms, llmail 6.9 ms, browsesafe 35.9 ms dev / 37.1 ms holdout; all within the 100 ms budget.
-  - Thorough corpus: findings 11166 → 11166, identical per target and per source; total `duration_ms` 33232 → 34850 (external-scanner variance), 0 errors.
-  - Red-team: 12/12 payloads flagged at 17–19 ms. Determinism: two dev runs identical (latency removed), FP/FN JSONL byte-identical.
+- **Version under test:** v0.3.25 (last accepted).
+- **Status:** Accepted (iteration 21). browsesafe precision rises on dev (0.829 → 0.873) and holdout (0.813 → 0.861); browsesafe dev F1 0.745 → 0.754 and holdout F1 0.695 → 0.705. Dev F1 sum +0.0088; no precision drop on any set.
+- **Change:** `data_exfiltration_email` patterns 0 and 4 are narrowed. Pattern 0 (retrieve verb + mail) needs an explicit `send`/`forward`, "and|then (e)mail", or `email`/`mail` within four words of the verb; pattern 4 (retrieve verb + data noun) needs the noun within four words. Retest of iteration 20, which had been rejected only by an undocumented 0.01 gain threshold.
+- **Metrics (fast-mode eval, v0.3.24 → v0.3.25):**
+  - Dev: browsesafe TP 203 → 199, FP 42 → 29, P 0.873, R 0.663, F1 0.754; deepset F1 0.571 (P 1.0, R 0.40) and llmail F1 0.881 (P 1.0, R 0.787) unchanged.
+  - Holdout: browsesafe-holdout TP 182 → 179, FP 42 → 29, P 0.861, R 0.597, F1 0.705; deepset-holdout F1 0.414 and llmail-holdout F1 0.835 unchanged.
+  - Latency p95: deepset 4.8 ms, llmail 8.0 ms, browsesafe 37.0 ms dev / 40.7 ms holdout; all within the 100 ms budget.
+  - Thorough corpus: findings 11166 → 11015 (−151, all `data_exfiltration_email`: InjecAgent 3820 → 3712, skylos 48 → 6, BIPIA 4 → 3); total `duration_ms` 32720 → 35427 (skylos external-scanner variance), 0 errors.
+  - Red-team: 12/12 payloads flagged at 16–18 ms. Determinism: two dev runs identical (latency removed), FP/FN JSONL byte-identical.
+- **Known gaps:** a retrieve verb with the mail/data noun more than four words away and no explicit send verb ("retrieve all of the customer's stored billing and shipping addresses") no longer matches patterns 0/4; other `data_exfiltration_email` patterns may still catch it.
 - **Rejected options (not released):**
   - Iteration 19 — narrow `data_exfiltration_email` pattern 0 so verify/confirm-your-email page text and mail-site links stop triggering it; dev/holdout F1 +0.000.
-  - Iteration 20 — dev F1 +0.009, holdout F1 +0.010, no precision drop; scored below the loop's gain threshold.
 - **Last accepted corpus improvement:** v0.3.17 (corpus findings +141 from `data_exfiltration_email`).
-- **Previous reverted iterations:** v0.3.4, v0.3.8, iterations 6, 7, 9, 11, 19, 20 (details in earlier commits and the process reviews).
-- **Stagnation check:** 2 consecutive no-gain iterations (19, 20). Loop stopped.
+- **Previous reverted iterations:** v0.3.4, v0.3.8, iterations 6, 7, 9, 11, 19 (details in earlier commits and the process reviews). Iteration 20 was reverted, then retested and accepted as iteration 21.
+- **Stagnation check:** iteration 21 improved labeled F1/precision; counter reset to 0.
 - **Next candidates:**
   - deepset recall (dev 0.40, holdout 0.26), flat since v0.3.14; needs a non-email attack family or the ML stage.
   - Evaluate `Llama-Prompt-Guard-2-22M`/`86M-onnx` (memory, latency, precision) on the labeled sets.
-  - Remaining browsesafe FPs (42 dev / 42 holdout) and FNs (97 dev): CSS-hidden text, attribute prose without listed keywords.
-  - Spot-check InjecAgent YARA findings (7968 of 11166) for FP inflation; decide `node_modules`/`vendor` in `dependency_paths`.
+  - Remaining browsesafe FPs (29 dev / 29 holdout) and FNs (101 dev): CSS-hidden text, attribute prose without listed keywords.
+  - Spot-check InjecAgent YARA findings (7860 of 11015) for FP inflation; decide `node_modules`/`vendor` in `dependency_paths`.
 
 ## Process review 2026-10-02
 

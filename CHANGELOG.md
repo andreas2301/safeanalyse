@@ -5,6 +5,25 @@ All notable functional and non-functional changes to `safeanalyze` are documente
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.3.25] — 2026-10-09
+
+### Functional
+
+- **Tighter `data_exfiltration_email` retrieve patterns:**
+  - Pattern 0 (retrieve verb + mail): `retrieve`/`get`/`fetch`/`extract`/`download`/`access`/`view`/`check` now matches only when followed within 60 characters by `send` or `forward`, or by "and|then (e)mail", or when `email`/`mail` follows within four words ("check my email", "access the user's inbox mail"). Previously any `email`/`mail`/`send`/`forward` within 60 characters matched.
+  - Pattern 4 (retrieve verb + data noun): `retrieve`/`get`/`fetch`/`extract` now needs `address(es)`/`payment`/`history`/`balance`/`messages`/`contacts`/`files` within four words instead of within 80 characters.
+  - Unflagged now: "Get started with our API. Contact us by email for an enterprise plan.", "View our privacy policy. Questions? Email support.", "Get the latest version of the app. Your order history is in your account.", Go error strings such as `get(ctx) ... "lookup files: %w"`.
+  - Why: most remaining browsesafe dev FPs were navigation or footer text where a retrieve verb and a mail/data word happened to fall within the old character window.
+
+### Non-functional
+
+- Fast-mode eval, dev sets (v0.3.24 → v0.3.25): browsesafe TP 203 → 199, FP 42 → 29 (precision 0.829 → 0.873, recall 0.677 → 0.663, F1 0.745 → 0.754); deepset and llmail unchanged (F1 0.571 and 0.881, FP 0). `data_exfiltration_email` hits (injection/benign): browsesafe 140/24 → 131/9, llmail 197/0 → 195/0 (no TP lost).
+- Fast-mode eval, holdout sets: browsesafe-holdout TP 182 → 179, FP 42 → 29 (precision 0.813 → 0.861, recall 0.607 → 0.597, F1 0.695 → 0.705); deepset-holdout and llmail-holdout unchanged (F1 0.414 and 0.835, FP 0).
+- Latency p95: browsesafe dev 37.3 → 37.0 ms; deepset and llmail within noise.
+- Thorough corpus: findings 11166 → 11015 (−151, all `data_exfiltration_email`): InjecAgent 3820 → 3712, skylos 48 → 6 (code noise), BIPIA 4 → 3; other rules and targets unchanged, 0 errors.
+- Retest of the iteration-20 change, which was previously rejected only by an undocumented minimum-gain threshold. Built on dev-set evidence only.
+- Added unit cases to `TestDataExfiltrationEmailForward`.
+
 ## [0.3.24] — 2026-10-09
 
 ### Functional

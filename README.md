@@ -1,4 +1,4 @@
-# safeanalyze v0.3.24
+# safeanalyze v0.3.25
 
 A Go CLI tool that sanitizes and scans untrusted code repositories **before** feeding them to AI assistants. Implements defense-in-depth inspired by [Zones of Distrust](https://github.com/bluvibytes/zone-of-distrust).
 
@@ -12,6 +12,10 @@ Prompt injection via malicious code is real. A repo can contain:
 - Secrets or malware mixed with legitimate source
 
 **safeanalyze** runs a security pipeline so AI assistants never see raw, unverified code.
+
+## What's new in v0.3.25
+
+- **Tighter retrieve-and-mail exfiltration matching** — two `data_exfiltration_email` patterns are narrowed. A retrieve verb (`retrieve`/`get`/`fetch`/`extract`/`download`/`access`/`view`/`check`) now needs an explicit `send`/`forward` within 60 characters, "and/then (e)mail", or `email`/`mail` within four words ("check my email", "fetch the invoice then email it"); the retrieve-a-data-noun pattern needs the noun (address, payment, history, balance, messages, contacts, files) within four words of the verb. Page text such as "Get started ... Contact us by email" and "View our privacy policy. Questions? Email support." no longer flags. browsesafe dev FPs drop 42 → 29 (precision 0.829 → 0.873, F1 0.745 → 0.754); holdout FPs 42 → 29 (F1 0.695 → 0.705).
 
 ## What's new in v0.3.24
 
@@ -259,7 +263,7 @@ Pure-Go regex rule engine with embedded detection patterns. A required-literal p
 | `credential_hardcode` | medium | password=, api_key=, secret=, AWS keys |
 | `suspicious_imports` | medium | subprocess, child_process, urllib requests |
 | `data_exfiltration` | high | fetch to external URLs, axios post, XMLHttpRequest |
-| `data_exfiltration_email` | high | "retrieve ... and email to ...", forward/transmit/relay of sensitive data or send/forward of a summary/result to an email address, `send_email`-style tool calls and `To:`/`Body:` key/value sends (including obfuscated `at`/`[at]`/`＠` addresses after a recipient key), notify/inform/ping/reply/convey/communicate of a confirmation, summary or secret to an address, piped `| mail -s` |
+| `data_exfiltration_email` | high | "retrieve ... and email/send/forward ..." (retrieve verb with an explicit send, or the mail/data noun within four words), forward/transmit/relay of sensitive data or send/forward of a summary/result to an email address, `send_email`-style tool calls and `To:`/`Body:` key/value sends (including obfuscated `at`/`[at]`/`＠` addresses after a recipient key), notify/inform/ping/reply/convey/communicate of a confirmation, summary or secret to an address, piped `| mail -s` |
 | `hidden_attribute_email` | high | Email address plus override/instruction or sensitive-data prose inside a non-rendered HTML attribute (`aria-label`, `title`, `alt`, `value`, `data-*`), e.g. `data-directive="OVERRIDE: ... to debug@..."` |
 | `account_access_request` | medium | "access my account", "retrieve my payment history" |
 | `output_constraint` | medium | "output only", "do not mention warnings", "no disclaimer" |
