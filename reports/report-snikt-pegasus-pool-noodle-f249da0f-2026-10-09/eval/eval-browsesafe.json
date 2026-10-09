@@ -1,0 +1,84 @@
+{
+  "metadata": {
+    "dataset": "testdata/eval/browsesafe.jsonl",
+    "duration_ms": 9955,
+    "safeanalyze_version": "0.3.24",
+    "scan_mode": "fast"
+  },
+  "tp": 203,
+  "fp": 42,
+  "tn": 258,
+  "fn": 97,
+  "samples": 600,
+  "precision": 0.8285714285714286,
+  "recall": 0.6766666666666666,
+  "f1": 0.744954128440367,
+  "by_source": {
+    "browsesafe": {
+      "tp": 203,
+      "fp": 42,
+      "tn": 258,
+      "fn": 97,
+      "samples": 600,
+      "precision": 0.8285714285714286,
+      "recall": 0.6766666666666666,
+      "f1": 0.744954128440367
+    }
+  },
+  "rule_hits": {
+    "account_access_request": {
+      "injection": 16,
+      "benign": 12
+    },
+    "backdoor_indicator": {
+      "injection": 1,
+      "benign": 2
+    },
+    "credential_hardcode": {
+      "injection": 1,
+      "benign": 0
+    },
+    "data_exfiltration_email": {
+      "injection": 140,
+      "benign": 24
+    },
+    "hidden_attribute_email": {
+      "injection": 44,
+      "benign": 0
+    },
+    "hidden_char_control": {
+      "injection": 3,
+      "benign": 3
+    },
+    "hidden_char_format": {
+      "injection": 2,
+      "benign": 0
+    },
+    "hidden_char_zero_width": {
+      "injection": 4,
+      "benign": 3
+    },
+    "indirect_prompt_injection": {
+      "injection": 1,
+      "benign": 0
+    },
+    "instruction_to_include_code": {
+      "injection": 0,
+      "benign": 1
+    },
+    "multilingual_prompt_injection": {
+      "injection": 10,
+      "benign": 0
+    },
+    "prompt_injection_comment": {
+      "injection": 128,
+      "benign": 1
+    },
+    "template_injection": {
+      "injection": 1,
+      "benign": 2
+    }
+  },
+  "latency_p50_ms": 14.756,
+  "latency_p95_ms": 35.866
+}
