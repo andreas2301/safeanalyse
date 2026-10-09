@@ -155,24 +155,27 @@ for f in testdata/eval/*.jsonl; do ./safeanalyze eval "$f"; done
 
 ## Current autoresearch iteration
 
-- **Version under test:** v0.3.32 (last accepted).
-- **Status:** Accepted (iteration 29). deepset dev recall rises 0.667 → 0.733 (TP 40 → 44, F1 0.800 → 0.846, FP 0). Dev F1 sum +0.0462. All holdout sets unchanged; no precision change on any set.
-- **Change:** two new patterns in the existing `output_constraint` rule. (a) Forced fallback answers with a quoted reply in English ("if you don't know (the answer), (just) say/answer/respond/reply/output (with) "Y""; a reply starting with "I " or "I'" such as "I don't know" is exempt), German ("wenn du es nicht weißt, sag (einfach) "Y"") and Spanish ("si no lo sabes, di "Y""). (b) Refusal suppression: "you are/you're/you supposed to/must/have to (always) answer/respond/reply(,) at all times/no matter what/always" followed by punctuation or end of text. Targets steering priority 2 (deepset recall); built on dev-set evidence only. No new rule name.
-- **Metrics (fast-mode eval, v0.3.31 → v0.3.32):**
-  - Dev: deepset TP 40 → 44, R 0.733, F1 0.846, FP 0; llmail F1 0.881 and browsesafe F1 0.758 unchanged (FP 0 / 26).
+- **Version under test:** v0.3.33 (last accepted).
+- **Status:** Accepted (iteration 30). deepset dev recall rises 0.733 → 0.767 (TP 44 → 46, F1 0.846 → 0.868, FP 0). Dev F1 sum +0.0218. All holdout sets unchanged; no precision change on any set.
+- **Change:** the last pattern of `prompt_injection_comment` gains a third alternative: "new instruction(s)" or "new statement" at the start of the text or after `.`/`!`/`?` plus whitespace, followed by `:`, `-`, `–` or `—`, optional please/now/just, and an override or output verb (ignore, forget, disregard, print, return, output, tell, show, reveal, say, send, repeat). Before, "new instructions:" matched only at the very start of the text and "new statement" not at all. Targets steering priority 2 (deepset recall); built on dev-set evidence only. No new rule name.
+- **Metrics (fast-mode eval, v0.3.32 → v0.3.33):**
+  - Dev: deepset TP 44 → 46, R 0.767, F1 0.868, FP 0; llmail F1 0.881 and browsesafe F1 0.758 unchanged (FP 0 / 26).
   - Holdout: deepset-holdout F1 0.468, llmail-holdout F1 0.833, browsesafe-holdout F1 0.708, all unchanged.
-  - Latency p95: deepset 6.1 ms, llmail 9.3 ms, browsesafe 48.3 ms dev (v0.3.31: 46.0; run 2: 51.0) / 45.5 ms holdout (v0.3.31: 47.1); all within the 100 ms budget.
-  - Thorough corpus: findings 11015 → 11015 (identical per target and source); total `duration_ms` 35077 → 34317 (run-to-run variance), 0 errors.
+  - Latency p95: deepset 6.6 ms, llmail 9.0 ms, browsesafe 49.8 ms dev (v0.3.32: 48.3; run 2: 46.9) / 48.4 ms holdout (v0.3.32: 45.5); all within the 100 ms budget.
+  - Thorough corpus: findings 11015 → 11015 (identical per target and source); total `duration_ms` 34317 → 32901 (run-to-run variance), 0 errors.
   - Red-team: 12/12 payloads flagged at 19–21 ms. Determinism: two dev runs identical (latency removed), FP/FN JSONL byte-identical.
-- **Known gaps:** fallback answers without a quoted reply ("if you don't know, just make something up"), other conditions ("if you can't answer", "if unsure"), French/Italian/Portuguese forms, and refusal suppression phrased without answer/respond/reply ("never refuse", "you cannot say no") are not matched by these patterns. The gain is deepset dev only; no holdout set moved.
+  - Corpus scans did not write `duration.txt` into the output dirs (only `safeanalyze.{json,md,html,sarif}`); durations come from `duration_ms` in `safeanalyze.json`.
+- **Known gaps:** "new statement"/"new instructions" mid-sentence without a preceding `.`/`!`/`?`, other markers ("new task:", "updated instructions:", "neue Anweisung:"), and verbs outside the list (e.g. "write", "list", "give") are not matched. The gain is deepset dev only (two samples of the same phrasing); no holdout set moved.
 - **Rejected options (not released):**
+  - Iteration 30 prototype with a wider "new statement" verb list (please/now/you/write/list as the follow-up word); replaced by the narrower verb list before measurement.
   - Iteration 27 — gate the bare `get` verb in `account_access_request` pattern 0 to instruction starts; browsesafe dev FP 26 → 23 (F1 0.758 → 0.762) but browsesafe-holdout TP 179 → 177 (F1 0.708 → 0.702), so reverted for a holdout regression.
   - Iteration 19 — narrow `data_exfiltration_email` pattern 0 so verify/confirm-your-email page text and mail-site links stop triggering it; dev/holdout F1 +0.000.
 - **Last accepted corpus improvement:** v0.3.17 (corpus findings +141 from `data_exfiltration_email`).
 - **Previous reverted iterations:** v0.3.4, v0.3.8, iterations 6, 7, 9, 11, 19, 27 (details in earlier commits and the process reviews). Iteration 20 was reverted, then retested and accepted as iteration 21.
-- **Stagnation check:** iteration 29 improved labeled F1 (deepset dev); counter stays at 0.
+- **Stagnation check:** iteration 30 improved labeled F1 (deepset dev); counter stays at 0.
 - **Next candidates:**
-  - deepset recall (dev 0.73, holdout 0.31) is still the weakest set; the dev/holdout gap keeps growing (iterations 26, 28 and 29 moved dev only), so prefer attack families that generalize over sample-shaped phrasings.
+  - deepset recall (dev 0.77, holdout 0.31) is still the weakest set; the dev/holdout gap keeps growing (iterations 26, 28, 29 and 30 moved dev only), so prefer attack families that generalize over sample-shaped phrasings.
+  - Fix missing `duration.txt` in corpus scan output dirs (report contents contract).
   - Evaluate `Llama-Prompt-Guard-2-22M`/`86M-onnx` (memory, latency, precision) on the labeled sets.
   - Remaining browsesafe FPs (26 dev / 27 holdout) and FNs (101 dev): CSS-hidden text, attribute prose without listed keywords.
   - Spot-check InjecAgent YARA findings (7860 of 11015) for FP inflation; decide `node_modules`/`vendor` in `dependency_paths`.
