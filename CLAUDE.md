@@ -155,24 +155,24 @@ for f in testdata/eval/*.jsonl; do ./safeanalyze eval "$f"; done
 
 ## Current autoresearch iteration
 
-- **Version under test:** v0.3.31 (last accepted).
-- **Status:** Accepted (iteration 28). deepset dev recall rises 0.600 → 0.667 (TP 36 → 40, F1 0.750 → 0.800, FP 0). Dev F1 sum +0.0500. All holdout sets unchanged; no precision change on any set.
-- **Change:** one new pattern in the existing `prompt_injection_comment` rule for English "ignore/forget/disregard what/whatever I/we/you said/wrote/told you/mentioned/... before/earlier/above/so far" and "... what's/what is before/above" overrides, including misspellings ("igmre", "ingore", "waht", "wat"). The verb must open an instruction (start of text, after `\n . ! ? : ; , > " ' * -`, or after please/now/just/and/then/so/also), a time word is required, and the short "what's/what is" form also needs a sentence end, "and" or a capitalized next word. Fills the English gap next to the existing German/Spanish/French/Portuguese/Italian "what I said before" patterns. Targets steering priority 2 (deepset recall); built on dev-set evidence only. No new rule name.
-- **Metrics (fast-mode eval, v0.3.30 → v0.3.31):**
-  - Dev: deepset TP 36 → 40, R 0.667, F1 0.800, FP 0; llmail F1 0.881 and browsesafe F1 0.758 unchanged (FP 0 / 26).
+- **Version under test:** v0.3.32 (last accepted).
+- **Status:** Accepted (iteration 29). deepset dev recall rises 0.667 → 0.733 (TP 40 → 44, F1 0.800 → 0.846, FP 0). Dev F1 sum +0.0462. All holdout sets unchanged; no precision change on any set.
+- **Change:** two new patterns in the existing `output_constraint` rule. (a) Forced fallback answers with a quoted reply in English ("if you don't know (the answer), (just) say/answer/respond/reply/output (with) "Y""; a reply starting with "I " or "I'" such as "I don't know" is exempt), German ("wenn du es nicht weißt, sag (einfach) "Y"") and Spanish ("si no lo sabes, di "Y""). (b) Refusal suppression: "you are/you're/you supposed to/must/have to (always) answer/respond/reply(,) at all times/no matter what/always" followed by punctuation or end of text. Targets steering priority 2 (deepset recall); built on dev-set evidence only. No new rule name.
+- **Metrics (fast-mode eval, v0.3.31 → v0.3.32):**
+  - Dev: deepset TP 40 → 44, R 0.733, F1 0.846, FP 0; llmail F1 0.881 and browsesafe F1 0.758 unchanged (FP 0 / 26).
   - Holdout: deepset-holdout F1 0.468, llmail-holdout F1 0.833, browsesafe-holdout F1 0.708, all unchanged.
-  - Latency p95: deepset 5.8 ms, llmail 9.2 ms, browsesafe 46.0 ms dev (v0.3.30: 45.8; run 2: 47.2) / 47.1 ms holdout (v0.3.30: 46.1); all within the 100 ms budget.
-  - Thorough corpus: findings 11015 → 11015 (identical per target and source); total `duration_ms` 37217 → 35077 (external-scanner variance), 0 errors.
-  - Red-team: 12/12 payloads flagged at 18–21 ms. Determinism: two dev runs identical (latency removed), FP/FN JSONL byte-identical.
-- **Known gaps:** overrides without a time word ("ignore what I said"), other verbs ("never mind what I said", "scratch that"), "what came/comes before" without punctuation or a capitalized next word, and non-instruction-start positions ("You can ignore what I said before ...") are not matched. The gain is deepset dev only; no holdout set moved.
+  - Latency p95: deepset 6.1 ms, llmail 9.3 ms, browsesafe 48.3 ms dev (v0.3.31: 46.0; run 2: 51.0) / 45.5 ms holdout (v0.3.31: 47.1); all within the 100 ms budget.
+  - Thorough corpus: findings 11015 → 11015 (identical per target and source); total `duration_ms` 35077 → 34317 (run-to-run variance), 0 errors.
+  - Red-team: 12/12 payloads flagged at 19–21 ms. Determinism: two dev runs identical (latency removed), FP/FN JSONL byte-identical.
+- **Known gaps:** fallback answers without a quoted reply ("if you don't know, just make something up"), other conditions ("if you can't answer", "if unsure"), French/Italian/Portuguese forms, and refusal suppression phrased without answer/respond/reply ("never refuse", "you cannot say no") are not matched by these patterns. The gain is deepset dev only; no holdout set moved.
 - **Rejected options (not released):**
   - Iteration 27 — gate the bare `get` verb in `account_access_request` pattern 0 to instruction starts; browsesafe dev FP 26 → 23 (F1 0.758 → 0.762) but browsesafe-holdout TP 179 → 177 (F1 0.708 → 0.702), so reverted for a holdout regression.
   - Iteration 19 — narrow `data_exfiltration_email` pattern 0 so verify/confirm-your-email page text and mail-site links stop triggering it; dev/holdout F1 +0.000.
 - **Last accepted corpus improvement:** v0.3.17 (corpus findings +141 from `data_exfiltration_email`).
 - **Previous reverted iterations:** v0.3.4, v0.3.8, iterations 6, 7, 9, 11, 19, 27 (details in earlier commits and the process reviews). Iteration 20 was reverted, then retested and accepted as iteration 21.
-- **Stagnation check:** iteration 28 improved labeled F1 (deepset dev); counter stays at 0.
+- **Stagnation check:** iteration 29 improved labeled F1 (deepset dev); counter stays at 0.
 - **Next candidates:**
-  - deepset recall (dev 0.67, holdout 0.31) is still the weakest set; the dev/holdout gap keeps growing (iterations 26 and 28 moved dev only), so prefer attack families that generalize over sample-shaped phrasings.
+  - deepset recall (dev 0.73, holdout 0.31) is still the weakest set; the dev/holdout gap keeps growing (iterations 26, 28 and 29 moved dev only), so prefer attack families that generalize over sample-shaped phrasings.
   - Evaluate `Llama-Prompt-Guard-2-22M`/`86M-onnx` (memory, latency, precision) on the labeled sets.
   - Remaining browsesafe FPs (26 dev / 27 holdout) and FNs (101 dev): CSS-hidden text, attribute prose without listed keywords.
   - Spot-check InjecAgent YARA findings (7860 of 11015) for FP inflation; decide `node_modules`/`vendor` in `dependency_paths`.

@@ -460,6 +460,8 @@ func (e *Engine) LoadBuiltins() {
 				`(?i)\blet['’]?s\s+play\s+a\s+game\s+(where|in\s+which)\s+(you|u)\s+((must|will|have\s+to|can|should)\s+)?(only\s+)?(answer|respond|reply|say|pretend|act)\b`,
 				`(?i)(\b(you|u)\s+(must|will|shall|have\s+to|need\s+to)\s+(only\s+)?|\bfrom\s+now\s+on,?\s+((you|u)\s+(must|will|shall)\s+)?)(answer|respond\s+to|reply\s+to)\s+(every|each|any)\s+(of\s+my\s+)?(questions?|messages?|prompts?|quer(y|ies)|requests?)\s+(only\s+)?with\s+(only\s+)?(the\s+(word|phrase|sentence|text|string)\s+)?["'“„«]`,
 				`(?i)\b(if|when|whenever)\s+i\s+say\s+\S.{0,40}?\s+(you|u)\s+(say|answer|respond|reply|write)\s+(with\s+)?["'“„«]|\bsi\s+(yo\s+)?digo\s+\S.{0,40}?\s+(t[uú]\s+)?(dices|respondes|contestas|escribes)\s+["'“„«]|\bwenn\s+ich\s+\S.{0,40}?\s+sage,?\s+(sagst|antwortest|schreibst)\s+du\s+["'“„«]`,
+				`(?i)\bif\s+(you|u)\s+(don['’]?t|do\s+not)\s+know\s*(it|that|this|the\s+answer)?\s*[,.]?\s*(just\s+|simply\s+|then\s+)?(say|answer|respond|reply|output)(\s+with)?(\s+only)?\s*:?\s*["'“„«]([^i\s"'“”„«»]|i[^\s'’])|\bwenn\s+du\s+(es\s+|das\s+|die\s+antwort\s+)?nicht\s+wei(ß|ss)t,?\s+(dann\s+)?(sag|sage|antworte|schreibe?)\s+(einfach\s+)?(mit\s+)?["'“„«]|\bsi\s+no\s+(lo\s+|la\s+respuesta\s+)?sabes,?\s+(di|responde|contesta|escribe)\s+["'“„«]`,
+				`(?i)\b(you\s+are|you['’]re|you)\s+(supposed\s+to|must|have\s+to)\s+(always\s+)?(answer|respond|reply),?\s+(at\s+all\s+times|no\s+matter\s+what|always)\s*([.!,;]|$)`,
 			},
 		},
 		{
