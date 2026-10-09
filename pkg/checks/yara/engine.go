@@ -411,7 +411,7 @@ func (e *Engine) LoadBuiltins() {
 			Description: "Natural-language request to retrieve data and send it to an email address",
 			Severity:    report.SeverityHigh,
 			Patterns: []string{
-				`(?i)\b(retrieve|get|fetch|extract|download|access|view|check)\b.{0,60}\b(send|forward)\b|\b(retrieve|get|fetch|extract|download|access|view|check)\b.{0,60}\b(and|then)\s+(e-?)?mail\b|\b(retrieve|get|fetch|extract|download|access|view|check)\s+([\w'’]+\s+){0,4}?(email|mail)\b`,
+				`(?i)\b(retrieve|get|fetch|extract|download|access|view|check)\b.{0,60}\b(send|forward)\b|\b(retrieve|get|fetch|extract|download|access|view|check)\b.{0,60}\b(and|then)\s+(e-?)?mail\b|(?:^|[\n.!?:;,*>•-])[\s"'(*]*(?:(?:please|kindly|now|then|also|and|first|next|go\s+ahead\s+and),?\s+)?(?:[\w'’\s]{0,30}?\byou\s+to\s+)?\b(retrieve|get|fetch|extract|download|access|view|check)\s+([\w'’]+\s+){0,4}?(email|mail)\b`,
 				`(?i)\bemail\b.{0,40}\b(to|at)\b.{0,30}\b[a-z0-9._%+-]+@[a-z0-9.-]+\.[a-z]{2,}\b`,
 				`(?i)\bsend\b.{0,40}\b(to|at)\b.{0,30}\b[a-z0-9._%+-]+@[a-z0-9.-]+\.[a-z]{2,}\b`,
 				`(?i)\balternate\s+(email|e-mail)\b`,

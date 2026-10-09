@@ -155,25 +155,25 @@ for f in testdata/eval/*.jsonl; do ./safeanalyze eval "$f"; done
 
 ## Current autoresearch iteration
 
-- **Version under test:** v0.3.28 (last accepted).
-- **Status:** Accepted (iteration 24). deepset recall rises on dev 0.483 → 0.533 (F1 0.652 → 0.696) and holdout 0.276 → 0.305 (F1 0.432 → 0.468). Dev F1 sum +0.0440; no precision drop and no new FP on any dev or holdout set.
-- **Change:** two new patterns in the existing `persona_hijack` rule for role-persistence / stay-in-character instructions in English and German: "stay/remain/keep in character" (clause start, after "you (must/will/...)" or "always/please"), "always/forever remain in their/your roles/characters/personas", "never/without/don't/must not (even) break (out of) (their/your) character/role/persona", "verharren/bleib* stets/immer/jederzeit in ihren/deiner Rolle(n)/Charakter*/Figur*" and "aus ihren/deinen Rollen/Charakteren auszubrechen/herauszufallen". Each form needs a following sentence end, punctuation or continuation word, so job/role descriptions ("remains in the role of CEO", "bleibt in seiner Rolle als Trainer") and "character limit/encoding/set" text stay unflagged. Targets steering priority 2 (persona/role-play, deepset recall). Does not touch `data_exfiltration_email`; no new rule name.
-- **Metrics (fast-mode eval, v0.3.27 → v0.3.28):**
-  - Dev: deepset TP 29 → 32, P 1.0, R 0.533, F1 0.696; llmail F1 0.881 (P 1.0, R 0.787) and browsesafe F1 0.754 (P 0.873, R 0.663, FP 29) unchanged. `persona_hijack` hits (injection/benign): deepset 5/0 → 8/0, none on llmail/browsesafe dev.
-  - Holdout: deepset-holdout TP 56 → 62, R 0.305, F1 0.468 (FP 0; `persona_hijack` 9/0 → 15/0); llmail-holdout 0.835 and browsesafe-holdout 0.705 unchanged.
-  - Latency p95: deepset 6.3 ms, llmail 8.6 ms, browsesafe 41.0 ms dev (v0.3.27: 39.1; run 2: 43.6) / 39.8 ms holdout; all within the 100 ms budget.
-  - Thorough corpus: findings 11015 → 11015 (identical per target and source); total `duration_ms` 35960 → 32769, 0 errors.
-  - Red-team: 12/12 payloads flagged at 18–19 ms. Determinism: two dev runs identical (latency removed), FP/FN JSONL byte-identical.
-- **Known gaps:** role persistence phrased without the listed verbs ("don't drop the act", "keep playing", "stay as DAN"), possessives other than their/your (en) and ihr/dein/euer (de), languages other than en/de, and a following word outside the continuation list are not matched.
+- **Version under test:** v0.3.29 (last accepted).
+- **Status:** Accepted (iteration 25). browsesafe precision rises on dev 0.873 → 0.884 (FP 29 → 26, F1 0.754 → 0.758) and holdout 0.861 → 0.869 (FP 29 → 27, F1 0.705 → 0.708) with no browsesafe TP lost. Dev F1 sum +0.0043. llmail-holdout loses one TP (F1 0.835 → 0.833, precision 1.0), within the single-sample holdout tolerance.
+- **Change:** `data_exfiltration_email` pattern 0, third alternative only (retrieve verb `retrieve`/`get`/`fetch`/`extract`/`download`/`access`/`view`/`check` with `email`/`mail` within four words): the verb must now open an instruction, i.e. follow the start of text, a newline, `.`/`!`/`?`/`:`/`;`/`,`, a bullet (`*`/`-`/`•`) or `>`, optionally after quotes/brackets, one softener (please, kindly, now, then, also, and, first, next, "go ahead and") or a short "... you to" lead-in. The send/forward and "and/then (e)mail" alternatives are unchanged. Narrows the rule only. Targets steering priority 1 (browsesafe precision); built on dev-set evidence only.
+- **Metrics (fast-mode eval, v0.3.28 → v0.3.29):**
+  - Dev: browsesafe TP 199, FP 29 → 26, P 0.884, R 0.663, F1 0.758 (`data_exfiltration_email` benign hits 9 → 5); deepset F1 0.696 and llmail F1 0.881 unchanged (FP 0).
+  - Holdout: browsesafe-holdout TP 179, FP 29 → 27, P 0.869, F1 0.708; llmail-holdout TP 215 → 214, R 0.713, F1 0.833 (FP 0); deepset-holdout F1 0.468 unchanged.
+  - Latency p95: deepset 6.9 ms, llmail 8.5 ms, browsesafe 43.7 ms dev (v0.3.28: 41.0; run 2: 42.8) / 44.4 ms holdout (v0.3.28: 39.8); all within the 100 ms budget.
+  - Thorough corpus: findings 11015 → 11015 (identical per target and source); total `duration_ms` 32769 → 36896 (external-scanner variance), 0 errors.
+  - Red-team: 12/12 payloads flagged at 18–20 ms. Determinism: two dev runs identical (latency removed), FP/FN JSONL byte-identical.
+- **Known gaps:** a retrieve-and-mail instruction in the middle of a sentence without a listed softener or "you to" lead-in ("so the bot should check my email") is now caught only by the other `data_exfiltration_email` alternatives; one llmail-holdout injection is no longer flagged.
 - **Rejected options (not released):**
   - Iteration 19 — narrow `data_exfiltration_email` pattern 0 so verify/confirm-your-email page text and mail-site links stop triggering it; dev/holdout F1 +0.000.
 - **Last accepted corpus improvement:** v0.3.17 (corpus findings +141 from `data_exfiltration_email`).
 - **Previous reverted iterations:** v0.3.4, v0.3.8, iterations 6, 7, 9, 11, 19 (details in earlier commits and the process reviews). Iteration 20 was reverted, then retested and accepted as iteration 21.
-- **Stagnation check:** iteration 24 improved labeled F1 (deepset dev and holdout); counter stays at 0.
+- **Stagnation check:** iteration 25 improved labeled F1/precision (browsesafe dev and holdout); counter stays at 0.
 - **Next candidates:**
   - deepset recall (dev 0.53, holdout 0.31) is still the weakest set; needs further non-email attack families or the ML stage.
   - Evaluate `Llama-Prompt-Guard-2-22M`/`86M-onnx` (memory, latency, precision) on the labeled sets.
-  - Remaining browsesafe FPs (29 dev / 29 holdout) and FNs (101 dev): CSS-hidden text, attribute prose without listed keywords.
+  - Remaining browsesafe FPs (26 dev / 27 holdout) and FNs (101 dev): CSS-hidden text, attribute prose without listed keywords.
   - Spot-check InjecAgent YARA findings (7860 of 11015) for FP inflation; decide `node_modules`/`vendor` in `dependency_paths`.
 
 ## Process review 2026-10-02
