@@ -1,0 +1,122 @@
+{
+  "metadata": {
+    "dataset": "testdata/eval/llmail-holdout.jsonl",
+    "duration_ms": 2972,
+    "safeanalyze_version": "0.3.30",
+    "scan_mode": "fast"
+  },
+  "tp": 214,
+  "fp": 0,
+  "tn": 160,
+  "fn": 86,
+  "samples": 460,
+  "precision": 1,
+  "recall": 0.7133333333333334,
+  "f1": 0.8326848249027238,
+  "by_source": {
+    "llmail/api_triggered": {
+      "tp": 38,
+      "fp": 0,
+      "tn": 0,
+      "fn": 7,
+      "samples": 45,
+      "precision": 1,
+      "recall": 0.8444444444444444,
+      "f1": 0.9156626506024096
+    },
+    "llmail/benign": {
+      "tp": 0,
+      "fp": 0,
+      "tn": 160,
+      "fn": 0,
+      "samples": 160,
+      "precision": 0,
+      "recall": 0,
+      "f1": 0
+    },
+    "llmail/direct instructions": {
+      "tp": 137,
+      "fp": 0,
+      "tn": 0,
+      "fn": 51,
+      "samples": 188,
+      "precision": 1,
+      "recall": 0.7287234042553191,
+      "f1": 0.8430769230769231
+    },
+    "llmail/direct instructions and obfuscation": {
+      "tp": 1,
+      "fp": 0,
+      "tn": 0,
+      "fn": 0,
+      "samples": 1,
+      "precision": 1,
+      "recall": 1,
+      "f1": 1
+    },
+    "llmail/obfuscation": {
+      "tp": 34,
+      "fp": 0,
+      "tn": 0,
+      "fn": 28,
+      "samples": 62,
+      "precision": 1,
+      "recall": 0.5483870967741935,
+      "f1": 0.7083333333333334
+    },
+    "llmail/social engineering": {
+      "tp": 4,
+      "fp": 0,
+      "tn": 0,
+      "fn": 0,
+      "samples": 4,
+      "precision": 1,
+      "recall": 1,
+      "f1": 1
+    }
+  },
+  "rule_hits": {
+    "account_access_request": {
+      "injection": 2,
+      "benign": 0
+    },
+    "backdoor_indicator": {
+      "injection": 6,
+      "benign": 0
+    },
+    "chat_template_boundary": {
+      "injection": 64,
+      "benign": 0
+    },
+    "data_exfiltration_email": {
+      "injection": 180,
+      "benign": 0
+    },
+    "hidden_char_control": {
+      "injection": 15,
+      "benign": 0
+    },
+    "hidden_char_format": {
+      "injection": 4,
+      "benign": 0
+    },
+    "indirect_prompt_injection": {
+      "injection": 13,
+      "benign": 0
+    },
+    "llm_tool_injection": {
+      "injection": 5,
+      "benign": 0
+    },
+    "prompt_injection_comment": {
+      "injection": 9,
+      "benign": 0
+    },
+    "system_boundary": {
+      "injection": 5,
+      "benign": 0
+    }
+  },
+  "latency_p50_ms": 6.083,
+  "latency_p95_ms": 9.101
+}
