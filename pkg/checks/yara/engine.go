@@ -390,6 +390,7 @@ func (e *Engine) LoadBuiltins() {
 				`"""\s*\n.*(?i)(ignore|disregard|system\s+prompt)`,
 				`'''\s*\n.*(?i)(ignore|disregard|system\s+prompt)`,
 				`(?i)(ignore|disregard).{0,30}\n\s*["']{3}`,
+				`(?i)[=#*~_<>|+/-]{3,}[ \t]*ende?(?:(?:[ \t_-]+of)?[ \t_-]+(?:the[ \t_-]+)?(?:context|e-?mails?|input|prompt|instructions?|conversation|messages?|system[ \t_-]+prompt|user[ \t_-]+input)[ \t]*(?:[=#*~_<>|+/-]{2,}|[.!:])?(?:\s|\\n|["'>])+|[ \t]*[.!](?:\s|\\n|["'>])+|\\n(?:\s|\\n|["'>])*)(?:[^\n]{0,20}?(?:\b|\\n))?(?:now|new|instead|ignore|disregard|forget|override|nun|jetzt|neue[nrs]?)\b`,
 			},
 		},
 		{
