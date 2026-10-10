@@ -76,6 +76,23 @@ func TestWriteAll_JSON(t *testing.T) {
 	}
 }
 
+func TestWriteAll_DurationFile(t *testing.T) {
+	dir := t.TempDir()
+	cfg := config.OutputConfig{Formats: []string{"json"}, OutDir: dir}
+
+	if err := WriteAll(sampleReport(), cfg); err != nil {
+		t.Fatalf("WriteAll failed: %v", err)
+	}
+
+	data, err := os.ReadFile(filepath.Join(dir, "duration.txt"))
+	if err != nil {
+		t.Fatalf("reading duration.txt: %v", err)
+	}
+	if got := strings.TrimSpace(string(data)); got != "60000" {
+		t.Errorf("expected duration.txt to contain 60000, got %q", got)
+	}
+}
+
 func TestWriteAll_Markdown(t *testing.T) {
 	dir := t.TempDir()
 	cfg := config.OutputConfig{Formats: []string{"markdown"}, OutDir: dir, IncludeFileTree: true}

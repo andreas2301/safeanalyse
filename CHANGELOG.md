@@ -5,6 +5,16 @@ All notable functional and non-functional changes to `safeanalyze` are documente
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.3.34] — 2026-10-10
+
+### Functional
+
+- **`duration.txt` report file:** `report.WriteAll` writes `duration.txt` containing the report's `duration_ms` into the output directory, alongside the configured formats. Covered by `TestWriteAll_DurationFile`.
+
+### Non-functional
+
+- Detection logic and labeled-eval metrics are unchanged from v0.3.33.
+
 ## [0.3.33] — 2026-10-09
 
 ### Functional

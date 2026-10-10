@@ -48,6 +48,11 @@ func WriteAll(report *Report, cfg config.OutputConfig) error {
 		}
 	}
 
+	durationPath := filepath.Join(cfg.OutDir, "duration.txt")
+	if err := os.WriteFile(durationPath, []byte(fmt.Sprintf("%d\n", report.DurationMs)), 0644); err != nil {
+		errs = append(errs, fmt.Sprintf("duration: %v", err))
+	}
+
 	if len(errs) > 0 {
 		return fmt.Errorf("output errors: %s", strings.Join(errs, "; "))
 	}
