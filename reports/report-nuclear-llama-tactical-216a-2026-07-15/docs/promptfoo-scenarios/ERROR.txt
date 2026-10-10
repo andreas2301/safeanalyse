@@ -1,0 +1,1 @@
+ERROR scanning docs/promptfoo-scenarios
