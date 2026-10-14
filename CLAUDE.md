@@ -174,31 +174,31 @@ done
 
 ## Current autoresearch iteration
 
-- **Version under test:** v0.3.34 (v0.3.33 detection logic plus `duration.txt` in report dirs). Labeled-set baseline for the extended sets (2026-10-14) is in `/tmp/safeanalyze-iter/v0.3.34-baseline/`: toolresp F1 0.603 dev / 0.577 holdout (FP 31 / 35), nemotron 0.204 / 0.209, spanish 0.400 / 0.464, multilingual recall 0.018 / 0.018, promptprotection-stress F1 0.250 (FP 30); old sets unchanged from v0.3.33. Corpus: 11015 findings, 0 errors.
-- **Last loop run:** v0.3.33 (loop stopped at the MAXITER=30 cap, not at stagnation).
-- **Status:** Accepted (iteration 30). deepset dev recall rises 0.733 → 0.767 (TP 44 → 46, F1 0.846 → 0.868, FP 0). Dev F1 sum +0.0218. All holdout sets unchanged; no precision change on any set.
-- **Change:** the last pattern of `prompt_injection_comment` gains a third alternative: "new instruction(s)" or "new statement" at the start of the text or after `.`/`!`/`?` plus whitespace, followed by `:`, `-`, `–` or `—`, optional please/now/just, and an override or output verb (ignore, forget, disregard, print, return, output, tell, show, reveal, say, send, repeat). Before, "new instructions:" matched only at the very start of the text and "new statement" not at all. Targets steering priority 2 (deepset recall); built on dev-set evidence only. No new rule name.
-- **Metrics (fast-mode eval, v0.3.32 → v0.3.33):**
-  - Dev: deepset TP 44 → 46, R 0.767, F1 0.868, FP 0; llmail F1 0.881 and browsesafe F1 0.758 unchanged (FP 0 / 26).
-  - Holdout: deepset-holdout F1 0.468, llmail-holdout F1 0.833, browsesafe-holdout F1 0.708, all unchanged.
-  - Latency p95: deepset 6.6 ms, llmail 9.0 ms, browsesafe 49.8 ms dev (v0.3.32: 48.3; run 2: 46.9) / 48.4 ms holdout (v0.3.32: 45.5); all within the 100 ms budget.
-  - Thorough corpus: findings 11015 → 11015 (identical per target and source); total `duration_ms` 34317 → 32901 (run-to-run variance), 0 errors.
-  - Red-team: 12/12 payloads flagged at 19–21 ms. Determinism: two dev runs identical (latency removed), FP/FN JSONL byte-identical.
-  - Corpus scans did not write `duration.txt` into the output dirs (only `safeanalyze.{json,md,html,sarif}`); durations come from `duration_ms` in `safeanalyze.json`.
-- **Known gaps:** "new statement"/"new instructions" mid-sentence without a preceding `.`/`!`/`?`, other markers ("new task:", "updated instructions:", "neue Anweisung:"), and verbs outside the list (e.g. "write", "list", "give") are not matched. The gain is deepset dev only (two samples of the same phrasing); no holdout set moved.
+- **Version under test:** v0.3.35 (last accepted; iteration 31, first iteration of the extended-set loop). Previous: v0.3.34 (v0.3.33 detection logic plus `duration.txt`); its extended-set baseline is in `/tmp/safeanalyze-iter/v0.3.34-baseline/`, iteration 31 measurements in `/tmp/safeanalyze-iter/iter31/`.
+- **Status:** Accepted (iteration 31). PRIMARY spanish dev recall 0.250 → 0.385 (TP 13 → 20, F1 0.400 → 0.556, FP 0); every other PRIMARY dev set unchanged. All holdout sets non-regressing; no precision change on any set.
+- **Change:** `multilingual_prompt_injection` gains one Spanish pattern directly after the existing Spanish one (olvida/olvide/olviden/olvidar/ignora/ignore/ignoren/ignorar + "(todo) lo dicho/anterior/previo/mencionado (antes/...)" before a sentence end or "y"; singular and extra nouns — instrucción, indicación, direcciones, regla, peticiones, declaraciones, directriz/directrices, pautas, restricciones — with anterior(es)/previa(s)/previo(s)/precedente(s), after optional todas/todos/cualquier(a) and las/los/el/tus/sus/tu/su; "cualquier petición/dirección anterior"; "tus/sus instrucciones/pautas/reglas/... (+1 word)" before "y", `.`, `!` or end of line). Hypothesis from `fn-spanish.jsonl` (12 of 39 dev misses were uncovered Spanish "ignore previous" phrasings) and the multilingual dev FNs; no holdout, GUARD-ONLY or stress FN/FP file was read. No new rule name.
+- **Metrics (fast-mode eval, v0.3.34 → v0.3.35):**
+  - PRIMARY dev: spanish TP 13 → 20, R 0.385, F1 0.556, FP 0; llmail F1 0.881 (FP 0), browsesafe F1 0.758 (FP 26), toolresp F1 0.603 (FP 31) unchanged.
+  - PRIMARY holdout: spanish-holdout TP 16 → 23, R 0.302 → 0.434, F1 0.464 → 0.605, FP 0; llmail-holdout 0.833, browsesafe-holdout 0.708, toolresp-holdout 0.577 unchanged.
+  - RECALL-ONLY: multilingual recall 0.018 → 0.025 (TP 15 → 21); multilingual-holdout 0.018 → 0.024 (TP 15 → 20).
+  - GUARD-ONLY: deepset 0.868 / holdout 0.468, nemotron 0.204 / holdout 0.209, all unchanged.
+  - REPORT-ONLY stress: promptprotection-stress P 0.500, R 0.167, F1 0.250, TP 30, FP 30, unchanged.
+  - Latency p95: browsesafe dev 48.84 → 49.73 ms (run 2: 48.70 ms), browsesafe-holdout 48.95 ms; all other sets < 10 ms; within the 100 ms budget.
+  - Thorough corpus: findings 11015 → 11015 (identical per target), 0 errors; `duration.txt` now present in every corpus output dir.
+  - Red-team: 12/12 payloads flagged at 19–20 ms. Determinism: two dev runs with byte-identical FP/FN JSONL.
+- **Known gaps:** other Spanish verbs (omite/descarta/no hagas caso de) with the new noun forms, "lo anterior" followed by a comma (left unflagged on purpose: "Olvida lo anterior, al final no vamos al cine."), and noun phrases with more than one word between "tus/sus" and the end. Spanish recall is still 0.385 dev; multilingual recall stays near 0.02.
 - **Rejected options (not released):**
-  - Iteration 30 prototype with a wider "new statement" verb list (please/now/you/write/list as the follow-up word); replaced by the narrower verb list before measurement.
-  - Iteration 27 — gate the bare `get` verb in `account_access_request` pattern 0 to instruction starts; browsesafe dev FP 26 → 23 (F1 0.758 → 0.762) but browsesafe-holdout TP 179 → 177 (F1 0.708 → 0.702), so reverted for a holdout regression.
-  - Iteration 19 — narrow `data_exfiltration_email` pattern 0 so verify/confirm-your-email page text and mail-site links stop triggering it; dev/holdout F1 +0.000.
+  - Iteration 31 alternative — drop the `obfuscated_javascript` `\u[0-9a-fA-F]{4}` pattern to remove 29 of 31 toolresp dev FPs; it would cut toolresp dev TP 143 → 46 because 105 injection samples also contain JSON `\u` escapes (dataset artifact), so not pursued.
+  - Iteration 27 — gate the bare `get` verb in `account_access_request` pattern 0 to instruction starts; browsesafe-holdout TP 179 → 177, reverted for a holdout regression.
+  - Iteration 19 — narrow `data_exfiltration_email` pattern 0; dev/holdout F1 +0.000.
 - **Last accepted corpus improvement:** v0.3.17 (corpus findings +141 from `data_exfiltration_email`).
 - **Previous reverted iterations:** v0.3.4, v0.3.8, iterations 6, 7, 9, 11, 19, 27 (details in earlier commits and the process reviews). Iteration 20 was reverted, then retested and accepted as iteration 21.
-- **Stagnation check:** iteration 30 improved labeled F1 (deepset dev); counter stays at 0. The round-3 redo (iterations 21–30) ended at the MAXITER=30 cap; process review done (see round 3 below).
+- **Stagnation check:** iteration 31 improved PRIMARY dev F1 (spanish); counter stays at 0.
 - **Next candidates:**
   - deepset and nemotron are GUARD-ONLY (see "Set taxonomy"): do not target them; they only must not regress.
   - toolresp precision and recall: 29 of 31 dev FPs (34 of 35 holdout) come from `obfuscated_javascript` firing on JSON tool responses; recall 0.48 dev / 0.45 holdout.
-  - spanish recall (0.25 dev / 0.30 holdout; 52 dev positives, mostly translated Gandalf attacks).
-  - multilingual recall (0.018 dev / 0.018 holdout; RECALL-ONLY, positives only).
-  - Fix missing `duration.txt` in corpus scan output dirs (report contents contract).
+  - spanish recall (0.385 dev / 0.434 holdout after v0.3.35; 52 dev positives, mostly translated Gandalf attacks).
+  - multilingual recall (0.025 dev / 0.024 holdout after v0.3.35; RECALL-ONLY, positives only).
   - Evaluate `Llama-Prompt-Guard-2-22M`/`86M-onnx` (memory, latency, precision) on the labeled sets.
   - Remaining browsesafe FPs (26 dev / 27 holdout) and FNs (101 dev): CSS-hidden text, attribute prose without listed keywords.
   - Spot-check InjecAgent YARA findings (7860 of 11015) for FP inflation; decide `node_modules`/`vendor` in `dependency_paths`.
