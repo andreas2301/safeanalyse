@@ -311,6 +311,7 @@ func (e *Engine) LoadBuiltins() {
 				`bash\s+-c\s*["\'].*\$\(`,
 				`nc\s+-e\s+`,
 				`mkfifo\s+.*\/bin\/sh`,
+				`(?i):[^`+"`"+`\n"]{0,3}`+"`"+`[^`+"`"+`\n]{0,120}?(?:wh[o0][a4]m[i1]|/etc/(?:passwd|shadow)|\bsh\s+-c\s|\bsystem\(|wscript\.sh|\bnc\s+-[lez])`,
 			},
 		},
 		{
