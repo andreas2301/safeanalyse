@@ -1,0 +1,284 @@
+{
+  "metadata": {
+    "dataset": "testdata/eval/multilingual.jsonl",
+    "duration_ms": 5166,
+    "safeanalyze_version": "0.3.37",
+    "scan_mode": "fast"
+  },
+  "tp": 21,
+  "fp": 0,
+  "tn": 0,
+  "fn": 819,
+  "samples": 840,
+  "precision": 1,
+  "recall": 0.025,
+  "f1": 0.04878048780487805,
+  "by_source": {
+    "cyberseceval/Arabic": {
+      "tp": 0,
+      "fp": 0,
+      "tn": 0,
+      "fn": 23,
+      "samples": 23,
+      "precision": 0,
+      "recall": 0,
+      "f1": 0
+    },
+    "cyberseceval/Bengali": {
+      "tp": 0,
+      "fp": 0,
+      "tn": 0,
+      "fn": 22,
+      "samples": 22,
+      "precision": 0,
+      "recall": 0,
+      "f1": 0
+    },
+    "cyberseceval/Chinese": {
+      "tp": 0,
+      "fp": 0,
+      "tn": 0,
+      "fn": 20,
+      "samples": 20,
+      "precision": 0,
+      "recall": 0,
+      "f1": 0
+    },
+    "cyberseceval/Filipino/Tagalog": {
+      "tp": 1,
+      "fp": 0,
+      "tn": 0,
+      "fn": 13,
+      "samples": 14,
+      "precision": 1,
+      "recall": 0.07142857142857142,
+      "f1": 0.13333333333333333
+    },
+    "cyberseceval/French": {
+      "tp": 3,
+      "fp": 0,
+      "tn": 0,
+      "fn": 21,
+      "samples": 24,
+      "precision": 1,
+      "recall": 0.125,
+      "f1": 0.2222222222222222
+    },
+    "cyberseceval/German": {
+      "tp": 2,
+      "fp": 0,
+      "tn": 0,
+      "fn": 15,
+      "samples": 17,
+      "precision": 1,
+      "recall": 0.11764705882352941,
+      "f1": 0.21052631578947367
+    },
+    "cyberseceval/Hindi": {
+      "tp": 0,
+      "fp": 0,
+      "tn": 0,
+      "fn": 90,
+      "samples": 90,
+      "precision": 0,
+      "recall": 0,
+      "f1": 0
+    },
+    "cyberseceval/Indonesian": {
+      "tp": 0,
+      "fp": 0,
+      "tn": 0,
+      "fn": 14,
+      "samples": 14,
+      "precision": 0,
+      "recall": 0,
+      "f1": 0
+    },
+    "cyberseceval/Italian": {
+      "tp": 2,
+      "fp": 0,
+      "tn": 0,
+      "fn": 11,
+      "samples": 13,
+      "precision": 1,
+      "recall": 0.15384615384615385,
+      "f1": 0.26666666666666666
+    },
+    "cyberseceval/Japanese": {
+      "tp": 1,
+      "fp": 0,
+      "tn": 0,
+      "fn": 13,
+      "samples": 14,
+      "precision": 1,
+      "recall": 0.07142857142857142,
+      "f1": 0.13333333333333333
+    },
+    "cyberseceval/Korean": {
+      "tp": 0,
+      "fp": 0,
+      "tn": 0,
+      "fn": 11,
+      "samples": 11,
+      "precision": 0,
+      "recall": 0,
+      "f1": 0
+    },
+    "cyberseceval/Portuguese": {
+      "tp": 3,
+      "fp": 0,
+      "tn": 0,
+      "fn": 14,
+      "samples": 17,
+      "precision": 1,
+      "recall": 0.17647058823529413,
+      "f1": 0.3
+    },
+    "cyberseceval/Russian": {
+      "tp": 0,
+      "fp": 0,
+      "tn": 0,
+      "fn": 23,
+      "samples": 23,
+      "precision": 0,
+      "recall": 0,
+      "f1": 0
+    },
+    "cyberseceval/Spanish": {
+      "tp": 4,
+      "fp": 0,
+      "tn": 0,
+      "fn": 16,
+      "samples": 20,
+      "precision": 1,
+      "recall": 0.2,
+      "f1": 0.3333333333333333
+    },
+    "cyberseceval/Thai": {
+      "tp": 0,
+      "fp": 0,
+      "tn": 0,
+      "fn": 11,
+      "samples": 11,
+      "precision": 0,
+      "recall": 0,
+      "f1": 0
+    },
+    "cyberseceval/Turkish": {
+      "tp": 0,
+      "fp": 0,
+      "tn": 0,
+      "fn": 18,
+      "samples": 18,
+      "precision": 0,
+      "recall": 0,
+      "f1": 0
+    },
+    "cyberseceval/Vietnamese": {
+      "tp": 0,
+      "fp": 0,
+      "tn": 0,
+      "fn": 18,
+      "samples": 18,
+      "precision": 0,
+      "recall": 0,
+      "f1": 0
+    },
+    "yanismiraoui/de": {
+      "tp": 0,
+      "fp": 0,
+      "tn": 0,
+      "fn": 53,
+      "samples": 53,
+      "precision": 0,
+      "recall": 0,
+      "f1": 0
+    },
+    "yanismiraoui/en": {
+      "tp": 4,
+      "fp": 0,
+      "tn": 0,
+      "fn": 153,
+      "samples": 157,
+      "precision": 1,
+      "recall": 0.025477707006369428,
+      "f1": 0.049689440993788817
+    },
+    "yanismiraoui/es": {
+      "tp": 1,
+      "fp": 0,
+      "tn": 0,
+      "fn": 61,
+      "samples": 62,
+      "precision": 1,
+      "recall": 0.016129032258064516,
+      "f1": 0.031746031746031744
+    },
+    "yanismiraoui/fr": {
+      "tp": 0,
+      "fp": 0,
+      "tn": 0,
+      "fn": 76,
+      "samples": 76,
+      "precision": 0,
+      "recall": 0,
+      "f1": 0
+    },
+    "yanismiraoui/it": {
+      "tp": 0,
+      "fp": 0,
+      "tn": 0,
+      "fn": 62,
+      "samples": 62,
+      "precision": 0,
+      "recall": 0,
+      "f1": 0
+    },
+    "yanismiraoui/pt": {
+      "tp": 0,
+      "fp": 0,
+      "tn": 0,
+      "fn": 57,
+      "samples": 57,
+      "precision": 0,
+      "recall": 0,
+      "f1": 0
+    },
+    "yanismiraoui/ro": {
+      "tp": 0,
+      "fp": 0,
+      "tn": 0,
+      "fn": 2,
+      "samples": 2,
+      "precision": 0,
+      "recall": 0,
+      "f1": 0
+    },
+    "yanismiraoui/und": {
+      "tp": 0,
+      "fp": 0,
+      "tn": 0,
+      "fn": 2,
+      "samples": 2,
+      "precision": 0,
+      "recall": 0,
+      "f1": 0
+    }
+  },
+  "rule_hits": {
+    "multilingual_prompt_injection": {
+      "injection": 17,
+      "benign": 0
+    },
+    "output_constraint": {
+      "injection": 3,
+      "benign": 0
+    },
+    "prompt_injection_comment": {
+      "injection": 1,
+      "benign": 0
+    }
+  },
+  "latency_p50_ms": 6.007,
+  "latency_p95_ms": 7.26
+}
