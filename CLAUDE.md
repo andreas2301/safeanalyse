@@ -174,7 +174,7 @@ done
 
 ## Current autoresearch iteration
 
-- **Version under test:** v0.3.44 (last accepted; iteration 40 of the extended-set loop). Previous: v0.3.43 (iteration 39); its measurements are in `/tmp/safeanalyze-iter/iter39/`, iteration 40 measurements in `/tmp/safeanalyze-iter/iter40/` (rerun in `iter40/run2/`).
+- **Version under test:** v0.3.44 (last accepted; iteration 40 of the extended-set loop; round 4 stopped at the MAXITER=40 cap, not at stagnation; process review 2026-10-14 (round 4) done, see below). Previous: v0.3.43 (iteration 39); its measurements are in `/tmp/safeanalyze-iter/iter39/`, iteration 40 measurements in `/tmp/safeanalyze-iter/iter40/` (rerun in `iter40/run2/`).
 - **Status:** Accepted (iteration 40). PRIMARY llmail dev recall 0.787 → 0.800 (TP 236 → 240, F1 0.881 → 0.889, FP 0 unchanged); every other PRIMARY dev set unchanged. llmail-holdout F1 0.833 → 0.837 (TP 214 → 216, FP 0); every other holdout set unchanged; no precision drop on any set.
 - **Change:** `prompt_injection_comment` gains one pattern for a line that hands control to the text after it: anchor (text start, `.`/`?`/`!`/`:` + whitespace, or a literal `\n`/`\t` escape) + ≤3 non-word chars + optional please/now/just + "follow" + "all"/"every" + optional "the"/"of the" + instruction(s)/directive(s)/command(s) + in/from/within/contained in/given in + "the following" + optional text/message/email/content/input/prompt/block + `:`. Each word tolerates single spaces between letters ("Fol lo W all  ins tructIonS  in the following:"). Hypothesis from `fn-llmail.jsonl` (4 dev FNs open with this frame, 3 with spaced letters) plus the other PRIMARY/RECALL-ONLY dev FN/FP files; no holdout, GUARD-ONLY or stress FN/FP file was read (deepset/nemotron were only counted for benign label-0 rows). No new rule name; the pattern keys on the frame, not on any dataset string.
 - **Metrics (fast-mode eval, v0.3.43 → v0.3.44):**
@@ -196,9 +196,10 @@ done
   - Iteration 19 — narrow `data_exfiltration_email` pattern 0; dev/holdout F1 +0.000.
 - **Last accepted corpus improvement:** v0.3.17 (corpus findings +141 from `data_exfiltration_email`).
 - **Previous reverted iterations:** v0.3.4, v0.3.8, iterations 6, 7, 9, 11, 19, 27 (details in earlier commits and the process reviews). Iteration 20 was reverted, then retested and accepted as iteration 21.
-- **Stagnation check:** iteration 40 improved PRIMARY dev F1 (llmail); counter stays at 0.
+- **Stagnation check:** iteration 40 improved PRIMARY dev F1 (llmail); counter stays at 0. Round 4 (iterations 31–40): 10 accepted, 0 reverted.
 - **Next candidates:**
   - deepset and nemotron are GUARD-ONLY (see "Set taxonomy"): do not target them; they only must not regress.
+  - Round 4 review: pause spanish-dev-driven rules (dev/holdout recall gap 0.28, see review); next iteration should be latency-only (browsesafe p95 74 ms) or toolresp precision (`obfuscated_javascript` on JSON `\u` escapes).
   - toolresp precision and recall: 29 of 31 dev FPs (34 of 35 holdout) come from `obfuscated_javascript` firing on JSON tool responses; recall 0.630 dev / 0.523 holdout after v0.3.44.
   - llmail recall (0.800 dev / 0.720 holdout after v0.3.44): forged role boundaries split across lines or written with spaces (`< user>`).
   - spanish recall (0.712 dev / 0.434 holdout after v0.3.41; holdout did not move in v0.3.39 or v0.3.41, so check whether the remaining dev themes generalize).
@@ -233,3 +234,34 @@ Redo. The first round-3 run had loop-script bugs: it checked the holdout on a su
 - **Corpus:** Not representative. There is still no labeled JSON tool-call/agent-trace or multilingual set, and deepset-holdout is the weakest set. InjecAgent is 8171 of 11015 corpus findings (74 %). Corpus counts are only a regression and error check: 11166 → 11015 after iteration 21, then unchanged through iteration 30, with 0 errors.
 - **Skipped optimizations:** Browsesafe p95 rose from 36.9 ms to 49.8 ms dev (48.4 ms holdout) over the redo, about +1.3 ms per accepted pattern. It is still within the 100 ms budget, but each new pattern needs a prefilter literal. Corpus scans do not write `duration.txt`, which breaks the report-contents contract; fix that next. Still open: the ML stage (Prompt-Guard-2 22M/86M), the InjecAgent FP spot-check, and `node_modules`/`vendor` in `dependency_paths`. v0.3.25–v0.3.33 are tagged.
 - **Report branches:** Worse. There are 37 local `report-*` branches (14 from 2026-07, 23 from 2026-10) and 34 on origin (11 from 2026-07, 23 from 2026-10). There is 1 worktree, about 62 MB under `.worktrees/`. Action (needs owner approval; nothing was deleted in this review): archive or delete the July branches locally and on origin, keep only the report branch of the last accepted version, and write per-iteration results only to `/tmp/safeanalyze-iter/`.
+
+## Process review 2026-10-14 (round 4)
+
+Done after iterations 31–40 (v0.3.35–v0.3.44): 10 accepted, 0 reverted. The loop stopped at the MAXITER=40 cap, not at stagnation. Baseline is `/tmp/safeanalyze-iter/v0.3.34-r4-baseline/`; final is `iter40/`.
+
+- **Metric:** Still the right one: per-set P/R/F1 with the role taxonomy (PRIMARY / RECALL-ONLY / GUARD-ONLY / REPORT-ONLY). Since deepset and nemotron became GUARD-ONLY, every gain landed on a PRIMARY set. No PRIMARY or GUARD-ONLY set lost precision. FP counts did not change on any set (browsesafe 26/27, toolresp 31/35, all others 0, stress 30). So round 4 was recall-only work, and precision went untested by any new FP source.
+- **Dev vs holdout (F1, round start → end):**
+  - llmail: dev 0.881 → 0.889 (+4 TP), holdout 0.833 → 0.837 (+2 TP). Moves together.
+  - browsesafe: dev 0.758, holdout 0.708. Neither moved; no round-4 iteration targeted it.
+  - toolresp: dev 0.603 → 0.727 (+0.124, TP 143 → 189), holdout 0.577 → 0.638 (+0.061, TP 136 → 157). The holdout gained about half of the dev gain. The gains generalize partly, and the dev/holdout recall gap widened from 0.02 to 0.11.
+  - spanish: dev 0.400 → 0.831 (+0.431, TP 13 → 37 of 52), holdout 0.464 → 0.605 (+0.141, TP 16 → 23 of 53). The recall gap went from −0.05 to +0.28, and the holdout did not move in v0.3.39 or v0.3.41.
+  - multilingual (RECALL-ONLY): recall 0.018 → 0.025 dev, 0.018 → 0.024 holdout. Moves together but stays negligible.
+  - GUARD-ONLY and stress: unchanged.
+- **Overfitting:** spanish shows **clear signs of dev overfitting**. It is small (52/53 positives, mostly machine-translated), and three iterations (31, 35, 37) pushed dev recall from 0.25 to 0.71 while the holdout reached only 0.43. toolresp shows moderate signs. Action: pause spanish-dev-driven rules until the set is larger or until a candidate also moves some independent Spanish signal. Before accepting a dev gain of 10 or more TP on a set with fewer than 100 positives, require that the target theme is general (no dataset strings) and record the dev:holdout TP-gain ratio in the iteration notes.
+- **Sets representative?** Partly.
+  - toolresp is the only JSON tool-response set. It is synthetic, and its 31 dev FPs are a dataset artifact (`obfuscated_javascript` on `\u` escapes, which also occur in 105 positives).
+  - spanish is too small to gate on.
+  - multilingual is positives-only machine translation, so it cannot test precision.
+  - Precision is now tested only by browsesafe and toolresp benign rows. There is still no benign multilingual or agent-trace set.
+  - Corpus counts stayed at 11015 with 0 errors, so they work only as a regression check. InjecAgent is still about 74 % of corpus findings.
+- **Skipped optimizations:**
+  - Latency is the main open risk. browsesafe p95 rose from 48.8 to 74.3 ms (+25.5 ms, about 2.5 ms per accepted pattern). Iteration 34 (leetspeak) alone added +13.5 ms. At this rate the 100 ms budget will be reached in about 10 iterations.
+  - The next iteration should be latency-only: prefilter literals for the leetspeak and space-tolerant patterns, or a cap on regex input size for HTML.
+  - Still open: the ML stage (Prompt-Guard-2 22M/86M), the InjecAgent FP spot-check, and `node_modules`/`vendor` in `dependency_paths`.
+  - Resolved: `duration.txt` is now written into every report directory (v0.3.34). v0.3.35–v0.3.44 are tagged.
+- **Report branches:**
+  - The July 2026 archive is mostly done: 14 → 2 local branches. The 2 left are `report-boom-zany-sarcasm-cd4dee48-2026-07-15` and `report-nuclear-llama-tactical-216a-2026-07-15`.
+  - October branches grew 23 → 33, so there are now 35 local and 35 on origin. There is 1 worktree, and `.worktrees/` holds about 4 KB.
+  - The guidance against one branch per iteration is still not followed.
+  - Action (needs owner approval; nothing was deleted in this review): delete or tag-archive the 2 July branches and the October branches older than the last accepted version, locally and on origin. After that, keep one report branch per review round, and keep per-iteration results in `/tmp/safeanalyze-iter/` only.
+
