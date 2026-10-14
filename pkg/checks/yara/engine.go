@@ -401,13 +401,14 @@ func (e *Engine) LoadBuiltins() {
 		},
 		{
 			Name:        "encoded_prompt_injection",
-			Description: "Prompt-injection keywords encoded as base64, hex, or Unicode escapes",
+			Description: "Prompt-injection keywords encoded as base64, hex, Unicode escapes, or leetspeak digit substitutions",
 			Severity:    report.SeverityHigh,
 			Patterns: []string{
 				`(?i)YmFzZTY0.*(?i)aWdub3Jl.*cHJldmlvdXM`, // base64 fragments containing ignore/previous
 				`(?i)ignore%20all%20previous%20instruction`,
 				`(?i)ignore\+all\+previous\+instruction`,
 				`\\x69\\x67\\x6e\\x6f\\x72\\x65`, // hex-encoded "ignore"
+				`(?i)(?:^|[^\pL\pN_]|\\[nrt])(?:(?:[1!|][g9]|i9)n[o0]r[e3]|ign(?:0r[e3]|or3)|d(?:1[s5]r[e3][g9][a4@]|i5r[e3][g9][a4@]|isr(?:3[g9][a4@]|e(?:9[a4@]|g[4@])))rd|d(?:1[s5]m[i1][s5]{2}|i5m[i1][s5]{2}|ism(?:1[s5]{2}|i(?:5[s5]|s5)))|(?:0v[e3]rr[i1]d[e3]|ov(?:3rr[i1]d[e3]|err(?:1d[e3]|id3)))|f(?:0r[g9][e3][t7]|or(?:9[e3][t7]|g(?:3[t7]|e7))))(?:\s|\\[nrt])+(?:[\w@$!|+']+(?:\s|\\[nrt])+){0,3}?(?:pr[e3]v[i1][o0]u[s5]|pr[i1][o0]r|[a4@]b[o0]v[e3]|b[e3][l1][o0]w|[i1]n[s5][t7]ruc[t7][i1][o0]n|ru[l1][e3][s5]|[t7][e3]x[t7]|pr[o0]mp[t7])`, // leetspeak override verb (needs a digit/symbol) + instruction target
 			},
 		},
 		{
