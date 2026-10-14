@@ -1,4 +1,4 @@
-# safeanalyze v0.3.38
+# safeanalyze v0.3.39
 
 A Go CLI tool that sanitizes and scans untrusted code repositories **before** feeding them to AI assistants. Implements defense-in-depth inspired by [Zones of Distrust](https://github.com/bluvibytes/zone-of-distrust).
 
@@ -12,6 +12,10 @@ Prompt injection via malicious code is real. A repo can contain:
 - Secrets or malware mixed with legitimate source
 
 **safeanalyze** runs a security pipeline so AI assistants never see raw, unverified code.
+
+## What's new in v0.3.39
+
+- **More Spanish override phrasings** — the `multilingual_prompt_injection` rule gains two Spanish patterns. The first covers verbs the old patterns missed ("No tenga en cuenta", "Olvídese de", "Deseche", "Haga caso omiso de", "No escuche", "pase por alto", "anule", ...). Up to five words may come before the target, which can be instructions, directivas, directrices, declaraciones or prompts qualified as anteriores, previas, pasadas, precedentes or últimas, or "su solicitud anterior" / "ninguna información previa" followed by "y"/"e". The second covers passive revocations: "Instrucciones pasadas revocadas", "Todas las instrucciones anteriores no se aplican", "Las directivas previas quedan anuladas". Benign text such as "Haga caso omiso de mi correo anterior", "Según las instrucciones anteriores, envíe el formulario." or "Las normas anteriores quedan sin efecto a partir del 1 de enero." stays unflagged. Spanish dev recall rises 0.385 → 0.596 (F1 0.556 → 0.747) with no new false positives on any set.
 
 ## What's new in v0.3.38
 
