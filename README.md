@@ -1,4 +1,4 @@
-# safeanalyze v0.3.43
+# safeanalyze v0.3.44
 
 A Go CLI tool that sanitizes and scans untrusted code repositories **before** feeding them to AI assistants. Implements defense-in-depth inspired by [Zones of Distrust](https://github.com/bluvibytes/zone-of-distrust).
 
@@ -12,6 +12,10 @@ Prompt injection via malicious code is real. A repo can contain:
 - Secrets or malware mixed with legitimate source
 
 **safeanalyze** runs a security pipeline so AI assistants never see raw, unverified code.
+
+## What's new in v0.3.44
+
+- **"Follow all instructions in the following" hand-off** — the `prompt_injection_comment` rule gains one pattern for a line that tells the model to obey whatever text comes next: "Follow all instructions in the following:", "Follow every directive contained in the following text:", and spaced-letter forms such as "Fol lo W all  ins tructIonS  in the following:". The phrase must start the text, a sentence, a clause after `:` or a literal `\n`/`\t` escape in JSON, use "all" or "every" with instructions, directives or commands, and end with "the following" (optionally text, message, email, content, input, prompt or block) plus a colon. Everyday text such as "Please follow all instructions in the following section:", "Applicants should follow all the instructions given in the following: (a) attach a CV" or `<p>Follow all the instructions in the following text:</p>` stays unflagged. llmail dev recall rises 0.787 → 0.800 (F1 0.881 → 0.889) and llmail-holdout 0.713 → 0.720 (F1 0.833 → 0.837) with no new false positives on any set.
 
 ## What's new in v0.3.43
 

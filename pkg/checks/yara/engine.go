@@ -239,6 +239,7 @@ func (e *Engine) LoadBuiltins() {
 				`\b(SYSTEM|ADMIN)[\s_-]+OVERRIDE\b`,
 				`(?i)(?:^|[\n.!?:;,>"'*-]\s*|\b(?:please|now|just|and|then|so|also)\s+)(ignore|ig[a-z]{1,2}re|ingore|forget|disregard)\s+(what|whatever|waht|wat)(('s|\s+(is|was|came|comes))\s+(before|earlier|previously|above|so\s+far|until\s+now)(\s*([.,;:!?)"'<]|$)|\s+and\b|(?-i:\s+\p{Lu}))|(\s+(i|we|you)('ve)?\s+(have\s+|had\s+|just\s+)?(said|wrote|written|told\s+you|mentioned|asked|typed|discussed))\s+(before|earlier|previously|above|so\s+far|until\s+now)\b)`,
 				`(?i)\bnew\s+directive\s*[:\-]|^\W*new\s+instructions?\s*[:\-]|(?:^|[.!?]\s+)\W*new\s+(?:instructions?|statement)\s*[:\-–—]\s*(?:(?:please|now|just)\s+)?(?:ignore|forget|disregard|print|return|output|tell|show|reveal|say|send|repeat)\b`,
+				`(?i)(?:^|[.!?:]\s+|\\[nt])\W{0,3}(?:(?:please|now|just)\s+)?f\s?o\s?l\s?l\s?o\s?w\s+(?:a\s?l\s?l|e\s?v\s?e\s?r\s?y)\s+(?:(?:t\s?h\s?e|o\s?f\s+t\s?h\s?e)\s+)?(?:i\s?n\s?s\s?t\s?r\s?u\s?c\s?t\s?i\s?o\s?n\s?s?|d\s?i\s?r\s?e\s?c\s?t\s?i\s?v\s?e\s?s?|c\s?o\s?m\s?m\s?a\s?n\s?d\s?s?)\s+(?:in|from|within|contained\s+in|given\s+in)\s+the\s+following(?:\s+(?:text|message|e-?mail|content|input|prompt|block))?\s*:`,
 			},
 		},
 		{
