@@ -1,0 +1,1490 @@
+{
+  "metadata": {
+    "dataset": "testdata/eval/promptprotection-stress.jsonl",
+    "duration_ms": 2853,
+    "safeanalyze_version": "0.3.40",
+    "scan_mode": "fast"
+  },
+  "tp": 30,
+  "fp": 30,
+  "tn": 166,
+  "fn": 150,
+  "samples": 376,
+  "precision": 0.5,
+  "recall": 0.16666666666666666,
+  "f1": 0.25,
+  "by_source": {
+    "promptprotection/agent-flows/calendar-forward": {
+      "tp": 1,
+      "fp": 0,
+      "tn": 1,
+      "fn": 1,
+      "samples": 3,
+      "precision": 1,
+      "recall": 0.5,
+      "f1": 0.6666666666666666
+    },
+    "promptprotection/agent-flows/code-review": {
+      "tp": 0,
+      "fp": 0,
+      "tn": 4,
+      "fn": 4,
+      "samples": 8,
+      "precision": 0,
+      "recall": 0,
+      "f1": 0
+    },
+    "promptprotection/agent-flows/email-exfil": {
+      "tp": 1,
+      "fp": 0,
+      "tn": 10,
+      "fn": 7,
+      "samples": 18,
+      "precision": 1,
+      "recall": 0.125,
+      "f1": 0.2222222222222222
+    },
+    "promptprotection/agent-flows/file-exec": {
+      "tp": 4,
+      "fp": 0,
+      "tn": 3,
+      "fn": 4,
+      "samples": 11,
+      "precision": 1,
+      "recall": 0.5,
+      "f1": 0.6666666666666666
+    },
+    "promptprotection/agent-flows/mcp-tool": {
+      "tp": 3,
+      "fp": 0,
+      "tn": 4,
+      "fn": 4,
+      "samples": 11,
+      "precision": 1,
+      "recall": 0.42857142857142855,
+      "f1": 0.6
+    },
+    "promptprotection/agent-flows/rag-poison": {
+      "tp": 8,
+      "fp": 3,
+      "tn": 4,
+      "fn": 0,
+      "samples": 15,
+      "precision": 0.7272727272727273,
+      "recall": 1,
+      "f1": 0.8421052631578947
+    },
+    "promptprotection/agent-flows/slack-relay": {
+      "tp": 1,
+      "fp": 0,
+      "tn": 4,
+      "fn": 5,
+      "samples": 10,
+      "precision": 1,
+      "recall": 0.16666666666666666,
+      "f1": 0.2857142857142857
+    },
+    "promptprotection/agent-flows/web-payment": {
+      "tp": 1,
+      "fp": 0,
+      "tn": 8,
+      "fn": 6,
+      "samples": 15,
+      "precision": 1,
+      "recall": 0.14285714285714285,
+      "f1": 0.25
+    },
+    "promptprotection/attacks/acrostic": {
+      "tp": 0,
+      "fp": 0,
+      "tn": 0,
+      "fn": 1,
+      "samples": 1,
+      "precision": 0,
+      "recall": 0,
+      "f1": 0
+    },
+    "promptprotection/attacks/arabic-override": {
+      "tp": 0,
+      "fp": 0,
+      "tn": 0,
+      "fn": 1,
+      "samples": 1,
+      "precision": 0,
+      "recall": 0,
+      "f1": 0
+    },
+    "promptprotection/attacks/attachment-smuggle": {
+      "tp": 0,
+      "fp": 0,
+      "tn": 0,
+      "fn": 1,
+      "samples": 1,
+      "precision": 0,
+      "recall": 0,
+      "f1": 0
+    },
+    "promptprotection/attacks/authority-escalation": {
+      "tp": 0,
+      "fp": 0,
+      "tn": 0,
+      "fn": 1,
+      "samples": 1,
+      "precision": 0,
+      "recall": 0,
+      "f1": 0
+    },
+    "promptprotection/attacks/authority-impersonation": {
+      "tp": 0,
+      "fp": 0,
+      "tn": 0,
+      "fn": 1,
+      "samples": 1,
+      "precision": 0,
+      "recall": 0,
+      "f1": 0
+    },
+    "promptprotection/attacks/authority-in-tool": {
+      "tp": 0,
+      "fp": 0,
+      "tn": 0,
+      "fn": 1,
+      "samples": 1,
+      "precision": 0,
+      "recall": 0,
+      "f1": 0
+    },
+    "promptprotection/attacks/base64-payload": {
+      "tp": 0,
+      "fp": 0,
+      "tn": 0,
+      "fn": 1,
+      "samples": 1,
+      "precision": 0,
+      "recall": 0,
+      "f1": 0
+    },
+    "promptprotection/attacks/beacon-in-summary": {
+      "tp": 0,
+      "fp": 0,
+      "tn": 0,
+      "fn": 1,
+      "samples": 1,
+      "precision": 0,
+      "recall": 0,
+      "f1": 0
+    },
+    "promptprotection/attacks/boundary-probe": {
+      "tp": 0,
+      "fp": 0,
+      "tn": 0,
+      "fn": 1,
+      "samples": 1,
+      "precision": 0,
+      "recall": 0,
+      "f1": 0
+    },
+    "promptprotection/attacks/calendar-note": {
+      "tp": 0,
+      "fp": 0,
+      "tn": 0,
+      "fn": 1,
+      "samples": 1,
+      "precision": 0,
+      "recall": 0,
+      "f1": 0
+    },
+    "promptprotection/attacks/chained-tool": {
+      "tp": 1,
+      "fp": 0,
+      "tn": 0,
+      "fn": 0,
+      "samples": 1,
+      "precision": 1,
+      "recall": 1,
+      "f1": 1
+    },
+    "promptprotection/attacks/character-lock": {
+      "tp": 1,
+      "fp": 0,
+      "tn": 0,
+      "fn": 0,
+      "samples": 1,
+      "precision": 1,
+      "recall": 1,
+      "f1": 1
+    },
+    "promptprotection/attacks/chat-transcript": {
+      "tp": 0,
+      "fp": 0,
+      "tn": 0,
+      "fn": 1,
+      "samples": 1,
+      "precision": 0,
+      "recall": 0,
+      "f1": 0
+    },
+    "promptprotection/attacks/chatml-forgery": {
+      "tp": 1,
+      "fp": 0,
+      "tn": 0,
+      "fn": 0,
+      "samples": 1,
+      "precision": 1,
+      "recall": 1,
+      "f1": 1
+    },
+    "promptprotection/attacks/chinese-jailbreak": {
+      "tp": 0,
+      "fp": 0,
+      "tn": 0,
+      "fn": 1,
+      "samples": 1,
+      "precision": 0,
+      "recall": 0,
+      "f1": 0
+    },
+    "promptprotection/attacks/clipboard": {
+      "tp": 0,
+      "fp": 0,
+      "tn": 0,
+      "fn": 1,
+      "samples": 1,
+      "precision": 0,
+      "recall": 0,
+      "f1": 0
+    },
+    "promptprotection/attacks/code-comment": {
+      "tp": 0,
+      "fp": 0,
+      "tn": 0,
+      "fn": 1,
+      "samples": 1,
+      "precision": 0,
+      "recall": 0,
+      "f1": 0
+    },
+    "promptprotection/attacks/completion-bait": {
+      "tp": 0,
+      "fp": 0,
+      "tn": 0,
+      "fn": 1,
+      "samples": 1,
+      "precision": 0,
+      "recall": 0,
+      "f1": 0
+    },
+    "promptprotection/attacks/conditional-exfil": {
+      "tp": 0,
+      "fp": 0,
+      "tn": 0,
+      "fn": 1,
+      "samples": 1,
+      "precision": 0,
+      "recall": 0,
+      "f1": 0
+    },
+    "promptprotection/attacks/conditional-trap": {
+      "tp": 0,
+      "fp": 0,
+      "tn": 0,
+      "fn": 1,
+      "samples": 1,
+      "precision": 0,
+      "recall": 0,
+      "f1": 0
+    },
+    "promptprotection/attacks/consent-forgery": {
+      "tp": 0,
+      "fp": 0,
+      "tn": 0,
+      "fn": 1,
+      "samples": 1,
+      "precision": 0,
+      "recall": 0,
+      "f1": 0
+    },
+    "promptprotection/attacks/context-switch": {
+      "tp": 0,
+      "fp": 0,
+      "tn": 0,
+      "fn": 1,
+      "samples": 1,
+      "precision": 0,
+      "recall": 0,
+      "f1": 0
+    },
+    "promptprotection/attacks/continuation": {
+      "tp": 0,
+      "fp": 0,
+      "tn": 0,
+      "fn": 1,
+      "samples": 1,
+      "precision": 0,
+      "recall": 0,
+      "f1": 0
+    },
+    "promptprotection/attacks/csv-cell": {
+      "tp": 0,
+      "fp": 0,
+      "tn": 0,
+      "fn": 1,
+      "samples": 1,
+      "precision": 0,
+      "recall": 0,
+      "f1": 0
+    },
+    "promptprotection/attacks/data-siphon": {
+      "tp": 0,
+      "fp": 0,
+      "tn": 0,
+      "fn": 1,
+      "samples": 1,
+      "precision": 0,
+      "recall": 0,
+      "f1": 0
+    },
+    "promptprotection/attacks/debug-pretext": {
+      "tp": 0,
+      "fp": 0,
+      "tn": 0,
+      "fn": 1,
+      "samples": 1,
+      "precision": 0,
+      "recall": 0,
+      "f1": 0
+    },
+    "promptprotection/attacks/delimiter-escape": {
+      "tp": 0,
+      "fp": 0,
+      "tn": 0,
+      "fn": 1,
+      "samples": 1,
+      "precision": 0,
+      "recall": 0,
+      "f1": 0
+    },
+    "promptprotection/attacks/dns-style": {
+      "tp": 0,
+      "fp": 0,
+      "tn": 0,
+      "fn": 1,
+      "samples": 1,
+      "precision": 0,
+      "recall": 0,
+      "f1": 0
+    },
+    "promptprotection/attacks/dual-response": {
+      "tp": 0,
+      "fp": 0,
+      "tn": 0,
+      "fn": 1,
+      "samples": 1,
+      "precision": 0,
+      "recall": 0,
+      "f1": 0
+    },
+    "promptprotection/attacks/dutch-exfil": {
+      "tp": 0,
+      "fp": 0,
+      "tn": 0,
+      "fn": 1,
+      "samples": 1,
+      "precision": 0,
+      "recall": 0,
+      "f1": 0
+    },
+    "promptprotection/attacks/email-body": {
+      "tp": 1,
+      "fp": 0,
+      "tn": 0,
+      "fn": 0,
+      "samples": 1,
+      "precision": 1,
+      "recall": 1,
+      "f1": 1
+    },
+    "promptprotection/attacks/emergency": {
+      "tp": 0,
+      "fp": 0,
+      "tn": 0,
+      "fn": 1,
+      "samples": 1,
+      "precision": 0,
+      "recall": 0,
+      "f1": 0
+    },
+    "promptprotection/attacks/emoji-cipher": {
+      "tp": 0,
+      "fp": 0,
+      "tn": 0,
+      "fn": 1,
+      "samples": 1,
+      "precision": 0,
+      "recall": 0,
+      "f1": 0
+    },
+    "promptprotection/attacks/encoding-request": {
+      "tp": 0,
+      "fp": 0,
+      "tn": 0,
+      "fn": 1,
+      "samples": 1,
+      "precision": 0,
+      "recall": 0,
+      "f1": 0
+    },
+    "promptprotection/attacks/env-read": {
+      "tp": 0,
+      "fp": 0,
+      "tn": 0,
+      "fn": 1,
+      "samples": 1,
+      "precision": 0,
+      "recall": 0,
+      "f1": 0
+    },
+    "promptprotection/attacks/expert-persona": {
+      "tp": 0,
+      "fp": 0,
+      "tn": 0,
+      "fn": 1,
+      "samples": 1,
+      "precision": 0,
+      "recall": 0,
+      "f1": 0
+    },
+    "promptprotection/attacks/fake-approval": {
+      "tp": 0,
+      "fp": 0,
+      "tn": 0,
+      "fn": 1,
+      "samples": 1,
+      "precision": 0,
+      "recall": 0,
+      "f1": 0
+    },
+    "promptprotection/attacks/fake-required-step": {
+      "tp": 0,
+      "fp": 0,
+      "tn": 0,
+      "fn": 1,
+      "samples": 1,
+      "precision": 0,
+      "recall": 0,
+      "f1": 0
+    },
+    "promptprotection/attacks/fake-system-tag": {
+      "tp": 0,
+      "fp": 0,
+      "tn": 0,
+      "fn": 1,
+      "samples": 1,
+      "precision": 0,
+      "recall": 0,
+      "f1": 0
+    },
+    "promptprotection/attacks/fake-tool-result": {
+      "tp": 0,
+      "fp": 0,
+      "tn": 0,
+      "fn": 1,
+      "samples": 1,
+      "precision": 0,
+      "recall": 0,
+      "f1": 0
+    },
+    "promptprotection/attacks/false-completion": {
+      "tp": 0,
+      "fp": 0,
+      "tn": 0,
+      "fn": 1,
+      "samples": 1,
+      "precision": 0,
+      "recall": 0,
+      "f1": 0
+    },
+    "promptprotection/attacks/fictional-ai": {
+      "tp": 0,
+      "fp": 0,
+      "tn": 0,
+      "fn": 1,
+      "samples": 1,
+      "precision": 0,
+      "recall": 0,
+      "f1": 0
+    },
+    "promptprotection/attacks/format-trick": {
+      "tp": 0,
+      "fp": 0,
+      "tn": 0,
+      "fn": 1,
+      "samples": 1,
+      "precision": 0,
+      "recall": 0,
+      "f1": 0
+    },
+    "promptprotection/attacks/french-persona": {
+      "tp": 0,
+      "fp": 0,
+      "tn": 0,
+      "fn": 1,
+      "samples": 1,
+      "precision": 0,
+      "recall": 0,
+      "f1": 0
+    },
+    "promptprotection/attacks/fullwidth": {
+      "tp": 0,
+      "fp": 0,
+      "tn": 0,
+      "fn": 1,
+      "samples": 1,
+      "precision": 0,
+      "recall": 0,
+      "f1": 0
+    },
+    "promptprotection/attacks/german-leak": {
+      "tp": 0,
+      "fp": 0,
+      "tn": 0,
+      "fn": 1,
+      "samples": 1,
+      "precision": 0,
+      "recall": 0,
+      "f1": 0
+    },
+    "promptprotection/attacks/gradual": {
+      "tp": 0,
+      "fp": 0,
+      "tn": 0,
+      "fn": 1,
+      "samples": 1,
+      "precision": 0,
+      "recall": 0,
+      "f1": 0
+    },
+    "promptprotection/attacks/gradual-escalation": {
+      "tp": 0,
+      "fp": 0,
+      "tn": 0,
+      "fn": 1,
+      "samples": 1,
+      "precision": 0,
+      "recall": 0,
+      "f1": 0
+    },
+    "promptprotection/attacks/grandma-variant": {
+      "tp": 0,
+      "fp": 0,
+      "tn": 0,
+      "fn": 1,
+      "samples": 1,
+      "precision": 0,
+      "recall": 0,
+      "f1": 0
+    },
+    "promptprotection/attacks/hex": {
+      "tp": 0,
+      "fp": 0,
+      "tn": 0,
+      "fn": 1,
+      "samples": 1,
+      "precision": 0,
+      "recall": 0,
+      "f1": 0
+    },
+    "promptprotection/attacks/hidden-html-comment": {
+      "tp": 1,
+      "fp": 0,
+      "tn": 0,
+      "fn": 0,
+      "samples": 1,
+      "precision": 1,
+      "recall": 1,
+      "f1": 1
+    },
+    "promptprotection/attacks/hidden-in-description": {
+      "tp": 0,
+      "fp": 0,
+      "tn": 0,
+      "fn": 1,
+      "samples": 1,
+      "precision": 0,
+      "recall": 0,
+      "f1": 0
+    },
+    "promptprotection/attacks/hindi-persona": {
+      "tp": 0,
+      "fp": 0,
+      "tn": 0,
+      "fn": 1,
+      "samples": 1,
+      "precision": 0,
+      "recall": 0,
+      "f1": 0
+    },
+    "promptprotection/attacks/homoglyph": {
+      "tp": 0,
+      "fp": 0,
+      "tn": 0,
+      "fn": 1,
+      "samples": 1,
+      "precision": 0,
+      "recall": 0,
+      "f1": 0
+    },
+    "promptprotection/attacks/hypothetical-frame": {
+      "tp": 0,
+      "fp": 0,
+      "tn": 0,
+      "fn": 1,
+      "samples": 1,
+      "precision": 0,
+      "recall": 0,
+      "f1": 0
+    },
+    "promptprotection/attacks/image-alt-text": {
+      "tp": 0,
+      "fp": 0,
+      "tn": 0,
+      "fn": 1,
+      "samples": 1,
+      "precision": 0,
+      "recall": 0,
+      "f1": 0
+    },
+    "promptprotection/attacks/impersonate-dev": {
+      "tp": 0,
+      "fp": 0,
+      "tn": 0,
+      "fn": 1,
+      "samples": 1,
+      "precision": 0,
+      "recall": 0,
+      "f1": 0
+    },
+    "promptprotection/attacks/innocuous-wrapper": {
+      "tp": 0,
+      "fp": 0,
+      "tn": 0,
+      "fn": 1,
+      "samples": 1,
+      "precision": 0,
+      "recall": 0,
+      "f1": 0
+    },
+    "promptprotection/attacks/instruction-in-schema": {
+      "tp": 0,
+      "fp": 0,
+      "tn": 0,
+      "fn": 1,
+      "samples": 1,
+      "precision": 0,
+      "recall": 0,
+      "f1": 0
+    },
+    "promptprotection/attacks/instruction-negation": {
+      "tp": 0,
+      "fp": 0,
+      "tn": 0,
+      "fn": 1,
+      "samples": 1,
+      "precision": 0,
+      "recall": 0,
+      "f1": 0
+    },
+    "promptprotection/attacks/italian-override": {
+      "tp": 0,
+      "fp": 0,
+      "tn": 0,
+      "fn": 1,
+      "samples": 1,
+      "precision": 0,
+      "recall": 0,
+      "f1": 0
+    },
+    "promptprotection/attacks/japanese-leak": {
+      "tp": 0,
+      "fp": 0,
+      "tn": 0,
+      "fn": 1,
+      "samples": 1,
+      "precision": 0,
+      "recall": 0,
+      "f1": 0
+    },
+    "promptprotection/attacks/json-dump": {
+      "tp": 0,
+      "fp": 0,
+      "tn": 0,
+      "fn": 1,
+      "samples": 1,
+      "precision": 0,
+      "recall": 0,
+      "f1": 0
+    },
+    "promptprotection/attacks/korean-leak": {
+      "tp": 0,
+      "fp": 0,
+      "tn": 0,
+      "fn": 1,
+      "samples": 1,
+      "precision": 0,
+      "recall": 0,
+      "f1": 0
+    },
+    "promptprotection/attacks/leetspeak-novel": {
+      "tp": 0,
+      "fp": 0,
+      "tn": 0,
+      "fn": 1,
+      "samples": 1,
+      "precision": 0,
+      "recall": 0,
+      "f1": 0
+    },
+    "promptprotection/attacks/legal-pressure": {
+      "tp": 0,
+      "fp": 0,
+      "tn": 0,
+      "fn": 1,
+      "samples": 1,
+      "precision": 0,
+      "recall": 0,
+      "f1": 0
+    },
+    "promptprotection/attacks/markdown-image": {
+      "tp": 0,
+      "fp": 0,
+      "tn": 0,
+      "fn": 1,
+      "samples": 1,
+      "precision": 0,
+      "recall": 0,
+      "f1": 0
+    },
+    "promptprotection/attacks/markdown-link": {
+      "tp": 0,
+      "fp": 0,
+      "tn": 0,
+      "fn": 1,
+      "samples": 1,
+      "precision": 0,
+      "recall": 0,
+      "f1": 0
+    },
+    "promptprotection/attacks/meta-permission": {
+      "tp": 0,
+      "fp": 0,
+      "tn": 0,
+      "fn": 1,
+      "samples": 1,
+      "precision": 0,
+      "recall": 0,
+      "f1": 0
+    },
+    "promptprotection/attacks/mixed-lang-smuggle": {
+      "tp": 1,
+      "fp": 0,
+      "tn": 0,
+      "fn": 0,
+      "samples": 1,
+      "precision": 1,
+      "recall": 1,
+      "f1": 1
+    },
+    "promptprotection/attacks/moral-inversion": {
+      "tp": 0,
+      "fp": 0,
+      "tn": 0,
+      "fn": 1,
+      "samples": 1,
+      "precision": 0,
+      "recall": 0,
+      "f1": 0
+    },
+    "promptprotection/attacks/morse": {
+      "tp": 0,
+      "fp": 0,
+      "tn": 0,
+      "fn": 1,
+      "samples": 1,
+      "precision": 0,
+      "recall": 0,
+      "f1": 0
+    },
+    "promptprotection/attacks/multi-step-summary": {
+      "tp": 0,
+      "fp": 0,
+      "tn": 0,
+      "fn": 1,
+      "samples": 1,
+      "precision": 0,
+      "recall": 0,
+      "f1": 0
+    },
+    "promptprotection/attacks/multi-turn-setup": {
+      "tp": 0,
+      "fp": 0,
+      "tn": 0,
+      "fn": 1,
+      "samples": 1,
+      "precision": 0,
+      "recall": 0,
+      "f1": 0
+    },
+    "promptprotection/attacks/nested-base64": {
+      "tp": 0,
+      "fp": 0,
+      "tn": 0,
+      "fn": 1,
+      "samples": 1,
+      "precision": 0,
+      "recall": 0,
+      "f1": 0
+    },
+    "promptprotection/attacks/nested-quote": {
+      "tp": 0,
+      "fp": 0,
+      "tn": 0,
+      "fn": 1,
+      "samples": 1,
+      "precision": 0,
+      "recall": 0,
+      "f1": 0
+    },
+    "promptprotection/attacks/obfuscated-target": {
+      "tp": 0,
+      "fp": 0,
+      "tn": 0,
+      "fn": 1,
+      "samples": 1,
+      "precision": 0,
+      "recall": 0,
+      "f1": 0
+    },
+    "promptprotection/attacks/opposite-day": {
+      "tp": 0,
+      "fp": 0,
+      "tn": 0,
+      "fn": 1,
+      "samples": 1,
+      "precision": 0,
+      "recall": 0,
+      "f1": 0
+    },
+    "promptprotection/attacks/override-other-tools": {
+      "tp": 0,
+      "fp": 0,
+      "tn": 0,
+      "fn": 1,
+      "samples": 1,
+      "precision": 0,
+      "recall": 0,
+      "f1": 0
+    },
+    "promptprotection/attacks/owner-claim": {
+      "tp": 0,
+      "fp": 0,
+      "tn": 0,
+      "fn": 1,
+      "samples": 1,
+      "precision": 0,
+      "recall": 0,
+      "f1": 0
+    },
+    "promptprotection/attacks/paraphrased-override": {
+      "tp": 0,
+      "fp": 0,
+      "tn": 0,
+      "fn": 2,
+      "samples": 2,
+      "precision": 0,
+      "recall": 0,
+      "f1": 0
+    },
+    "promptprotection/attacks/pdf-footer": {
+      "tp": 0,
+      "fp": 0,
+      "tn": 0,
+      "fn": 1,
+      "samples": 1,
+      "precision": 0,
+      "recall": 0,
+      "f1": 0
+    },
+    "promptprotection/attacks/peer-model": {
+      "tp": 0,
+      "fp": 0,
+      "tn": 0,
+      "fn": 1,
+      "samples": 1,
+      "precision": 0,
+      "recall": 0,
+      "f1": 0
+    },
+    "promptprotection/attacks/persona-no-triggers": {
+      "tp": 0,
+      "fp": 0,
+      "tn": 0,
+      "fn": 2,
+      "samples": 2,
+      "precision": 0,
+      "recall": 0,
+      "f1": 0
+    },
+    "promptprotection/attacks/pixel-tracker": {
+      "tp": 0,
+      "fp": 0,
+      "tn": 0,
+      "fn": 1,
+      "samples": 1,
+      "precision": 0,
+      "recall": 0,
+      "f1": 0
+    },
+    "promptprotection/attacks/polish-jailbreak": {
+      "tp": 0,
+      "fp": 0,
+      "tn": 0,
+      "fn": 1,
+      "samples": 1,
+      "precision": 0,
+      "recall": 0,
+      "f1": 0
+    },
+    "promptprotection/attacks/polite-override": {
+      "tp": 0,
+      "fp": 0,
+      "tn": 0,
+      "fn": 1,
+      "samples": 1,
+      "precision": 0,
+      "recall": 0,
+      "f1": 0
+    },
+    "promptprotection/attacks/portuguese-exfil": {
+      "tp": 0,
+      "fp": 0,
+      "tn": 0,
+      "fn": 1,
+      "samples": 1,
+      "precision": 0,
+      "recall": 0,
+      "f1": 0
+    },
+    "promptprotection/attacks/priority-claim": {
+      "tp": 0,
+      "fp": 0,
+      "tn": 0,
+      "fn": 1,
+      "samples": 1,
+      "precision": 0,
+      "recall": 0,
+      "f1": 0
+    },
+    "promptprotection/attacks/privilege-claim": {
+      "tp": 0,
+      "fp": 0,
+      "tn": 0,
+      "fn": 1,
+      "samples": 1,
+      "precision": 0,
+      "recall": 0,
+      "f1": 0
+    },
+    "promptprotection/attacks/privileged-channel": {
+      "tp": 0,
+      "fp": 0,
+      "tn": 0,
+      "fn": 1,
+      "samples": 1,
+      "precision": 0,
+      "recall": 0,
+      "f1": 0
+    },
+    "promptprotection/attacks/query-param": {
+      "tp": 0,
+      "fp": 0,
+      "tn": 0,
+      "fn": 1,
+      "samples": 1,
+      "precision": 0,
+      "recall": 0,
+      "f1": 0
+    },
+    "promptprotection/attacks/readme": {
+      "tp": 1,
+      "fp": 0,
+      "tn": 0,
+      "fn": 0,
+      "samples": 1,
+      "precision": 1,
+      "recall": 1,
+      "f1": 1
+    },
+    "promptprotection/attacks/reflection": {
+      "tp": 0,
+      "fp": 0,
+      "tn": 0,
+      "fn": 1,
+      "samples": 1,
+      "precision": 0,
+      "recall": 0,
+      "f1": 0
+    },
+    "promptprotection/attacks/repeat-above": {
+      "tp": 0,
+      "fp": 0,
+      "tn": 0,
+      "fn": 1,
+      "samples": 1,
+      "precision": 0,
+      "recall": 0,
+      "f1": 0
+    },
+    "promptprotection/attacks/researcher": {
+      "tp": 0,
+      "fp": 0,
+      "tn": 0,
+      "fn": 1,
+      "samples": 1,
+      "precision": 0,
+      "recall": 0,
+      "f1": 0
+    },
+    "promptprotection/attacks/reset-framing": {
+      "tp": 0,
+      "fp": 0,
+      "tn": 0,
+      "fn": 1,
+      "samples": 1,
+      "precision": 0,
+      "recall": 0,
+      "f1": 0
+    },
+    "promptprotection/attacks/reversed": {
+      "tp": 0,
+      "fp": 0,
+      "tn": 0,
+      "fn": 1,
+      "samples": 1,
+      "precision": 0,
+      "recall": 0,
+      "f1": 0
+    },
+    "promptprotection/attacks/review-text": {
+      "tp": 0,
+      "fp": 0,
+      "tn": 0,
+      "fn": 1,
+      "samples": 1,
+      "precision": 0,
+      "recall": 0,
+      "f1": 0
+    },
+    "promptprotection/attacks/reward-conditioning": {
+      "tp": 0,
+      "fp": 0,
+      "tn": 0,
+      "fn": 1,
+      "samples": 1,
+      "precision": 0,
+      "recall": 0,
+      "f1": 0
+    },
+    "promptprotection/attacks/role-confusion": {
+      "tp": 0,
+      "fp": 0,
+      "tn": 0,
+      "fn": 1,
+      "samples": 1,
+      "precision": 0,
+      "recall": 0,
+      "f1": 0
+    },
+    "promptprotection/attacks/rot13": {
+      "tp": 0,
+      "fp": 0,
+      "tn": 0,
+      "fn": 1,
+      "samples": 1,
+      "precision": 0,
+      "recall": 0,
+      "f1": 0
+    },
+    "promptprotection/attacks/russian-exfil": {
+      "tp": 0,
+      "fp": 0,
+      "tn": 0,
+      "fn": 1,
+      "samples": 1,
+      "precision": 0,
+      "recall": 0,
+      "f1": 0
+    },
+    "promptprotection/attacks/shadowing": {
+      "tp": 0,
+      "fp": 0,
+      "tn": 0,
+      "fn": 1,
+      "samples": 1,
+      "precision": 0,
+      "recall": 0,
+      "f1": 0
+    },
+    "promptprotection/attacks/simulation-frame": {
+      "tp": 0,
+      "fp": 0,
+      "tn": 0,
+      "fn": 1,
+      "samples": 1,
+      "precision": 0,
+      "recall": 0,
+      "f1": 0
+    },
+    "promptprotection/attacks/slack-message": {
+      "tp": 0,
+      "fp": 0,
+      "tn": 0,
+      "fn": 1,
+      "samples": 1,
+      "precision": 0,
+      "recall": 0,
+      "f1": 0
+    },
+    "promptprotection/attacks/soft-reframe": {
+      "tp": 0,
+      "fp": 0,
+      "tn": 0,
+      "fn": 1,
+      "samples": 1,
+      "precision": 0,
+      "recall": 0,
+      "f1": 0
+    },
+    "promptprotection/attacks/spaced-letters": {
+      "tp": 0,
+      "fp": 0,
+      "tn": 0,
+      "fn": 1,
+      "samples": 1,
+      "precision": 0,
+      "recall": 0,
+      "f1": 0
+    },
+    "promptprotection/attacks/spanish-paraphrase": {
+      "tp": 0,
+      "fp": 0,
+      "tn": 0,
+      "fn": 1,
+      "samples": 1,
+      "precision": 0,
+      "recall": 0,
+      "f1": 0
+    },
+    "promptprotection/attacks/staged": {
+      "tp": 0,
+      "fp": 0,
+      "tn": 0,
+      "fn": 1,
+      "samples": 1,
+      "precision": 0,
+      "recall": 0,
+      "f1": 0
+    },
+    "promptprotection/attacks/steganographic": {
+      "tp": 0,
+      "fp": 0,
+      "tn": 0,
+      "fn": 1,
+      "samples": 1,
+      "precision": 0,
+      "recall": 0,
+      "f1": 0
+    },
+    "promptprotection/attacks/suffix-append": {
+      "tp": 0,
+      "fp": 0,
+      "tn": 0,
+      "fn": 1,
+      "samples": 1,
+      "precision": 0,
+      "recall": 0,
+      "f1": 0
+    },
+    "promptprotection/attacks/summarize-self": {
+      "tp": 0,
+      "fp": 0,
+      "tn": 0,
+      "fn": 1,
+      "samples": 1,
+      "precision": 0,
+      "recall": 0,
+      "f1": 0
+    },
+    "promptprotection/attacks/support-agent": {
+      "tp": 0,
+      "fp": 0,
+      "tn": 0,
+      "fn": 1,
+      "samples": 1,
+      "precision": 0,
+      "recall": 0,
+      "f1": 0
+    },
+    "promptprotection/attacks/support-ticket": {
+      "tp": 0,
+      "fp": 0,
+      "tn": 0,
+      "fn": 1,
+      "samples": 1,
+      "precision": 0,
+      "recall": 0,
+      "f1": 0
+    },
+    "promptprotection/attacks/sysadmin": {
+      "tp": 0,
+      "fp": 0,
+      "tn": 0,
+      "fn": 1,
+      "samples": 1,
+      "precision": 0,
+      "recall": 0,
+      "f1": 0
+    },
+    "promptprotection/attacks/token-game": {
+      "tp": 0,
+      "fp": 0,
+      "tn": 0,
+      "fn": 1,
+      "samples": 1,
+      "precision": 0,
+      "recall": 0,
+      "f1": 0
+    },
+    "promptprotection/attacks/translation-trick": {
+      "tp": 0,
+      "fp": 0,
+      "tn": 0,
+      "fn": 1,
+      "samples": 1,
+      "precision": 0,
+      "recall": 0,
+      "f1": 0
+    },
+    "promptprotection/attacks/turkish-override": {
+      "tp": 0,
+      "fp": 0,
+      "tn": 0,
+      "fn": 1,
+      "samples": 1,
+      "precision": 0,
+      "recall": 0,
+      "f1": 0
+    },
+    "promptprotection/attacks/unicode-escape": {
+      "tp": 1,
+      "fp": 0,
+      "tn": 0,
+      "fn": 0,
+      "samples": 1,
+      "precision": 1,
+      "recall": 1,
+      "f1": 1
+    },
+    "promptprotection/attacks/unicode-tag-smuggle": {
+      "tp": 1,
+      "fp": 0,
+      "tn": 0,
+      "fn": 0,
+      "samples": 1,
+      "precision": 1,
+      "recall": 1,
+      "f1": 1
+    },
+    "promptprotection/attacks/vendor-claim": {
+      "tp": 0,
+      "fp": 0,
+      "tn": 0,
+      "fn": 1,
+      "samples": 1,
+      "precision": 0,
+      "recall": 0,
+      "f1": 0
+    },
+    "promptprotection/attacks/webhook": {
+      "tp": 0,
+      "fp": 0,
+      "tn": 0,
+      "fn": 1,
+      "samples": 1,
+      "precision": 0,
+      "recall": 0,
+      "f1": 0
+    },
+    "promptprotection/attacks/webpage": {
+      "tp": 0,
+      "fp": 0,
+      "tn": 0,
+      "fn": 1,
+      "samples": 1,
+      "precision": 0,
+      "recall": 0,
+      "f1": 0
+    },
+    "promptprotection/attacks/whitespace-split": {
+      "tp": 0,
+      "fp": 0,
+      "tn": 0,
+      "fn": 1,
+      "samples": 1,
+      "precision": 0,
+      "recall": 0,
+      "f1": 0
+    },
+    "promptprotection/attacks/wiki-edit": {
+      "tp": 0,
+      "fp": 0,
+      "tn": 0,
+      "fn": 1,
+      "samples": 1,
+      "precision": 0,
+      "recall": 0,
+      "f1": 0
+    },
+    "promptprotection/attacks/xml-role-forgery": {
+      "tp": 1,
+      "fp": 0,
+      "tn": 0,
+      "fn": 0,
+      "samples": 1,
+      "precision": 1,
+      "recall": 1,
+      "f1": 1
+    },
+    "promptprotection/attacks/zero-width": {
+      "tp": 1,
+      "fp": 0,
+      "tn": 0,
+      "fn": 0,
+      "samples": 1,
+      "precision": 1,
+      "recall": 1,
+      "f1": 1
+    },
+    "promptprotection/benign-hard/common-query": {
+      "tp": 0,
+      "fp": 0,
+      "tn": 31,
+      "fn": 0,
+      "samples": 31,
+      "precision": 0,
+      "recall": 0,
+      "f1": 0
+    },
+    "promptprotection/benign-hard/dev-jargon": {
+      "tp": 0,
+      "fp": 0,
+      "tn": 21,
+      "fn": 0,
+      "samples": 21,
+      "precision": 0,
+      "recall": 0,
+      "f1": 0
+    },
+    "promptprotection/benign-hard/multilingual": {
+      "tp": 0,
+      "fp": 1,
+      "tn": 25,
+      "fn": 0,
+      "samples": 26,
+      "precision": 0,
+      "recall": 0,
+      "f1": 0
+    },
+    "promptprotection/benign-hard/security-docs": {
+      "tp": 0,
+      "fp": 7,
+      "tn": 8,
+      "fn": 0,
+      "samples": 15,
+      "precision": 0,
+      "recall": 0,
+      "f1": 0
+    },
+    "promptprotection/benign-hard/technique-query": {
+      "tp": 0,
+      "fp": 14,
+      "tn": 17,
+      "fn": 0,
+      "samples": 31,
+      "precision": 0,
+      "recall": 0,
+      "f1": 0
+    },
+    "promptprotection/benign-hard/virtual-creation": {
+      "tp": 0,
+      "fp": 5,
+      "tn": 26,
+      "fn": 0,
+      "samples": 31,
+      "precision": 0,
+      "recall": 0,
+      "f1": 0
+    }
+  },
+  "rule_hits": {
+    "backdoor_indicator": {
+      "injection": 1,
+      "benign": 0
+    },
+    "chat_template_boundary": {
+      "injection": 2,
+      "benign": 0
+    },
+    "data_exfiltration_email": {
+      "injection": 7,
+      "benign": 0
+    },
+    "hidden_char_format": {
+      "injection": 1,
+      "benign": 0
+    },
+    "hidden_char_zero_width": {
+      "injection": 1,
+      "benign": 0
+    },
+    "multilingual_prompt_injection": {
+      "injection": 4,
+      "benign": 0
+    },
+    "obfuscated_javascript": {
+      "injection": 3,
+      "benign": 0
+    },
+    "persona_hijack": {
+      "injection": 1,
+      "benign": 0
+    },
+    "prompt_injection_comment": {
+      "injection": 8,
+      "benign": 29
+    },
+    "suspicious_imports": {
+      "injection": 1,
+      "benign": 0
+    },
+    "suspicious_shell": {
+      "injection": 4,
+      "benign": 0
+    },
+    "system_boundary": {
+      "injection": 2,
+      "benign": 1
+    }
+  },
+  "latency_p50_ms": 7.472,
+  "latency_p95_ms": 8.955
+}
