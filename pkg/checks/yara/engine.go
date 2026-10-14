@@ -468,6 +468,7 @@ func (e *Engine) LoadBuiltins() {
 				`(?i)\b(if|when|whenever)\s+i\s+say\s+\S.{0,40}?\s+(you|u)\s+(say|answer|respond|reply|write)\s+(with\s+)?["'“„«]|\bsi\s+(yo\s+)?digo\s+\S.{0,40}?\s+(t[uú]\s+)?(dices|respondes|contestas|escribes)\s+["'“„«]|\bwenn\s+ich\s+\S.{0,40}?\s+sage,?\s+(sagst|antwortest|schreibst)\s+du\s+["'“„«]`,
 				`(?i)\bif\s+(you|u)\s+(don['’]?t|do\s+not)\s+know\s*(it|that|this|the\s+answer)?\s*[,.]?\s*(just\s+|simply\s+|then\s+)?(say|answer|respond|reply|output)(\s+with)?(\s+only)?\s*:?\s*["'“„«]([^i\s"'“”„«»]|i[^\s'’])|\bwenn\s+du\s+(es\s+|das\s+|die\s+antwort\s+)?nicht\s+wei(ß|ss)t,?\s+(dann\s+)?(sag|sage|antworte|schreibe?)\s+(einfach\s+)?(mit\s+)?["'“„«]|\bsi\s+no\s+(lo\s+|la\s+respuesta\s+)?sabes,?\s+(di|responde|contesta|escribe)\s+["'“„«]`,
 				`(?i)\b(you\s+are|you['’]re|you)\s+(supposed\s+to|must|have\s+to)\s+(always\s+)?(answer|respond|reply),?\s+(at\s+all\s+times|no\s+matter\s+what|always)\s*([.!,;]|$)`,
+				`(?i)(?:(?:\b|\\[nt])(?:now|instead|only|simply),?\s+(?:(?:please|just)\s+)?(?:say|output|respond\s+with|repeat)\s+(?:only\s+|exactly\s+|(?:the\s+)?(?:exact\s+)?(?:following|phrase|words?|string|sentence|text)\s*[:,]?\s*)?|\b(?:say|output|respond\s+with|repeat)\s+(?:only|exactly|(?:the\s+)?exact\s+(?:phrase|words?|string|sentence|text)|the\s+following)\s*[:,]?\s*)(?:\\?"[^"\n]{1,120}?\\?"|'[^'\n]{1,120}?'|“[^”\n]{1,120}?”|„[^“”\n]{1,120}?[“”]|«[^»\n]{1,120}?»|<[^<>\n]{1,60}>)\s*(?:$|[\n.!?,;:)\]}"]|\\[nt]|only\b|and\s+nothing\b|from\s+now\s+on\b|(?:don['’]?t|do\s+not)\b)`,
 			},
 		},
 		{
