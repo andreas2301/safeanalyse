@@ -1,0 +1,116 @@
+{
+  "metadata": {
+    "dataset": "testdata/eval/nemotron.jsonl",
+    "duration_ms": 5018,
+    "safeanalyze_version": "0.3.43",
+    "scan_mode": "fast"
+  },
+  "tp": 34,
+  "fp": 0,
+  "tn": 300,
+  "fn": 266,
+  "samples": 600,
+  "precision": 1,
+  "recall": 0.11333333333333333,
+  "f1": 0.20359281437125748,
+  "by_source": {
+    "nemotron/ecommerce": {
+      "tp": 1,
+      "fp": 0,
+      "tn": 19,
+      "fn": 18,
+      "samples": 38,
+      "precision": 1,
+      "recall": 0.05263157894736842,
+      "f1": 0.1
+    },
+    "nemotron/education": {
+      "tp": 1,
+      "fp": 0,
+      "tn": 34,
+      "fn": 33,
+      "samples": 68,
+      "precision": 1,
+      "recall": 0.029411764705882353,
+      "f1": 0.05714285714285714
+    },
+    "nemotron/healthcare": {
+      "tp": 20,
+      "fp": 0,
+      "tn": 39,
+      "fn": 19,
+      "samples": 78,
+      "precision": 1,
+      "recall": 0.5128205128205128,
+      "f1": 0.6779661016949152
+    },
+    "nemotron/hr": {
+      "tp": 10,
+      "fp": 0,
+      "tn": 26,
+      "fn": 16,
+      "samples": 52,
+      "precision": 1,
+      "recall": 0.38461538461538464,
+      "f1": 0.5555555555555556
+    },
+    "nemotron/insurance": {
+      "tp": 0,
+      "fp": 0,
+      "tn": 18,
+      "fn": 18,
+      "samples": 36,
+      "precision": 0,
+      "recall": 0,
+      "f1": 0
+    },
+    "nemotron/it_helpdesk": {
+      "tp": 0,
+      "fp": 0,
+      "tn": 33,
+      "fn": 33,
+      "samples": 66,
+      "precision": 0,
+      "recall": 0,
+      "f1": 0
+    },
+    "nemotron/legal": {
+      "tp": 0,
+      "fp": 0,
+      "tn": 65,
+      "fn": 65,
+      "samples": 130,
+      "precision": 0,
+      "recall": 0,
+      "f1": 0
+    },
+    "nemotron/logistics": {
+      "tp": 0,
+      "fp": 0,
+      "tn": 36,
+      "fn": 36,
+      "samples": 72,
+      "precision": 0,
+      "recall": 0,
+      "f1": 0
+    },
+    "nemotron/real_estate": {
+      "tp": 2,
+      "fp": 0,
+      "tn": 30,
+      "fn": 28,
+      "samples": 60,
+      "precision": 1,
+      "recall": 0.06666666666666667,
+      "f1": 0.125
+    }
+  },
+  "rule_hits": {
+    "data_exfiltration_email": {
+      "injection": 34,
+      "benign": 0
+    }
+  },
+  "latency_p50_ms": 8.319,
+  "latency_p95_ms": 9.448
+}

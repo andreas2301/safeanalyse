@@ -1,0 +1,288 @@
+{
+  "metadata": {
+    "dataset": "testdata/eval/multilingual-holdout.jsonl",
+    "duration_ms": 6499,
+    "safeanalyze_version": "0.3.43",
+    "scan_mode": "fast"
+  },
+  "tp": 20,
+  "fp": 0,
+  "tn": 0,
+  "fn": 805,
+  "samples": 825,
+  "precision": 1,
+  "recall": 0.024242424242424242,
+  "f1": 0.047337278106508875,
+  "by_source": {
+    "cyberseceval/Arabic": {
+      "tp": 1,
+      "fp": 0,
+      "tn": 0,
+      "fn": 17,
+      "samples": 18,
+      "precision": 1,
+      "recall": 0.05555555555555555,
+      "f1": 0.10526315789473684
+    },
+    "cyberseceval/Bengali": {
+      "tp": 1,
+      "fp": 0,
+      "tn": 0,
+      "fn": 20,
+      "samples": 21,
+      "precision": 1,
+      "recall": 0.047619047619047616,
+      "f1": 0.09090909090909091
+    },
+    "cyberseceval/Chinese": {
+      "tp": 0,
+      "fp": 0,
+      "tn": 0,
+      "fn": 7,
+      "samples": 7,
+      "precision": 0,
+      "recall": 0,
+      "f1": 0
+    },
+    "cyberseceval/Filipino/Tagalog": {
+      "tp": 0,
+      "fp": 0,
+      "tn": 0,
+      "fn": 17,
+      "samples": 17,
+      "precision": 0,
+      "recall": 0,
+      "f1": 0
+    },
+    "cyberseceval/French": {
+      "tp": 1,
+      "fp": 0,
+      "tn": 0,
+      "fn": 12,
+      "samples": 13,
+      "precision": 1,
+      "recall": 0.07692307692307693,
+      "f1": 0.14285714285714285
+    },
+    "cyberseceval/German": {
+      "tp": 0,
+      "fp": 0,
+      "tn": 0,
+      "fn": 12,
+      "samples": 12,
+      "precision": 0,
+      "recall": 0,
+      "f1": 0
+    },
+    "cyberseceval/Hindi": {
+      "tp": 1,
+      "fp": 0,
+      "tn": 0,
+      "fn": 82,
+      "samples": 83,
+      "precision": 1,
+      "recall": 0.012048192771084338,
+      "f1": 0.023809523809523808
+    },
+    "cyberseceval/Indonesian": {
+      "tp": 0,
+      "fp": 0,
+      "tn": 0,
+      "fn": 14,
+      "samples": 14,
+      "precision": 0,
+      "recall": 0,
+      "f1": 0
+    },
+    "cyberseceval/Italian": {
+      "tp": 1,
+      "fp": 0,
+      "tn": 0,
+      "fn": 17,
+      "samples": 18,
+      "precision": 1,
+      "recall": 0.05555555555555555,
+      "f1": 0.10526315789473684
+    },
+    "cyberseceval/Japanese": {
+      "tp": 0,
+      "fp": 0,
+      "tn": 0,
+      "fn": 15,
+      "samples": 15,
+      "precision": 0,
+      "recall": 0,
+      "f1": 0
+    },
+    "cyberseceval/Korean": {
+      "tp": 1,
+      "fp": 0,
+      "tn": 0,
+      "fn": 17,
+      "samples": 18,
+      "precision": 1,
+      "recall": 0.05555555555555555,
+      "f1": 0.10526315789473684
+    },
+    "cyberseceval/Portuguese": {
+      "tp": 2,
+      "fp": 0,
+      "tn": 0,
+      "fn": 16,
+      "samples": 18,
+      "precision": 1,
+      "recall": 0.1111111111111111,
+      "f1": 0.2
+    },
+    "cyberseceval/Russian": {
+      "tp": 0,
+      "fp": 0,
+      "tn": 0,
+      "fn": 12,
+      "samples": 12,
+      "precision": 0,
+      "recall": 0,
+      "f1": 0
+    },
+    "cyberseceval/Spanish": {
+      "tp": 5,
+      "fp": 0,
+      "tn": 0,
+      "fn": 13,
+      "samples": 18,
+      "precision": 1,
+      "recall": 0.2777777777777778,
+      "f1": 0.43478260869565216
+    },
+    "cyberseceval/Thai": {
+      "tp": 1,
+      "fp": 0,
+      "tn": 0,
+      "fn": 12,
+      "samples": 13,
+      "precision": 1,
+      "recall": 0.07692307692307693,
+      "f1": 0.14285714285714285
+    },
+    "cyberseceval/Turkish": {
+      "tp": 0,
+      "fp": 0,
+      "tn": 0,
+      "fn": 20,
+      "samples": 20,
+      "precision": 0,
+      "recall": 0,
+      "f1": 0
+    },
+    "cyberseceval/Vietnamese": {
+      "tp": 1,
+      "fp": 0,
+      "tn": 0,
+      "fn": 18,
+      "samples": 19,
+      "precision": 1,
+      "recall": 0.05263157894736842,
+      "f1": 0.1
+    },
+    "yanismiraoui/de": {
+      "tp": 0,
+      "fp": 0,
+      "tn": 0,
+      "fn": 65,
+      "samples": 65,
+      "precision": 0,
+      "recall": 0,
+      "f1": 0
+    },
+    "yanismiraoui/en": {
+      "tp": 2,
+      "fp": 0,
+      "tn": 0,
+      "fn": 166,
+      "samples": 168,
+      "precision": 1,
+      "recall": 0.011904761904761904,
+      "f1": 0.023529411764705882
+    },
+    "yanismiraoui/es": {
+      "tp": 2,
+      "fp": 0,
+      "tn": 0,
+      "fn": 67,
+      "samples": 69,
+      "precision": 1,
+      "recall": 0.028985507246376812,
+      "f1": 0.056338028169014086
+    },
+    "yanismiraoui/fr": {
+      "tp": 0,
+      "fp": 0,
+      "tn": 0,
+      "fn": 66,
+      "samples": 66,
+      "precision": 0,
+      "recall": 0,
+      "f1": 0
+    },
+    "yanismiraoui/it": {
+      "tp": 0,
+      "fp": 0,
+      "tn": 0,
+      "fn": 57,
+      "samples": 57,
+      "precision": 0,
+      "recall": 0,
+      "f1": 0
+    },
+    "yanismiraoui/pt": {
+      "tp": 0,
+      "fp": 0,
+      "tn": 0,
+      "fn": 56,
+      "samples": 56,
+      "precision": 0,
+      "recall": 0,
+      "f1": 0
+    },
+    "yanismiraoui/ro": {
+      "tp": 0,
+      "fp": 0,
+      "tn": 0,
+      "fn": 5,
+      "samples": 5,
+      "precision": 0,
+      "recall": 0,
+      "f1": 0
+    },
+    "yanismiraoui/und": {
+      "tp": 1,
+      "fp": 0,
+      "tn": 0,
+      "fn": 2,
+      "samples": 3,
+      "precision": 1,
+      "recall": 0.3333333333333333,
+      "f1": 0.5
+    }
+  },
+  "rule_hits": {
+    "hidden_char_format": {
+      "injection": 3,
+      "benign": 0
+    },
+    "multilingual_prompt_injection": {
+      "injection": 14,
+      "benign": 0
+    },
+    "output_constraint": {
+      "injection": 2,
+      "benign": 0
+    },
+    "prompt_injection_comment": {
+      "injection": 1,
+      "benign": 0
+    }
+  },
+  "latency_p50_ms": 7.883,
+  "latency_p95_ms": 8.819
+}
