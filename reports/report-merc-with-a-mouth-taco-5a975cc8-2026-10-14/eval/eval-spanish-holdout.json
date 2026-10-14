@@ -1,0 +1,96 @@
+{
+  "metadata": {
+    "dataset": "testdata/eval/spanish-holdout.jsonl",
+    "duration_ms": 2538,
+    "safeanalyze_version": "0.3.34",
+    "scan_mode": "fast"
+  },
+  "tp": 23,
+  "fp": 0,
+  "tn": 371,
+  "fn": 30,
+  "samples": 424,
+  "precision": 1,
+  "recall": 0.4339622641509434,
+  "f1": 0.6052631578947368,
+  "by_source": {
+    "edithngalame/bipia_clean_email/MIT": {
+      "tp": 0,
+      "fp": 0,
+      "tn": 22,
+      "fn": 0,
+      "samples": 22,
+      "precision": 0,
+      "recall": 0,
+      "f1": 0
+    },
+    "edithngalame/dolly_context/CC-BY-SA-3.0": {
+      "tp": 0,
+      "fp": 0,
+      "tn": 77,
+      "fn": 0,
+      "samples": 77,
+      "precision": 0,
+      "recall": 0,
+      "f1": 0
+    },
+    "edithngalame/dolly_instruction/CC-BY-SA-3.0": {
+      "tp": 0,
+      "fp": 0,
+      "tn": 205,
+      "fn": 0,
+      "samples": 205,
+      "precision": 0,
+      "recall": 0,
+      "f1": 0
+    },
+    "edithngalame/email_benign_insert/MIT": {
+      "tp": 0,
+      "fp": 0,
+      "tn": 60,
+      "fn": 0,
+      "samples": 60,
+      "precision": 0,
+      "recall": 0,
+      "f1": 0
+    },
+    "edithngalame/gandalf/MIT": {
+      "tp": 23,
+      "fp": 0,
+      "tn": 0,
+      "fn": 26,
+      "samples": 49,
+      "precision": 1,
+      "recall": 0.46938775510204084,
+      "f1": 0.6388888888888888
+    },
+    "edithngalame/jackhhao_benign/Apache-2.0": {
+      "tp": 0,
+      "fp": 0,
+      "tn": 7,
+      "fn": 0,
+      "samples": 7,
+      "precision": 0,
+      "recall": 0,
+      "f1": 0
+    },
+    "edithngalame/jailbreak_roleplay/Apache-2.0": {
+      "tp": 0,
+      "fp": 0,
+      "tn": 0,
+      "fn": 4,
+      "samples": 4,
+      "precision": 0,
+      "recall": 0,
+      "f1": 0
+    }
+  },
+  "rule_hits": {
+    "multilingual_prompt_injection": {
+      "injection": 23,
+      "benign": 0
+    }
+  },
+  "latency_p50_ms": 5.876,
+  "latency_p95_ms": 7.206
+}
