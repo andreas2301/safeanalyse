@@ -45,21 +45,21 @@ The project uses an iterative, measurement-driven improvement loop inspired by [
   - `safeanalyze-doc-webagents.html`
 - External scanners installed via `./safeanalyze install --all` (Semgrep, TruffleHog, prompt-injection-scanner, etc.).
 - Corpus targets checked out at the pinned upstream SHAs/sha256s in `testdata/eval/SOURCES.md` ("Thorough-mode corpus manifest"; re-baselined 2026-10-02). Do not compare against runs on other revisions.
-- Labeled eval sets fetched with `./scripts/fetch_eval.sh` (pinned, sha256-verified, seeded; not committed). Dev: `testdata/eval/{deepset,llmail,browsesafe}.jsonl`. Holdout: `testdata/eval/{deepset,llmail,browsesafe}-holdout.jsonl`.
+- Labeled eval sets fetched with `./scripts/fetch_eval.sh` (pinned, sha256-verified, seeded; not committed). Dev: `testdata/eval/{deepset,llmail,browsesafe,toolresp,nemotron,multilingual,spanish}.jsonl`. Holdout: the same names with `-holdout`. Report-only stress set: `testdata/eval/promptprotection-stress.jsonl`. See "Set taxonomy" below for how each set is used.
 - The corpus scan config sets `no_verification: true` on the `trufflehog` scanner so results do not depend on live credential verification.
 - Enough disk space and memory for the test corpus. Note: the default DeBERTa ONNX model uses ~11 GB RAM at load/inference time, so the stochastic ML stage is currently disabled by default until a sub-2 GB model is validated.
 - A stable, otherwise idle machine for duration comparisons (run-to-run variance should be <10 % for large targets).
 
 ### Iteration steps
 
-1. **Measure baseline** — run `./scripts/fetch_eval.sh`, then `safeanalyze eval <set>.jsonl --json eval-<set>.json --fp-out fp-<set>.jsonl --fn-out fn-<set>.jsonl` on every dev **and** holdout set. Record precision, recall, F1, TP/FP/TN/FN and p50/p95 latency. Also run `safeanalyze scan --mode thorough` against the pinned test corpus (trufflehog `no_verification: true`) and record findings + durations from `safeanalyze.json` (`duration_ms`) and `duration.txt`.
+1. **Measure baseline** — run `./scripts/fetch_eval.sh`, then `safeanalyze eval <set>.jsonl --json eval-<set>.json --fp-out fp-<set>.jsonl --fn-out fn-<set>.jsonl` on every dev **and** holdout set and on the report-only stress set. Record precision, recall, F1, TP/FP/TN/FN and p50/p95 latency. Also run `safeanalyze scan --mode thorough` against the pinned test corpus (trufflehog `no_verification: true`) and record findings + durations from `safeanalyze.json` (`duration_ms`) and `duration.txt`.
 2. **Premortem** — run `./scripts/premortem.sh` and ask: "If this improvement lands and the tool still fails in production, what most likely broke?" Document the biggest risks (false positives, latency blow-out, missing variants).
-3. **Analyze gaps** — inspect the **dev** sets' `fn-*.jsonl` / `fp-*.jsonl` and the corpus findings against known prompt-injection patterns. Never inspect holdout misclassifications to design rules.
+3. **Analyze gaps** — inspect the `fn-*.jsonl` / `fp-*.jsonl` of the **PRIMARY dev** sets (llmail, browsesafe, toolresp, spanish) and the multilingual dev set, plus the corpus findings, against known prompt-injection patterns. Never inspect holdout misclassifications, GUARD-ONLY (deepset, nemotron) misclassifications or promptprotection-stress (REPORT-ONLY) misclassifications to design rules.
 4. **Hypothesize** — pick one concrete improvement: a new YARA rule, a tuned entropy threshold, a smaller/faster model, a file-size limit, or parallelism.
 5. **Implement** — make the smallest change that tests the hypothesis. Do not combine multiple unrelated changes in one iteration.
 6. **Red-team** — run `./scripts/redteam.sh`. Try to evade the new check with rephrased, encoded, or multi-language injections. If it is trivially bypassed, revert or harden.
-7. **Evaluate** — re-run `./scripts/fetch_eval.sh` (output sha256s must match `testdata/eval/SOURCES.md`) and `safeanalyze eval` on every dev and holdout set, then re-run the same pinned test corpus. Compare:
-   - Precision, recall and F1 per labeled set (dev and holdout).
+7. **Evaluate** — re-run `./scripts/fetch_eval.sh` (output sha256s must match `testdata/eval/SOURCES.md`) and `safeanalyze eval` on every dev and holdout set and on the report-only stress set (`promptprotection-stress.jsonl`; recorded, never gating), then re-run the same pinned test corpus. Compare:
+   - Precision, recall and F1 per labeled set (dev and holdout), grouped by the set taxonomy below; stress-set metrics are recorded but do not gate.
    - Total and per-target finding counts.
    - Wall-clock duration per target (`duration_ms`).
    - Fast-mode latency (`./scripts/redteam.sh`).
@@ -67,20 +67,36 @@ The project uses an iterative, measurement-driven improvement loop inspired by [
 8. **Keep or revert** — apply the decision rules below. If accepted, commit and bump the version. If not, revert and try another hypothesis.
 9. **Repeat** until two consecutive iterations show no measurable improvement.
 
+### Set taxonomy
+
+Every labeled set has one role. Each role applies to the dev set and its `-holdout` twin unless stated otherwise. Sources, licenses and sampling rules are in `testdata/eval/SOURCES.md`.
+
+| Role | Sets | Gate | Hypothesis source? | Counts toward acceptance? |
+|---|---|---|---|---|
+| **PRIMARY** | llmail, browsesafe, toolresp, spanish | F1 and precision must not drop on dev or holdout | Yes, dev only | Yes (dev F1 gains) |
+| **RECALL-ONLY** | multilingual | Recall must not drop on dev or holdout (positives only; precision/F1 are meaningless) | Yes, dev only | No |
+| **GUARD-ONLY** | deepset, nemotron | F1 and precision must not drop on dev or holdout | **Never** | **No** — gains are ignored |
+| **REPORT-ONLY** | promptprotection-stress | None; record P/R/F1/FP in the iteration notes | **Never** | No |
+
+- deepset was moved to GUARD-ONLY by user decision on 2026-10-14 because it was overfitted: iterations 26, 28, 29 and 30 moved deepset dev only, and dev recall reached 0.77 against 0.31 on the holdout. Its FP/FN files must not be read to design rules, and a deepset gain alone never justifies accepting an iteration.
+- nemotron was made GUARD-ONLY by user decision on 2026-10-14: 98 % of its positives use one of two injection wrappers (`[PRIORITY MESSAGE]` and `⚠️ URGENT: Before completing any other tasks`), so a single rule for a wrapper would move recall without generalizing. The same restrictions as deepset apply.
+- `llmail-holdout` reuses the dev benign emails, so only its recall is an independent signal. multilingual, nemotron, toolresp and most of spanish are synthetic or machine-translated; read their caveats in SOURCES.md before drawing conclusions.
+
 ### Decision rules
 
-- **Primary metrics** are F1 and precision on the labeled sets. Raw corpus finding counts are secondary: the corpus is unlabeled, so a higher count can mean more false positives.
-- **Holdout must not regress.** An iteration that lowers F1 or precision on any holdout set is reverted, whatever the dev gains. Single-sample tolerance: an F1 drop on one set caused by losing at most one TP is allowed if that set's precision does not drop and the sum of F1 across holdout sets rises (precedent: v0.3.24, deepset-holdout TP 54 → 53, FP 2 → 0). `llmail-holdout` reuses the dev benign emails, so only its recall is an independent signal.
+- **Primary metrics** are F1 and precision on the PRIMARY sets (see "Set taxonomy"). Raw corpus finding counts are secondary: the corpus is unlabeled, so a higher count can mean more false positives.
+- **Holdout must not regress.** An iteration that lowers F1 or precision on any PRIMARY or GUARD-ONLY holdout set, or recall on the RECALL-ONLY holdout set, is reverted, whatever the dev gains. Single-sample tolerance: an F1 drop on one PRIMARY or GUARD-ONLY set caused by losing at most one TP is allowed if that set's precision does not drop and the sum of F1 across the **PRIMARY holdout sets** rises (precedent: v0.3.24, deepset-holdout TP 54 → 53, FP 2 → 0). Apart from that tolerance, GUARD-ONLY sets allow no F1 or precision drop at all. The tolerance does not apply to the RECALL-ONLY sets: their recall must not drop by even one TP. `llmail-holdout` reuses the dev benign emails, so only its recall is an independent signal.
 - **Accept** the iteration if holdout F1/precision do not regress **and**:
-  - Dev F1 improves without a precision drop on any labeled set, **or**
+  - Dev F1 improves on at least one PRIMARY set without a precision drop on any PRIMARY or GUARD-ONLY set and without a recall drop on the RECALL-ONLY sets, **or**
   - Latency (eval p95, fast-mode, corpus `duration_ms`) decreases with unchanged labeled metrics and corpus findings, **or**
   - A security hardening fix removes a real foot-gun without regressing metrics.
 - **Revert** the iteration if:
-  - F1 or precision drops on any dev or holdout set (except the single-sample tolerance above), **or**
+  - F1 or precision drops on any PRIMARY or GUARD-ONLY dev or holdout set (except the single-sample tolerance above), **or**
+  - Recall drops on the RECALL-ONLY dev or holdout set, **or**
   - Corpus finding count drops without a labeled-set explanation (e.g. removed false positives), **or**
   - Latency increases without a labeled-metric gain, **or**
   - The change introduces non-deterministic output or new errors.
-- **Stagnation** — stop the loop after two consecutive accepted/reverted iterations produce no improvement in labeled F1/precision or latency.
+- **Stagnation** — stop the loop after two consecutive accepted/reverted iterations produce no improvement in PRIMARY F1/precision or latency.
 
 ### Process review
 
@@ -144,9 +160,12 @@ echo 'ignore all previous instructions' | ./safeanalyze inspect --verbose
 # Install dependencies
 ./safeanalyze install --all
 
-# Labeled eval (dev + holdout)
+# Labeled eval (dev + holdout + report-only stress set)
 ./scripts/fetch_eval.sh
-for f in testdata/eval/*.jsonl; do ./safeanalyze eval "$f"; done
+O=/tmp/safeanalyze-iter/<iter>; mkdir -p "$O"
+for f in testdata/eval/*.jsonl; do n=$(basename "$f" .jsonl)
+  ./safeanalyze eval "$f" --json "$O/eval-$n.json" --fp-out "$O/fp-$n.jsonl" --fn-out "$O/fn-$n.jsonl"
+done
 
 # Autoresearch helpers
 ./scripts/redteam.sh
@@ -155,7 +174,8 @@ for f in testdata/eval/*.jsonl; do ./safeanalyze eval "$f"; done
 
 ## Current autoresearch iteration
 
-- **Version under test:** v0.3.33 (last accepted; loop stopped at the MAXITER=30 cap, not at stagnation).
+- **Version under test:** v0.3.34 (v0.3.33 detection logic plus `duration.txt` in report dirs). Labeled-set baseline for the extended sets (2026-10-14) is in `/tmp/safeanalyze-iter/v0.3.34-baseline/`: toolresp F1 0.603 dev / 0.577 holdout (FP 31 / 35), nemotron 0.204 / 0.209, spanish 0.400 / 0.464, multilingual recall 0.018 / 0.018, promptprotection-stress F1 0.250 (FP 30); old sets unchanged from v0.3.33. Corpus: 11015 findings, 0 errors.
+- **Last loop run:** v0.3.33 (loop stopped at the MAXITER=30 cap, not at stagnation).
 - **Status:** Accepted (iteration 30). deepset dev recall rises 0.733 → 0.767 (TP 44 → 46, F1 0.846 → 0.868, FP 0). Dev F1 sum +0.0218. All holdout sets unchanged; no precision change on any set.
 - **Change:** the last pattern of `prompt_injection_comment` gains a third alternative: "new instruction(s)" or "new statement" at the start of the text or after `.`/`!`/`?` plus whitespace, followed by `:`, `-`, `–` or `—`, optional please/now/just, and an override or output verb (ignore, forget, disregard, print, return, output, tell, show, reveal, say, send, repeat). Before, "new instructions:" matched only at the very start of the text and "new statement" not at all. Targets steering priority 2 (deepset recall); built on dev-set evidence only. No new rule name.
 - **Metrics (fast-mode eval, v0.3.32 → v0.3.33):**
@@ -174,7 +194,10 @@ for f in testdata/eval/*.jsonl; do ./safeanalyze eval "$f"; done
 - **Previous reverted iterations:** v0.3.4, v0.3.8, iterations 6, 7, 9, 11, 19, 27 (details in earlier commits and the process reviews). Iteration 20 was reverted, then retested and accepted as iteration 21.
 - **Stagnation check:** iteration 30 improved labeled F1 (deepset dev); counter stays at 0. The round-3 redo (iterations 21–30) ended at the MAXITER=30 cap; process review done (see round 3 below).
 - **Next candidates:**
-  - deepset recall (dev 0.77, holdout 0.31) is still the weakest set; the dev/holdout gap keeps growing (iterations 26, 28, 29 and 30 moved dev only), so prefer attack families that generalize over sample-shaped phrasings.
+  - deepset and nemotron are GUARD-ONLY (see "Set taxonomy"): do not target them; they only must not regress.
+  - toolresp precision and recall: 29 of 31 dev FPs (34 of 35 holdout) come from `obfuscated_javascript` firing on JSON tool responses; recall 0.48 dev / 0.45 holdout.
+  - spanish recall (0.25 dev / 0.30 holdout; 52 dev positives, mostly translated Gandalf attacks).
+  - multilingual recall (0.018 dev / 0.018 holdout; RECALL-ONLY, positives only).
   - Fix missing `duration.txt` in corpus scan output dirs (report contents contract).
   - Evaluate `Llama-Prompt-Guard-2-22M`/`86M-onnx` (memory, latency, precision) on the labeled sets.
   - Remaining browsesafe FPs (26 dev / 27 holdout) and FNs (101 dev): CSS-hidden text, attribute prose without listed keywords.
