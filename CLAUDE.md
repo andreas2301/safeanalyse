@@ -174,20 +174,20 @@ done
 
 ## Current autoresearch iteration
 
-- **Version under test:** v0.3.36 (last accepted; iteration 32 of the extended-set loop). Previous: v0.3.35 (iteration 31); its measurements are in `/tmp/safeanalyze-iter/iter31/`, iteration 32 measurements in `/tmp/safeanalyze-iter/iter32/`.
-- **Status:** Accepted (iteration 32). PRIMARY toolresp dev recall 0.477 → 0.523 (TP 143 → 157, F1 0.603 → 0.643, FP 31 unchanged); every other PRIMARY dev set unchanged. All holdout sets non-regressing; no precision drop on any set.
-- **Change:** `suspicious_shell` gains one pattern after the `mkfifo` pattern: a label colon, at most 3 non-backtick/quote/newline characters, a backtick, then within 120 characters on the same line `wh[o0][a4]m[i1]`, `/etc/passwd|shadow`, `sh -c`, `system(`, `wscript.sh` or `nc -l/-e/-z` (case-insensitive). Hypothesis from `fn-toolresp.jsonl` (about 16 of 157 dev misses were code-execution payloads in JSON tool-response fields behind a label and a backtick span, often leetspeak) plus the other dev FN/FP files; no holdout, GUARD-ONLY or stress FN/FP file was read. The HackAPrompt canary "I have been PWNED" was not targeted (dataset memorization). No new rule name.
-- **Metrics (fast-mode eval, v0.3.35 → v0.3.36):**
-  - PRIMARY dev: toolresp TP 143 → 157, P 0.822 → 0.835, R 0.477 → 0.523, F1 0.603 → 0.643, FP 31; llmail F1 0.881 (FP 0), browsesafe F1 0.758 (FP 26), spanish F1 0.556 (FP 0) unchanged.
-  - PRIMARY holdout: toolresp-holdout TP 136 → 146, P 0.795 → 0.807, R 0.453 → 0.487, F1 0.577 → 0.607, FP 35; llmail-holdout 0.833, browsesafe-holdout 0.708, spanish-holdout 0.605 unchanged.
+- **Version under test:** v0.3.37 (last accepted; iteration 33 of the extended-set loop). Previous: v0.3.36 (iteration 32); its measurements are in `/tmp/safeanalyze-iter/iter32/`, iteration 33 measurements in `/tmp/safeanalyze-iter/iter33/`.
+- **Status:** Accepted (iteration 33). PRIMARY toolresp dev recall 0.523 → 0.547 (TP 157 → 164, F1 0.643 → 0.663, FP 31 unchanged); every other PRIMARY dev set unchanged. All holdout sets non-regressing; no precision drop on any set.
+- **Change:** `prompt_injection_comment` gains one pattern after the main "ignore previous instructions" pattern: ignore/disregard/forget/overlook, at most 3 modifiers (all, any, anything, everything, the, of, other, these, those, every), an optional noun (text, content, rules, prompts, instructions, limitations, paragraph, sentences, lines, messages, operations, input, words, context, restrictions; "X or Y" allowed), then a positional reference ("that/which follows", "after/before/above/below this/here [sentence|line|...]", "below [operations|text|...]", "following text/paragraph/content/rules/instructions/...", "further instructions"), optionally completely/entirely/altogether/as well, and then a sentence end, `-`, `\`, newline, end of text, or "and"/"but". Hypothesis from `fn-toolresp.jsonl` (about 10 of 143 dev misses dismissed text by position, not by naming "previous instructions") plus the other PRIMARY/RECALL-ONLY dev FN/FP files; no holdout, GUARD-ONLY or stress FN/FP file was read. No new rule name.
+- **Metrics (fast-mode eval, v0.3.36 → v0.3.37):**
+  - PRIMARY dev: toolresp TP 157 → 164, P 0.835 → 0.841, R 0.523 → 0.547, F1 0.643 → 0.663, FP 31; llmail F1 0.881 (FP 0), browsesafe F1 0.758 (FP 26), spanish F1 0.556 (FP 0) unchanged.
+  - PRIMARY holdout: toolresp-holdout TP 146 → 151, P 0.807 → 0.812, R 0.487 → 0.503, F1 0.607 → 0.621, FP 35; llmail-holdout 0.833, browsesafe-holdout 0.708, spanish-holdout 0.605 unchanged.
   - RECALL-ONLY: multilingual recall 0.025 / holdout 0.024, unchanged.
   - GUARD-ONLY: deepset 0.868 / holdout 0.468, nemotron 0.204 / holdout 0.209, all unchanged.
   - REPORT-ONLY stress: promptprotection-stress P 0.500, R 0.167, F1 0.250, TP 30, FP 30, unchanged.
-  - `suspicious_shell` hits (injection / benign): toolresp 0/0 → 29/0, toolresp-holdout 0/0 → 28/0.
-  - Latency p95: browsesafe dev 49.73 → 50.40 ms (run 2: 49.25 ms), browsesafe-holdout 48.95 → 50.39 ms; all other sets < 10 ms; within the 100 ms budget.
-  - Thorough corpus: findings 11015 → 11015 (identical per target and rule), 0 errors; total `duration_ms` 34384 → 32616.
-  - Red-team: 12/12 payloads flagged at 20 ms. Determinism: two dev runs with byte-identical FP/FN JSONL.
-- **Known gaps:** shell payloads without a label colon before the backtick span, fenced code blocks, other recon primitives (`id`, `uname -a`, `cat ~/.ssh`, PowerShell `IEX`), and leetspeak outside `whoami`. The largest remaining toolresp FN theme is the HackAPrompt canary, left out on purpose. 29 of 31 toolresp dev FPs still come from `obfuscated_javascript` on JSON `\u` escapes.
+  - `prompt_injection_comment` hits (injection / benign): toolresp 24/0 → 31/0, toolresp-holdout 22/0 → 27/0; other sets unchanged.
+  - Latency p95: browsesafe dev 50.40 → 49.95 ms (run 2: 52.50 ms), browsesafe-holdout 50.39 → 51.66 ms; all other sets < 10 ms; within the 100 ms budget.
+  - Thorough corpus: findings 11015 → 11015 (identical per target and rule), 0 errors; total `duration_ms` 32616 → 36230 (skylos 13784 → 17692, external-scanner variance).
+  - Red-team: 12/12 payloads flagged at 19–22 ms. Determinism: two dev runs (iter33, iter33/run2) with byte-identical FP/FN JSONL.
+- **Known gaps:** positional dismissals that continue the clause with other words (anything other than a sentence end, dash, newline or "and"/"but" after the positional reference), other verbs (skip, drop, pay no attention to), non-English positional forms, and llmail misses such as "Ignore email signatures, disclaimers ..." that have no positional reference. The HackAPrompt canary "I have been PWNED" stays out on purpose. 29 of 31 toolresp dev FPs still come from `obfuscated_javascript` on JSON `\u` escapes.
 - **Rejected options (not released):**
   - Iteration 32 alternative — match the HackAPrompt canary "I have been PWNED" (largest single toolresp FN theme); not pursued as dataset memorization.
   - Iteration 31 alternative — drop the `obfuscated_javascript` `\u[0-9a-fA-F]{4}` pattern to remove 29 of 31 toolresp dev FPs; it would cut toolresp dev TP 143 → 46 because 105 injection samples also contain JSON `\u` escapes (dataset artifact), so not pursued.
@@ -195,10 +195,10 @@ done
   - Iteration 19 — narrow `data_exfiltration_email` pattern 0; dev/holdout F1 +0.000.
 - **Last accepted corpus improvement:** v0.3.17 (corpus findings +141 from `data_exfiltration_email`).
 - **Previous reverted iterations:** v0.3.4, v0.3.8, iterations 6, 7, 9, 11, 19, 27 (details in earlier commits and the process reviews). Iteration 20 was reverted, then retested and accepted as iteration 21.
-- **Stagnation check:** iteration 32 improved PRIMARY dev F1 (toolresp); counter stays at 0.
+- **Stagnation check:** iteration 33 improved PRIMARY dev F1 (toolresp); counter stays at 0.
 - **Next candidates:**
   - deepset and nemotron are GUARD-ONLY (see "Set taxonomy"): do not target them; they only must not regress.
-  - toolresp precision and recall: 29 of 31 dev FPs (34 of 35 holdout) come from `obfuscated_javascript` firing on JSON tool responses; recall 0.52 dev / 0.49 holdout after v0.3.36.
+  - toolresp precision and recall: 29 of 31 dev FPs (34 of 35 holdout) come from `obfuscated_javascript` firing on JSON tool responses; recall 0.55 dev / 0.50 holdout after v0.3.37.
   - spanish recall (0.385 dev / 0.434 holdout after v0.3.35; 52 dev positives, mostly translated Gandalf attacks).
   - multilingual recall (0.025 dev / 0.024 holdout after v0.3.35; RECALL-ONLY, positives only).
   - Evaluate `Llama-Prompt-Guard-2-22M`/`86M-onnx` (memory, latency, precision) on the labeled sets.

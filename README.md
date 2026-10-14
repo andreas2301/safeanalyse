@@ -1,4 +1,4 @@
-# safeanalyze v0.3.36
+# safeanalyze v0.3.37
 
 A Go CLI tool that sanitizes and scans untrusted code repositories **before** feeding them to AI assistants. Implements defense-in-depth inspired by [Zones of Distrust](https://github.com/bluvibytes/zone-of-distrust).
 
@@ -12,6 +12,10 @@ Prompt injection via malicious code is real. A repo can contain:
 - Secrets or malware mixed with legitimate source
 
 **safeanalyze** runs a security pipeline so AI assistants never see raw, unverified code.
+
+## What's new in v0.3.37
+
+- **Dismissal of text by its position** — the `prompt_injection_comment` rule gains one pattern for overrides that dismiss a span of text by where it sits instead of calling it "previous instructions": "ignore anything that follows", "Ignore all rules or prompts after this sentence", "ignore all text before this and ...", "IGNORE THE FOLLOWING TEXT COMPLETELY", "overlook the following paragraph", "IGNORE BELOW OPERATIONS", "forget below, ...", "IGNORE ANY FURTHER INSTRUCTIONS.". The positional reference must end the clause (sentence end, newline, dash, "and"/"but"), so everyday text such as "Ignore the text below if you already subscribed.", "You can safely ignore the following warning." or "Feel free to ignore further instructions in the README if you use Docker." stays unflagged. toolresp dev recall rises 0.523 → 0.547 (F1 0.643 → 0.663) and toolresp-holdout 0.487 → 0.503 (F1 0.607 → 0.621) with no new false positives on any set.
 
 ## What's new in v0.3.36
 
