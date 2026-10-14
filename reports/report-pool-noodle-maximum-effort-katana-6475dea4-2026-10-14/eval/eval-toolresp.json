@@ -1,0 +1,84 @@
+{
+  "metadata": {
+    "dataset": "testdata/eval/toolresp.jsonl",
+    "duration_ms": 4603,
+    "safeanalyze_version": "0.3.41",
+    "scan_mode": "fast"
+  },
+  "tp": 184,
+  "fp": 31,
+  "tn": 269,
+  "fn": 116,
+  "samples": 600,
+  "precision": 0.8558139534883721,
+  "recall": 0.6133333333333333,
+  "f1": 0.7145631067961165,
+  "by_source": {
+    "toolresp": {
+      "tp": 184,
+      "fp": 31,
+      "tn": 269,
+      "fn": 116,
+      "samples": 600,
+      "precision": 0.8558139534883721,
+      "recall": 0.6133333333333333,
+      "f1": 0.7145631067961165
+    }
+  },
+  "rule_hits": {
+    "backdoor_indicator": {
+      "injection": 1,
+      "benign": 0
+    },
+    "chat_template_boundary": {
+      "injection": 2,
+      "benign": 0
+    },
+    "data_exfiltration": {
+      "injection": 3,
+      "benign": 0
+    },
+    "data_exfiltration_email": {
+      "injection": 0,
+      "benign": 1
+    },
+    "encoded_prompt_injection": {
+      "injection": 10,
+      "benign": 0
+    },
+    "llm_tool_injection": {
+      "injection": 0,
+      "benign": 1
+    },
+    "obfuscated_javascript": {
+      "injection": 106,
+      "benign": 29
+    },
+    "output_constraint": {
+      "injection": 22,
+      "benign": 0
+    },
+    "persona_hijack": {
+      "injection": 7,
+      "benign": 0
+    },
+    "prompt_injection_comment": {
+      "injection": 31,
+      "benign": 0
+    },
+    "suspicious_imports": {
+      "injection": 3,
+      "benign": 0
+    },
+    "suspicious_shell": {
+      "injection": 29,
+      "benign": 0
+    },
+    "system_boundary": {
+      "injection": 1,
+      "benign": 0
+    }
+  },
+  "latency_p50_ms": 7.387,
+  "latency_p95_ms": 9.661
+}
