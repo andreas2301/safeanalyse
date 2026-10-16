@@ -29,6 +29,11 @@ Example Squid external_acl helper usage:
   external_acl_type prompt_injection_check %SRC %DST %METHOD %URI /usr/local/bin/safeanalyze inspect --squid
   acl prompt_injection_detected external prompt_injection_check
   http_access deny prompt_injection_detected
+
+Note: Squid passes only the format fields (client, host, method, URL) to an
+external_acl helper, never the response body, so this setup scans request
+metadata only. To scan HTTP response bodies, run 'safeanalyze icap' and
+attach it to Squid as an ICAP RESPMOD service.
 `,
 	RunE: func(cmd *cobra.Command, args []string) error {
 		body, _ := cmd.Flags().GetBool("body")
