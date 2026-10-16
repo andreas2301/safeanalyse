@@ -54,7 +54,7 @@ The project uses an iterative, measurement-driven improvement loop inspired by [
 
 1. **Measure baseline** — run `./scripts/fetch_eval.sh`, then `safeanalyze eval <set>.jsonl --json eval-<set>.json --fp-out fp-<set>.jsonl --fn-out fn-<set>.jsonl` on every dev **and** holdout set and on the report-only stress set. Record precision, recall, F1, TP/FP/TN/FN and p50/p95 latency. Also run `safeanalyze scan --mode thorough` against the pinned test corpus (trufflehog `no_verification: true`) and record findings + durations from `safeanalyze.json` (`duration_ms`) and `duration.txt`.
 2. **Premortem** — run `./scripts/premortem.sh` and ask: "If this improvement lands and the tool still fails in production, what most likely broke?" Document the biggest risks (false positives, latency blow-out, missing variants).
-3. **Analyze gaps** — inspect the `fn-*.jsonl` / `fp-*.jsonl` of the **PRIMARY dev** sets (llmail, browsesafe, toolresp, spanish) and the multilingual dev set, plus the corpus findings, against known prompt-injection patterns. Never inspect holdout misclassifications, GUARD-ONLY (deepset, nemotron) misclassifications or promptprotection-stress (REPORT-ONLY) misclassifications to design rules.
+3. **Analyze gaps** — inspect the `fn-*.jsonl` / `fp-*.jsonl` of the **PRIMARY dev** sets (llmail, browsesafe, toolresp) and the multilingual dev set, plus the corpus findings, against known prompt-injection patterns. Never inspect holdout misclassifications, GUARD-ONLY (deepset, nemotron, spanish) misclassifications or promptprotection-stress (REPORT-ONLY) misclassifications to design rules.
 4. **Hypothesize** — pick one concrete improvement: a new YARA rule, a tuned entropy threshold, a smaller/faster model, a file-size limit, or parallelism.
 5. **Implement** — make the smallest change that tests the hypothesis. Do not combine multiple unrelated changes in one iteration.
 6. **Red-team** — run `./scripts/redteam.sh`. Try to evade the new check with rephrased, encoded, or multi-language injections. If it is trivially bypassed, revert or harden.
@@ -73,13 +73,14 @@ Every labeled set has one role. Each role applies to the dev set and its `-holdo
 
 | Role | Sets | Gate | Hypothesis source? | Counts toward acceptance? |
 |---|---|---|---|---|
-| **PRIMARY** | llmail, browsesafe, toolresp, spanish | F1 and precision must not drop on dev or holdout | Yes, dev only | Yes (dev F1 gains) |
+| **PRIMARY** | llmail, browsesafe, toolresp | F1 and precision must not drop on dev or holdout | Yes, dev only | Yes (dev F1 gains) |
 | **RECALL-ONLY** | multilingual | Recall must not drop on dev or holdout (positives only; precision/F1 are meaningless) | Yes, dev only | No |
-| **GUARD-ONLY** | deepset, nemotron | F1 and precision must not drop on dev or holdout | **Never** | **No** — gains are ignored |
+| **GUARD-ONLY** | deepset, nemotron, spanish | F1 and precision must not drop on dev or holdout | **Never** | **No** — gains are ignored |
 | **REPORT-ONLY** | promptprotection-stress | None; record P/R/F1/FP in the iteration notes | **Never** | No |
 
 - deepset was moved to GUARD-ONLY by user decision on 2026-10-14 because it was overfitted: iterations 26, 28, 29 and 30 moved deepset dev only, and dev recall reached 0.77 against 0.31 on the holdout. Its FP/FN files must not be read to design rules, and a deepset gain alone never justifies accepting an iteration.
 - nemotron was made GUARD-ONLY by user decision on 2026-10-14: 98 % of its positives use one of two injection wrappers (`[PRIORITY MESSAGE]` and `⚠️ URGENT: Before completing any other tasks`), so a single rule for a wrapper would move recall without generalizing. The same restrictions as deepset apply.
+- spanish was made GUARD-ONLY by user decision on 2026-10-16: with 52/53 positives (mostly machine-translated) it overfitted in round 4 (dev F1 0.400 → 0.831 vs holdout 0.464 → 0.605). The same restrictions as deepset apply.
 - `llmail-holdout` reuses the dev benign emails, so only its recall is an independent signal. multilingual, nemotron, toolresp and most of spanish are synthetic or machine-translated; read their caveats in SOURCES.md before drawing conclusions.
 
 ### Decision rules
@@ -111,12 +112,13 @@ Document the outcome of the review in CLAUDE.md or the next commit message.
 
 ### Report branches
 
-- Create each report branch as a Git worktree from `master`:
+- One report branch per loop **round** (user decision 2026-10-16), created after the round's last accepted iteration and comparing the round's final version against the version the round started from. Per-iteration results stay in `/tmp/safeanalyze-iter/<iter>/` only. Existing per-iteration branches are kept.
+- Create the report branch as a Git worktree from `master`:
   ```bash
   git worktree add -B report-<devicename>-<date> .worktrees/report-<devicename>-<date> master
   ```
 - Generate a random Deadpool-style device name for each run (e.g., `boom-zany-sarcasm-cd4dee48`).
-- Build the binary in the worktree, run `./scripts/redteam.sh`, run the corpus scan, and write a `COMPARISON.md` against the previous accepted version.
+- Build the binary in the worktree, run `./scripts/redteam.sh`, run the corpus scan, and write a `COMPARISON.md` against the version the round started from.
 - Push only the report branch:
   ```bash
   git push -u origin report-<devicename>-<date>
