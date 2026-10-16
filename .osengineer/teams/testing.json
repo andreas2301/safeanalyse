@@ -1,0 +1,21 @@
+{
+  "team_id": "testing",
+  "folder": null,
+  "agents": [
+    "qa"
+  ],
+  "owns_paths": [
+    "**/*_test.go"
+  ],
+  "reads_paths": [
+    "internal/**",
+    "cmd/**",
+    "pkg/**",
+    "src/**",
+    "api/**",
+    "contracts/**"
+  ],
+  "escalates_to": [
+    "coding"
+  ]
+}

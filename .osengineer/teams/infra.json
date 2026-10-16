@@ -1,0 +1,25 @@
+{
+  "team_id": "infra",
+  "folder": null,
+  "agents": [
+    "topology-validator",
+    "live-system-operator",
+    "cert-monitor",
+    "health-verifier"
+  ],
+  "owns_paths": [
+    "scripts/**",
+    ".github/workflows/**"
+  ],
+  "reads_paths": [
+    "**/*.yml",
+    "**/Dockerfile",
+    "service-manifest.yml",
+    "contracts/**"
+  ],
+  "escalates_to": [
+    "coding",
+    "security",
+    "docs"
+  ]
+}

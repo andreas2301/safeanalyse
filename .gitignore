@@ -37,3 +37,6 @@ writetest.py
 testdata/eval/*
 !testdata/eval/SOURCES.md
 !testdata/eval/policy.yaml
+
+# osEngineer sensitive local secrets
+.osengineer/secrets.env

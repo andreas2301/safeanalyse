@@ -1,0 +1,6 @@
+#!/usr/bin/env bash
+# osEngineer launcher — resolves the skill checkout without baking an
+# absolute path into every repo.
+set -euo pipefail
+OSENGINEER_HOME="${OSENGINEER_HOME:-/root/sideProjects/osEngineer}"
+exec python3 "$OSENGINEER_HOME/bin/osengineer" "$@"
