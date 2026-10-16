@@ -5,6 +5,17 @@ All notable functional and non-functional changes to `safeanalyze` are documente
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.3.45] — 2026-10-16
+
+### Non-functional
+
+- **YARA literal prefilter rewritten as a single-pass line index (latency only):** `Engine.ScanFile` no longer calls `strings.Contains` for every prefilter literal on the whole text and again on every line for every pattern. It now walks the case-folded text once, looks up each position by its first three bytes in a table of all prefilter literals, and records a per-literal bitset of the lines that contain it. Each pattern's AND-of-ORs prefilter is then evaluated on those bitsets, and the regex runs only on candidate lines. Literals containing a newline never mark a line (as before); a literal shorter than three bytes, should one appear, marks every line so no candidate line is skipped. Findings are byte-identical.
+  - Why: CPU profile of fast-mode inspect over browsesafe dev showed the prefilter as the largest single cost (7.7 s of 24.0 s, 32 %), because folded HTML payloads (median 50 KB, about 660 lines) made `strings.Index` scan almost every byte for each of 770 literal occurrences.
+- Fast-mode eval (v0.3.44 → v0.3.45): precision, recall, F1, TP/FP/FN unchanged on every set (PRIMARY, RECALL-ONLY, GUARD-ONLY dev and holdout, and REPORT-ONLY promptprotection-stress P 0.500, R 0.167, F1 0.250, FP 30); FP/FN JSONL byte-identical to the baseline.
+- Latency: browsesafe dev p50 28.59 → 18.33 ms, p95 70.72 → 44.09 ms (rerun 44.47 ms); browsesafe-holdout p50 28.27 → 17.44 ms, p95 77.01 → 48.20 ms; llmail dev p95 12.73 → 12.06 ms, llmail-holdout 12.51 → 12.49 ms, toolresp dev 11.68 → 11.20 ms, toolresp-holdout 10.66 → 10.13 ms; all other sets under 11 ms.
+- Thorough corpus: findings 11015 → 11015, identical per target; 0 errors; total `duration_ms` 36373 → 32789 (skylos 17913 → 14179, mostly external-scanner variance).
+- Added `TestLineIndexMatchesPerLineContains`, which checks the index against per-line `strings.Contains` for every literal, including across the 64-line bitset word boundary.
+
 ## [0.3.44] — 2026-10-14
 
 ### Functional

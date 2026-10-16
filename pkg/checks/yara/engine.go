@@ -155,39 +155,22 @@ func requiredLiterals(re *syntax.Regexp) [][]string {
 	return nil
 }
 
-// prefilterPass reports whether every clause has a literal contained in s.
-func prefilterPass(pf [][]string, s string) bool {
-	for _, clause := range pf {
-		ok := false
-		for _, lit := range clause {
-			if strings.Contains(s, lit) {
-				ok = true
-				break
-			}
-		}
-		if !ok {
-			return false
-		}
-	}
-	return true
-}
-
 // ScanFile scans a single file's content.
 func (e *Engine) ScanFile(content, filename string) []Match {
 	var matches []Match
 	lines := strings.Split(content, "\n")
 	// strings.Map never adds or removes '\n', so folded lines align with lines.
 	folded := foldString(content)
-	flines := strings.Split(folded, "\n")
+	idx := newLineIndex(folded, len(lines), e.rules)
 
 	for _, rule := range e.rules {
-		active := make([]bool, len(rule.compiled))
+		cand := make([][]uint64, len(rule.compiled))
 		for i := range rule.compiled {
-			active[i] = prefilterPass(rule.prefilter[i], folded)
+			cand[i] = idx.candidates(rule.prefilter[i])
 		}
 		for lineNum, line := range lines {
 			for i, re := range rule.compiled {
-				if !active[i] || !prefilterPass(rule.prefilter[i], flines[lineNum]) {
+				if c := cand[i]; c != nil && c[lineNum>>6]&(1<<(uint(lineNum)&63)) == 0 {
 					continue
 				}
 				for _, loc := range re.FindAllStringIndex(line, -1) {
@@ -208,6 +191,104 @@ func (e *Engine) ScanFile(content, filename string) []Match {
 	}
 
 	return matches
+}
+
+// lineIndex records, for one folded file, which lines contain each prefilter
+// literal. All literals are found in a single pass over the text (keyed by
+// their first three bytes) instead of one strings.Contains per (pattern,
+// line) pair.
+type lineIndex struct {
+	words int
+	lits  map[string][]uint64 // literal -> bitset of lines containing it (nil: none)
+}
+
+func newLineIndex(folded string, nlines int, rules []Rule) *lineIndex {
+	x := &lineIndex{words: (nlines + 63) / 64, lits: make(map[string][]uint64)}
+	var byKey map[uint32][]string
+	var first2 [1 << 16 / 64]uint64
+	for _, r := range rules {
+		for _, pf := range r.prefilter {
+			for _, clause := range pf {
+				for _, lit := range clause {
+					if _, ok := x.lits[lit]; ok {
+						continue
+					}
+					x.lits[lit] = nil // allocated on first occurrence
+					// A literal with '\n' can never lie within one line.
+					if strings.IndexByte(lit, '\n') >= 0 {
+						continue
+					}
+					// patternPrefilter only yields literals >= 3 bytes; should
+					// a shorter one appear, scan every line rather than none.
+					if len(lit) < 3 {
+						all := make([]uint64, x.words)
+						for w := range all {
+							all[w] = ^uint64(0)
+						}
+						x.lits[lit] = all
+						continue
+					}
+					if byKey == nil {
+						byKey = make(map[uint32][]string)
+					}
+					k := uint32(lit[0])<<16 | uint32(lit[1])<<8 | uint32(lit[2])
+					byKey[k] = append(byKey[k], lit)
+					k2 := k >> 8
+					first2[k2>>6] |= 1 << (k2 & 63)
+				}
+			}
+		}
+	}
+	line := 0
+	for i := 0; i+2 < len(folded); i++ {
+		c := folded[i]
+		if c == '\n' {
+			line++
+			continue
+		}
+		k2 := uint32(c)<<8 | uint32(folded[i+1])
+		if first2[k2>>6]&(1<<(k2&63)) == 0 {
+			continue
+		}
+		for _, lit := range byKey[k2<<8|uint32(folded[i+2])] {
+			if strings.HasPrefix(folded[i:], lit) {
+				b := x.lits[lit]
+				if b == nil {
+					b = make([]uint64, x.words)
+					x.lits[lit] = b
+				}
+				b[line>>6] |= 1 << (uint(line) & 63)
+			}
+		}
+	}
+	return x
+}
+
+func (x *lineIndex) lines(lit string) []uint64 { return x.lits[lit] }
+
+// candidates returns the bitset of lines that pass prefilter pf (an AND of
+// ORs of literals), or nil if pf is empty and every line must be scanned.
+func (x *lineIndex) candidates(pf [][]string) []uint64 {
+	if len(pf) == 0 {
+		return nil
+	}
+	out := make([]uint64, x.words)
+	for ci, clause := range pf {
+		or := make([]uint64, x.words)
+		for _, lit := range clause {
+			for w, v := range x.lines(lit) {
+				or[w] |= v
+			}
+		}
+		if ci == 0 {
+			copy(out, or)
+			continue
+		}
+		for w := range out {
+			out[w] &= or[w]
+		}
+	}
+	return out
 }
 
 // LoadBuiltins loads the embedded detection rules.
