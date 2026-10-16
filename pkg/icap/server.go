@@ -14,6 +14,7 @@ import (
 	"mime"
 	"net"
 	"net/url"
+	"runtime"
 	"sort"
 	"strings"
 	"sync"
@@ -35,14 +36,18 @@ type Config struct {
 	BlockSeverity string        // minimum finding severity that blocks
 	ISTag         string        // service tag, without quotes
 	PreviewBytes  int           // Preview size advertised in OPTIONS
-	Scan          ScanFunc
-	Logger        *slog.Logger
+	// MaxConcurrentScans bounds scans in flight, including scans abandoned
+	// after a timeout that are still running. Default runtime.NumCPU()*2.
+	MaxConcurrentScans int
+	Scan               ScanFunc
+	Logger             *slog.Logger
 }
 
 // Server is an ICAP RESPMOD server.
 type Server struct {
 	cfg       Config
 	blockRank int
+	sem       chan struct{} // scan slots
 
 	mu     sync.Mutex
 	ln     net.Listener
@@ -84,10 +89,13 @@ func NewServer(cfg Config) (*Server, error) {
 	if cfg.PreviewBytes <= 0 {
 		cfg.PreviewBytes = 4096
 	}
+	if cfg.MaxConcurrentScans <= 0 {
+		cfg.MaxConcurrentScans = runtime.NumCPU() * 2
+	}
 	if cfg.Logger == nil {
 		cfg.Logger = slog.New(slog.NewJSONHandler(io.Discard, nil))
 	}
-	return &Server{cfg: cfg, blockRank: rank, conns: map[net.Conn]struct{}{}}, nil
+	return &Server{cfg: cfg, blockRank: rank, sem: make(chan struct{}, cfg.MaxConcurrentScans), conns: map[net.Conn]struct{}{}}, nil
 }
 
 // Serve accepts connections on ln until Close is called.
@@ -259,13 +267,33 @@ func (s *Server) respmod(conn net.Conn, br *bufio.Reader, bw *bufio.Writer, req 
 	}
 
 	scannable := isTextContentType(resHdr.Header.Get("Content-Type"))
+	encoding := resHdr.Header.Get("Content-Encoding")
 	inPreview := req.Preview >= 0
-	// Echoing the response back (200 instead of 204) needs the full body.
+	// Echoing the response back (200 instead of 204) needs the body, which is
+	// buffered up to MaxBodyBytes; see echoOverflow for larger bodies.
 	sink := &chunkSink{keep: s.cfg.MaxBodyBytes, keepAll: !allow204}
+	echo := &echoState{}
+	armEcho := func() {
+		if !req.Allows204() {
+			sink.onFull = func(buffered []byte) { s.echoOverflow(conn, bw, req, res, sink, echo, buffered, scannable, encoding) }
+		}
+	}
+	if !inPreview {
+		armEcho()
+	}
+
+	readErr := func(err error) bool {
+		if echo.streaming {
+			// A partial 200 was already sent; the stream cannot be recovered.
+			res.bytes, res.decision, res.reason = sink.total, "error", "read: "+err.Error()
+			return false
+		}
+		return s.bodyError(conn, bw, req, res, sink, err)
+	}
 
 	ieof, err := readChunked(br, sink)
 	if err != nil {
-		return s.bodyError(conn, bw, req, res, sink, err)
+		return readErr(err)
 	}
 	if inPreview && !ieof {
 		if !scannable {
@@ -282,14 +310,19 @@ func (s *Server) respmod(conn net.Conn, br *bufio.Reader, bw *bufio.Writer, req 
 			res.decision, res.reason, res.status = "error", "write_failed", 0
 			return false
 		}
+		armEcho()
 		if _, err := readChunked(br, sink); err != nil {
-			return s.bodyError(conn, bw, req, res, sink, err)
+			return readErr(err)
 		}
 	} else if inPreview {
 		// The whole body fit in the preview; 204 stays permitted.
 		allow204 = true
 	}
 	res.bytes = sink.total
+
+	if sink.fired {
+		return s.finishEchoOverflow(conn, bw, res, echo)
+	}
 	raw := sink.buf.Bytes()
 
 	if !scannable {
@@ -298,33 +331,11 @@ func (s *Server) respmod(conn net.Conn, br *bufio.Reader, bw *bufio.Writer, req 
 		return true
 	}
 
-	scanInput := raw
-	if len(scanInput) > s.cfg.MaxBodyBytes {
-		scanInput = scanInput[:s.cfg.MaxBodyBytes]
-	}
 	res.truncated = sink.total > int64(s.cfg.MaxBodyBytes)
-	decoded, decTrunc, err := decodeBody(scanInput, resHdr.Header.Get("Content-Encoding"), s.cfg.MaxBodyBytes)
+	blocking, err := s.scanBody(raw, encoding, res)
 	if err != nil {
-		res.reason = "decode: " + err.Error()
 		return s.failDecision(conn, bw, req, res, allow204, raw)
 	}
-	res.truncated = res.truncated || decTrunc
-	res.scanned = len(decoded)
-
-	ctx, cancel := context.WithTimeout(context.Background(), s.cfg.Timeout)
-	defer cancel()
-	findings, err := s.scan(ctx, decoded)
-	if err != nil {
-		if errors.Is(err, context.DeadlineExceeded) {
-			res.reason = "scan_timeout"
-		} else {
-			res.reason = "scan: " + err.Error()
-		}
-		return s.failDecision(conn, bw, req, res, allow204, raw)
-	}
-
-	res.rules = ruleIDs(findings, 0)
-	blocking := ruleIDs(findings, s.blockRank)
 	if len(blocking) > 0 {
 		res.decision, res.rules = "block", blocking
 		res.status = s.writeBlock(conn, bw, blocking, "prompt-injection content detected")
@@ -335,15 +346,59 @@ func (s *Server) respmod(conn net.Conn, br *bufio.Reader, bw *bufio.Writer, req 
 	return true
 }
 
-// scan runs the scanner with the context deadline. A scanner that ignores the
-// context keeps running in the background; its result is discarded.
+// scanBody decodes and scans at most MaxBodyBytes of raw and returns the rule
+// IDs at or above the block severity. A non-nil error means the body could not
+// be scanned; res.reason says why and the caller applies the fail policy.
+func (s *Server) scanBody(raw []byte, encoding string, res *result) ([]string, error) {
+	if len(raw) > s.cfg.MaxBodyBytes {
+		raw = raw[:s.cfg.MaxBodyBytes]
+	}
+	decoded, decTrunc, err := decodeBody(raw, encoding, s.cfg.MaxBodyBytes)
+	if err != nil {
+		res.reason = "decode: " + err.Error()
+		return nil, err
+	}
+	res.truncated = res.truncated || decTrunc
+	res.scanned = len(decoded)
+
+	ctx, cancel := context.WithTimeout(context.Background(), s.cfg.Timeout)
+	defer cancel()
+	findings, err := s.scan(ctx, decoded)
+	if err != nil {
+		switch {
+		case errors.Is(err, errScanBusy):
+			res.reason = "scan_queue_timeout"
+		case errors.Is(err, context.DeadlineExceeded):
+			res.reason = "scan_timeout"
+		default:
+			res.reason = "scan: " + err.Error()
+		}
+		return nil, err
+	}
+	res.rules = ruleIDs(findings, 0)
+	return ruleIDs(findings, s.blockRank), nil
+}
+
+// errScanBusy reports that no scan slot became free within the scan timeout.
+var errScanBusy = errors.New("all scan slots busy")
+
+// scan runs the scanner with the context deadline. It first waits for one of
+// MaxConcurrentScans slots (within the same deadline). A scanner that ignores
+// the context keeps running in the background and holds its slot until it
+// returns, so abandoned scans never exceed the bound; its result is discarded.
 func (s *Server) scan(ctx context.Context, payload []byte) ([]report.Finding, error) {
+	select {
+	case s.sem <- struct{}{}:
+	case <-ctx.Done():
+		return nil, fmt.Errorf("%w: %w", errScanBusy, ctx.Err())
+	}
 	type out struct {
 		f   []report.Finding
 		err error
 	}
 	ch := make(chan out, 1)
 	go func() {
+		defer func() { <-s.sem }()
 		f, err := s.cfg.Scan(ctx, payload)
 		ch <- out{f, err}
 	}()
@@ -353,6 +408,91 @@ func (s *Server) scan(ctx context.Context, payload []byte) ([]report.Finding, er
 	case <-ctx.Done():
 		return nil, ctx.Err()
 	}
+}
+
+// echoState tracks a no-Allow-204 response whose body exceeded MaxBodyBytes.
+type echoState struct {
+	streaming bool     // a 200 echo is being streamed to the client
+	writeErr  error    // write failure while streaming
+	rules     []string // blocking rules found in the first MaxBodyBytes
+}
+
+// echoOverflow runs once when a body that must be echoed (client sent no
+// "Allow: 204") grows past MaxBodyBytes. The first MaxBodyBytes are buffered.
+//   - fail-closed, text: the rest is drained and the response replaced by a 403.
+//   - fail-open, or non-text: the buffered prefix is scanned (text only, like
+//     the 204 path); on a finding the rest is drained and a 403 sent, otherwise
+//     a 200 echo starts streaming immediately and the remaining chunks are
+//     forwarded unscanned as they arrive, without buffering.
+func (s *Server) echoOverflow(conn net.Conn, bw *bufio.Writer, req *Request, res *result, sink *chunkSink, echo *echoState, buffered []byte, scannable bool, encoding string) {
+	res.truncated = true
+	if scannable {
+		if !s.cfg.FailOpen {
+			res.reason = "echo_body_over_cap"
+			return
+		}
+		blocking, err := s.scanBody(buffered, encoding, res)
+		switch {
+		case err != nil:
+			res.decision = "error" // reason set by scanBody; fail-open
+		case len(blocking) > 0:
+			echo.rules = blocking
+			return
+		default:
+			res.decision, res.reason = "allow", "echo_body_over_cap"
+		}
+	} else {
+		res.decision, res.reason = "skip", "content_type"
+	}
+
+	echo.streaming = true
+	var b bytes.Buffer
+	b.WriteString("ICAP/1.0 200 OK\r\n")
+	s.writeCommon(&b, false)
+	fmt.Fprintf(&b, "Encapsulated: res-hdr=0, res-body=%d\r\n\r\n", len(req.ResHdr))
+	b.Write(req.ResHdr)
+	writeChunk(&b, buffered)
+	s.streamWrite(conn, bw, echo, b.Bytes())
+	sink.passthrough = func(p []byte) {
+		if len(p) == 0 {
+			return
+		}
+		var c bytes.Buffer
+		writeChunk(&c, p)
+		s.streamWrite(conn, bw, echo, c.Bytes())
+	}
+}
+
+func (s *Server) streamWrite(conn net.Conn, bw *bufio.Writer, echo *echoState, p []byte) {
+	if echo.writeErr != nil {
+		return
+	}
+	_ = conn.SetWriteDeadline(time.Now().Add(s.cfg.IdleTimeout))
+	_, echo.writeErr = bw.Write(p)
+}
+
+// finishEchoOverflow completes a response after echoOverflow ran.
+func (s *Server) finishEchoOverflow(conn net.Conn, bw *bufio.Writer, res *result, echo *echoState) bool {
+	switch {
+	case echo.streaming:
+		res.status = 200
+		if echo.writeErr == nil {
+			_ = conn.SetWriteDeadline(time.Now().Add(s.cfg.IdleTimeout))
+			if _, err := bw.WriteString("0\r\n\r\n"); err == nil {
+				echo.writeErr = bw.Flush()
+			} else {
+				echo.writeErr = err
+			}
+		}
+		return echo.writeErr == nil
+	case len(echo.rules) > 0:
+		res.decision, res.rules = "block", echo.rules
+		res.status = s.writeBlock(conn, bw, echo.rules, "prompt-injection content detected")
+	default: // fail-closed
+		res.decision = "block"
+		res.status = s.writeBlock(conn, bw, nil, "response too large to scan")
+	}
+	return true
 }
 
 // bodyError handles a failure while reading the chunked body. The stream is
@@ -493,13 +633,19 @@ func (s *Server) flush(conn net.Conn, bw *bufio.Writer, p []byte) {
 	}
 }
 
+// writeChunked writes data as one chunk plus the terminating zero chunk.
 func writeChunked(b *bytes.Buffer, data []byte) {
+	writeChunk(b, data)
+	b.WriteString("0\r\n\r\n")
+}
+
+// writeChunk writes data as one chunk; empty data writes nothing.
+func writeChunk(b *bytes.Buffer, data []byte) {
 	if len(data) > 0 {
 		fmt.Fprintf(b, "%x\r\n", len(data))
 		b.Write(data)
 		b.WriteString("\r\n")
 	}
-	b.WriteString("0\r\n\r\n")
 }
 
 // ruleIDs returns the sorted, de-duplicated rule IDs of findings at or above

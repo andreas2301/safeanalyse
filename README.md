@@ -565,8 +565,19 @@ response to it; the body is scanned as one payload with the fast check suite
 
 ```bash
 safeanalyze icap --listen 127.0.0.1:1344 --service /safeanalyze \
-  --max-body-bytes 2097152 --timeout 2s --fail-open --block-severity high
+  --max-body-bytes 2097152 --timeout 2s --max-concurrent-scans 16 \
+  --fail-open --block-severity high
 ```
+
+| Flag | Default | Meaning |
+|------|---------|---------|
+| `--listen` | `127.0.0.1:1344` | Address to listen on |
+| `--service` | `/safeanalyze` | ICAP service path |
+| `--max-body-bytes` | `2097152` (2 MiB) | Scan (and, without `Allow: 204`, buffer) at most this many body bytes; also caps gzip/deflate output |
+| `--timeout` | `2s` | Scan time budget per response, including the wait for a free scan slot |
+| `--max-concurrent-scans` | `2 × CPUs` | Scans in flight at once, counting timed-out scans that are still running |
+| `--fail-open` / `--fail-closed` | fail-open | What to do when a response cannot be scanned |
+| `--block-severity` | `high` | Lowest finding severity that blocks (`critical`, `high`, `medium`, `low`) |
 
 ```squid
 icap_enable on
@@ -594,13 +605,25 @@ Behavior:
 - Bodies larger than `--max-body-bytes` (default 2 MiB) are scanned on their first
   N bytes only. The rest is read and passed through unscanned, and the log line
   shows `"truncated":true`.
+- Clients that do not send `Allow: 204` need the original response echoed back,
+  so the body is buffered up to `--max-body-bytes`. If it grows past that, the
+  first N bytes are scanned. With `--fail-open`, a clean response is then echoed
+  as a stream: the buffered part is sent and the rest is forwarded unscanned as
+  it arrives, without buffering. With `--fail-closed`, the response is replaced
+  by a 403. A finding in the first N bytes blocks in both modes. Squid always
+  sends `Allow: 204`.
 - `--timeout` (default 2s) is the scan time budget per response. A stalled client
   connection (no data for 60 s) is closed.
+- `--max-concurrent-scans` (default 2 × CPUs) limits CPU and memory under load.
+  A scan that hits the timeout keeps running in the background and holds its slot
+  until it finishes, so timed-out scans cannot push the count past the limit.
+  A request that gets no slot within `--timeout` follows the fail policy and logs
+  `"reason":"scan_queue_timeout"`.
 - One JSON log line per request goes to stderr: `decision` (allow, block, skip,
   error), `rules`, `bytes`, `scanned_bytes`, `truncated`, `ms`, `status`, `url`.
 
-**Fail-open vs. fail-closed.** On read/decode errors, unsupported encodings or a
-scan timeout, `--fail-open` (default) lets the response through, and
+**Fail-open vs. fail-closed.** On read/decode errors, unsupported encodings, a
+scan timeout, all scan slots staying busy, or an over-cap body that must be echoed, `--fail-open` (default) lets the response through, and
 `--fail-closed` replaces it with a 403. Fail-open keeps browsing working when
 the scanner is slow or broken, but an attacker who can make a page slow to scan
 gets it through unscanned. Fail-closed is safer and can break legitimate pages.

@@ -209,16 +209,38 @@ func ParseHTTPHeader(b []byte) (*HTTPHeader, error) {
 }
 
 // chunkSink collects decoded chunk data. Bytes beyond keep are counted but
-// dropped unless keepAll is set.
+// dropped unless keepAll is set. With keepAll and onFull set, onFull is called
+// once (with the first keep bytes) when the data outgrows keep; afterwards the
+// data goes to passthrough if onFull set it, and is dropped otherwise.
 type chunkSink struct {
-	buf     bytes.Buffer
-	keep    int
-	keepAll bool
-	total   int64
+	buf         bytes.Buffer
+	keep        int
+	keepAll     bool
+	total       int64
+	onFull      func(buffered []byte)
+	passthrough func(p []byte)
+	fired       bool
 }
 
 func (s *chunkSink) write(p []byte) {
 	s.total += int64(len(p))
+	if s.passthrough != nil {
+		s.passthrough(p)
+		return
+	}
+	if s.keepAll && s.onFull != nil && !s.fired && s.buf.Len()+len(p) > s.keep {
+		s.fired = true
+		if room := s.keep - s.buf.Len(); room > 0 {
+			s.buf.Write(p[:room])
+			p = p[room:]
+		}
+		s.keepAll = false
+		s.onFull(s.buf.Bytes())
+		if s.passthrough != nil {
+			s.passthrough(p)
+		}
+		return
+	}
 	if s.keepAll {
 		s.buf.Write(p)
 		return
