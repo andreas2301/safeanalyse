@@ -1,4 +1,4 @@
-# safeanalyze v0.3.45
+# safeanalyze v0.3.46
 
 A Go CLI tool that sanitizes and scans untrusted code repositories **before** feeding them to AI assistants. Implements defense-in-depth inspired by [Zones of Distrust](https://github.com/bluvibytes/zone-of-distrust).
 
@@ -52,6 +52,11 @@ What this means:
 See [docs/LLM_SCANNER_SPEC.md](docs/LLM_SCANNER_SPEC.md) for the proposed companion scanner
 that adds classifier/LLM-based detection, and [docs/ASSESSMENT.md](docs/ASSESSMENT.md) for
 the full assessment.
+
+## What's new in v0.3.46
+
+- **`scan` blocking gates scoped to their own stage** — the hidden-character gate previously aborted on *any* High finding (YARA, TruffleHog, Semgrep, ML) with the message "blocking hidden character findings detected", and the YARA gate on any Critical finding. Each gate now only considers findings from its own stage, and the error names the triggering rule IDs with `file:line` (first three, plus a count).
+- **Documentation** — new "What safeanalyze can and cannot catch" section, [docs/ASSESSMENT.md](docs/ASSESSMENT.md) (honest capability assessment and premortem) and [docs/LLM_SCANNER_SPEC.md](docs/LLM_SCANNER_SPEC.md) (companion classifier/LLM scanner spec).
 
 ## What's new in v0.3.45
 

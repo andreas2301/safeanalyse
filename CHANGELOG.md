@@ -5,6 +5,18 @@ All notable functional and non-functional changes to `safeanalyze` are documente
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.3.46] — 2026-10-16
+
+### Functional
+
+- **`scan` blocking gates:** `fail_on_findings` for `hidden_chars` and `yara` now only consider findings whose `source` is `hiddenchars` / `yara` respectively (previously any High / Critical finding from any stage tripped them, with a misleading hidden-character message). The error names the first three triggering findings as `rule_id at file:line` plus a count. Tests: `TestBlockingFindingsScopedToSource`, `TestDescribeFindingsTruncates`. Reported from real usage (thorough scan of a third-party Claude Code skill).
+
+### Non-functional
+
+- Added `docs/ASSESSMENT.md`, `docs/LLM_SCANNER_SPEC.md` and a capability section in `README.md`.
+- Detection logic and labeled-eval metrics are unchanged from v0.3.45.
+- Decision: emoji variation selectors and other `Mn` combining marks (e.g. U+FE0F) stay out of scope for `hiddenchars`; they are not a smuggling vector. Unicode tag characters (`Cf`) remain covered.
+
 ## [0.3.45] — 2026-10-16
 
 ### Non-functional
