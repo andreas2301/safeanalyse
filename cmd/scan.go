@@ -4,6 +4,7 @@ import (
 	"context"
 	"fmt"
 	"os"
+	"strings"
 
 	"github.com/fatih/color"
 	"github.com/spf13/cobra"
@@ -83,15 +84,48 @@ report (SARIF, Markdown, HTML) in the configured output directory.`,
 			color.Green("Reports written to %s\n", outCfg.OutDir)
 		}
 
-		if cfg.YARA.FailOnFindings && rep.HasSeverity(report.SeverityCritical) {
-			return fmt.Errorf("blocking YARA findings detected")
+		if cfg.YARA.FailOnFindings {
+			if blocking := blockingFindings(rep, "yara", report.SeverityCritical); len(blocking) > 0 {
+				return fmt.Errorf("blocking YARA findings detected: %s", describeFindings(blocking))
+			}
 		}
-		if cfg.HiddenChars.FailOnFindings && rep.HasSeverity(report.SeverityHigh) {
-			return fmt.Errorf("blocking hidden character findings detected")
+		if cfg.HiddenChars.FailOnFindings {
+			if blocking := blockingFindings(rep, "hiddenchars", report.SeverityHigh); len(blocking) > 0 {
+				return fmt.Errorf("blocking hidden character findings detected: %s", describeFindings(blocking))
+			}
 		}
 
 		return nil
 	},
+}
+
+// blockingFindings returns the findings emitted by the named stage at the
+// given severity, so a stage's blocking gate is not tripped by other stages.
+func blockingFindings(rep *report.Report, source, severity string) []report.Finding {
+	var out []report.Finding
+	for _, f := range rep.Findings {
+		if f.Source == source && f.Severity == severity {
+			out = append(out, f)
+		}
+	}
+	return out
+}
+
+// describeFindings names the first few blocking findings for the error message.
+func describeFindings(findings []report.Finding) string {
+	const max = 3
+	parts := make([]string, 0, max)
+	for i, f := range findings {
+		if i == max {
+			break
+		}
+		parts = append(parts, fmt.Sprintf("%s at %s:%d", f.RuleID, f.File, f.Line))
+	}
+	s := strings.Join(parts, ", ")
+	if len(findings) > max {
+		s += fmt.Sprintf(" (+%d more)", len(findings)-max)
+	}
+	return s
 }
 
 func contains(slice []string, item string) bool {
