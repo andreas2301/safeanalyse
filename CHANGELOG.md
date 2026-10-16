@@ -5,6 +5,17 @@ All notable functional and non-functional changes to `safeanalyze` are documente
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.3.48] — 2026-10-16
+
+### Functional
+
+- **`safeanalyze icap`:** ICAP RESPMOD server (`pkg/icap`, `cmd/icap.go`, stdlib only) so Squid can send response bodies for scanning; the `external_acl_type` helper only receives connection/URL metadata. Flags: `--listen`, `--service`, `--max-body-bytes`, `--timeout`, `--fail-open|--fail-closed`, `--block-severity`, `--max-concurrent-scans`. Clean → 204; finding ≥ block severity → 200 with an HTTP 403 replacement and `X-Safeanalyze-Rules`; non-text types → 204 unscanned; gzip/deflate decoded with a decompressed-size cap; echo mode (no `Allow: 204`) buffers at most `--max-body-bytes`; timed-out scans keep their concurrency slot until they finish. One JSON log line per request.
+- `inspect` help now points to `icap` for body scanning.
+
+### Non-functional
+
+- Parser, server and end-to-end tests (incl. race tests); measured p95 ≈ 41 ms per browsesafe page over loopback. Detection logic and labeled-eval metrics unchanged from v0.3.47.
+
 ## [0.3.47] — 2026-10-16
 
 ### Functional

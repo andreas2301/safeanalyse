@@ -1,4 +1,4 @@
-# safeanalyze v0.3.47
+# safeanalyze v0.3.48
 
 A Go CLI tool that sanitizes and scans untrusted code repositories **before** feeding them to AI assistants. Implements defense-in-depth inspired by [Zones of Distrust](https://github.com/bluvibytes/zone-of-distrust).
 
@@ -52,6 +52,10 @@ What this means:
 See [docs/LLM_SCANNER_SPEC.md](docs/LLM_SCANNER_SPEC.md) for the proposed companion scanner
 that adds classifier/LLM-based detection, and [docs/ASSESSMENT.md](docs/ASSESSMENT.md) for
 the full assessment.
+
+## What's new in v0.3.48
+
+- **`safeanalyze icap` — ICAP RESPMOD server for Squid body scanning.** The documented `external_acl_type` helper only ever received `%SRC %DST %METHOD %URI`, so response bodies were never scanned. `icap` implements the RFC 3507 subset Squid needs (OPTIONS, RESPMOD, Preview, 204), runs the fast-mode detector on each text body (gzip/deflate decoded, size-capped), returns 204 when clean and an HTTP 403 replacement naming the rule IDs when blocked, and supports fail-open/fail-closed, a scan timeout and `--max-concurrent-scans`. Measured full ICAP round trip on browsesafe pages: p50 ≈ 19 ms, p95 ≈ 41 ms. See "Squid Integration". Not covered: HTTPS bodies without SSL-Bump; br/zstd bodies follow the fail policy; concurrent connections are not capped (bind to localhost).
 
 ## What's new in v0.3.47
 
