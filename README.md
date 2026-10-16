@@ -332,6 +332,9 @@ Install optional scanner/model dependencies from source:
 ./safeanalyze inspect --body < request.txt
 ./safeanalyze inspect --squid  # OK/ERR format
 
+# ICAP RESPMOD server that scans HTTP response bodies (Squid)
+./safeanalyze icap --listen 127.0.0.1:1344
+
 # Sanitize only
 ./safeanalyze sanitize ./my-suspicious-repo
 
@@ -350,6 +353,7 @@ Install optional scanner/model dependencies from source:
 | `install --all` | Clone/build external scanners and download ML model |
 | `install model` | Download the prompt-injection ONNX model |
 | `inspect` | Fast stdin/file inspection for reverse proxies (Squid helper) |
+| `icap` | ICAP RESPMOD server that scans HTTP response bodies (Squid `icap_service`) |
 | `eval <file.jsonl>` | Measure fast-mode precision/recall/F1/latency on a labeled dataset |
 | `scan <path>` | Run security checks and emit SARIF/Markdown/HTML/JSON reports |
 | `sanitize <src> [dst]` | Strip comments (AST-aware), remove non-ASCII, enforce limits |
@@ -553,7 +557,68 @@ sandbox:
 
 ## Squid Integration
 
-`safeanalyze inspect` is designed to be used as a Squid `external_acl_type` helper:
+### Response bodies: ICAP RESPMOD (recommended)
+
+`safeanalyze icap` runs an ICAP (RFC 3507) RESPMOD service. Squid sends each HTTP
+response to it; the body is scanned as one payload with the fast check suite
+(YARA + hidden characters, the same path as `inspect --body` and `eval`).
+
+```bash
+safeanalyze icap --listen 127.0.0.1:1344 --service /safeanalyze \
+  --max-body-bytes 2097152 --timeout 2s --fail-open --block-severity high
+```
+
+```squid
+icap_enable on
+icap_send_client_ip on
+icap_service safeanalyze_resp respmod_precache bypass=on icap://127.0.0.1:1344/safeanalyze
+adaptation_access safeanalyze_resp allow all
+```
+
+Behavior:
+
+- Clean responses get `204 No Content`, so Squid delivers the original response unchanged.
+- If a finding at or above `--block-severity` (default `high`) is found, the response is
+  replaced by an HTTP `403` with a short text body naming the rule IDs
+  (also in `X-Safeanalyze-Rules`). The scanned content is never echoed.
+  Medium/low findings (e.g. `credential_hardcode`) are logged but do not block
+  unless you lower `--block-severity`. `eval` counts any finding as positive,
+  so its precision/recall match `--block-severity low`.
+- Non-text content types (images, video, audio, fonts, `application/octet-stream`,
+  PDFs, archives) get `204` right after the preview, without scanning.
+- `Content-Encoding: gzip`/`deflate` bodies are decompressed for scanning; the
+  decompressed size is capped at `--max-body-bytes`. Other encodings (`br`, `zstd`)
+  cannot be scanned and follow the fail policy. To scan them, limit what clients
+  may ask for, e.g. `request_header_access Accept-Encoding deny all` plus
+  `request_header_replace Accept-Encoding gzip`.
+- Bodies larger than `--max-body-bytes` (default 2 MiB) are scanned on their first
+  N bytes only. The rest is read and passed through unscanned, and the log line
+  shows `"truncated":true`.
+- `--timeout` (default 2s) is the scan time budget per response. A stalled client
+  connection (no data for 60 s) is closed.
+- One JSON log line per request goes to stderr: `decision` (allow, block, skip,
+  error), `rules`, `bytes`, `scanned_bytes`, `truncated`, `ms`, `status`, `url`.
+
+**Fail-open vs. fail-closed.** On read/decode errors, unsupported encodings or a
+scan timeout, `--fail-open` (default) lets the response through, and
+`--fail-closed` replaces it with a 403. Fail-open keeps browsing working when
+the scanner is slow or broken, but an attacker who can make a page slow to scan
+gets it through unscanned. Fail-closed is safer and can break legitimate pages.
+Squid's own `bypass=on|off` works the same way for the ICAP service being down:
+`bypass=on` serves the response unscanned and `bypass=off` returns an error page.
+Use `--fail-closed` with `bypass=off` for strict setups.
+
+**TLS.** Squid can only pass response bodies of HTTPS traffic to ICAP when it
+decrypts that traffic with SSL-Bump (`ssl_bump bump`). Without SSL-Bump, HTTPS
+requests are opaque `CONNECT` tunnels and only plain-HTTP bodies are scanned.
+
+Measured on 300 evenly sampled browsesafe pages (avg. 57 KB, persistent ICAP
+connection, loopback): p50 19 ms, p95 41–43 ms per request, including the
+ICAP round trip.
+
+### Request metadata: external ACL helper (limited)
+
+`safeanalyze inspect --squid` can be used as a Squid `external_acl_type` helper:
 
 ```squid
 external_acl_type prompt_injection_check %SRC %DST %METHOD %URI /usr/local/bin/safeanalyze inspect --squid
@@ -561,7 +626,11 @@ acl prompt_injection_detected external prompt_injection_check
 http_access deny prompt_injection_detected
 ```
 
-The helper reads payloads from stdin, runs the fast check suite, and returns `OK` or `ERR <rule>`.
+Squid sends the helper only the format fields on the `external_acl_type` line (here
+client IP, destination host, method and URL), one line per request. **It never
+sends request or response bodies**, so this setup can only flag injection text in
+URLs. Use the ICAP service above to scan page content. The helper returns `OK` or
+`ERR <rule>`.
 
 ## Architecture
 
@@ -581,6 +650,7 @@ pkg/
   sandbox/        Cross-platform sandbox abstraction
   ingest/         Markdown/JSON/plain formatter for AI consumption
   eval/           Labeled-dataset metrics for `safeanalyze eval`
+  icap/           ICAP RESPMOD server and parser for `safeanalyze icap`
   config/         YAML configuration loading
   version/        Release version constant
   utils/          Filesystem helpers
