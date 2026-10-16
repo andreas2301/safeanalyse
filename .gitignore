@@ -40,3 +40,6 @@ testdata/eval/*
 
 # osEngineer sensitive local secrets
 .osengineer/secrets.env
+
+# graphify generated knowledge graph (osEngineer post-commit hook)
+graphify-out/

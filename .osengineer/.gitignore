@@ -2,3 +2,5 @@ secrets.env
 bypass-log.jsonl
 override-log.jsonl
 config.local.toml
+evolution-counter.yml
+.state.lock
