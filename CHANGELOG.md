@@ -5,6 +5,25 @@ All notable functional and non-functional changes to `safeanalyze` are documente
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.3.47] — 2026-10-16
+
+### Functional
+
+- **`safeanalyze gate`** (new command, package `pkg/gate`): `gate --baseline <dir> --candidate <dir> [--policy testdata/eval/policy.yaml] [--json out]` reads the `eval-<set>.json` files of two runs and returns ACCEPT or REVERT with reasons (exit status 0 / 3, errors 1). It implements CLAUDE.md "Set taxonomy" and "Decision rules": PRIMARY (llmail, browsesafe, toolresp) and GUARD-ONLY (deepset, nemotron, spanish) F1 and precision must not drop on dev or holdout, with the single-sample tolerance (≤ 1 TP lost, precision holds, sum of PRIMARY holdout F1 rises; at most one set); RECALL-ONLY (multilingual) TP must not drop; REPORT-ONLY (promptprotection-stress) and SEALED sets never gate; GUARD-ONLY and RECALL-ONLY gains never count. New stricter gates (user decision):
+  - Generalization ratio: each PRIMARY set with a dev F1 gain needs a holdout F1 gain ≥ 0.5 × the dev gain; when that required gain is below one holdout TP's F1 step, only the no-drop rule applies.
+  - Significance: a PRIMARY dev F1 gain counts only if the lower bound of its 95 % paired-bootstrap CI (10,000 resamples, seed 1337, per-sample predictions) is > 0.
+  - Latency: dev p95 ≤ 100 ms; a dev p95 rise > 15 % (and > 2 ms) without an accepted gain is a revert; latency-only accept when TP/FP are identical on every gated set and a dev p95 drops ≥ 10 % (and ≥ 2 ms).
+  - Errors (not decisions) when a gated set is missing from either run or the two runs evaluated different datasets.
+  - Roles and thresholds come from the committed `testdata/eval/policy.yaml` (strict YAML, validated; must equal the built-in default, checked by a test). Table-driven tests (30 decision cases plus error, pairing, bootstrap, loader and policy tests) cover every rule, the tolerance and the v0.3.24 precedent.
+- **`eval --predictions out.jsonl`**: optional per-sample predictions (`index`, `label`, `predicted`, `text_sha256`) for the paired bootstrap; `gate` falls back to the fp/fn JSONL files when they are missing. Existing `--json`, `--fp-out` and `--fn-out` output is unchanged.
+
+### Non-functional
+
+- **Sealed test sets**: `scripts/fetch_eval.sh` builds `llmail-sealed` (300 unused attacks + the 160 reused benign emails; only recall is independent), `browsesafe-sealed` (300 + 300 unused test rows), `toolresp-sealed` (300 + 300 test rows whose injection string and response pair are unused by dev/holdout) and `nemotron-sealed` (300 pairs from unused union-find groups). Disjointness is script-checked; deepset, spanish and multilingual have no unused rows. Dev, holdout and stress files are byte-identical to v0.3.46 (sha256s unchanged), and two consecutive runs are byte-identical. Documented in `testdata/eval/SOURCES.md`.
+- CLAUDE.md: iteration steps use `eval --predictions` and `safeanalyze gate` for keep/revert; sealed sets are evaluated once per round end and recorded in the round report's `COMPARISON.md`.
+- Re-verified at v0.3.46 detection logic: every dev/holdout/stress metric unchanged from v0.3.45 (FP/FN JSONL byte-identical to iteration 41). Round-5-end sealed reading: llmail-sealed F1 0.859 (R 0.753), browsesafe-sealed 0.773 (FP 24), toolresp-sealed 0.602 (FP 30), nemotron-sealed 0.240.
+- Gate replays: baseline vs itself REVERT (no gain); v0.3.44-r5-baseline → iteration 41 ACCEPT (latency, browsesafe p95 70.72 → 44.09 ms); → iteration 42 REVERT (toolresp F1 dev 0.727 → 0.693, holdout 0.638 → 0.606).
+
 ## [0.3.46] — 2026-10-16
 
 ### Functional

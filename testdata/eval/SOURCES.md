@@ -29,12 +29,19 @@ Downloads are cached in `testdata/eval/.cache/` (override with `SAFEANALYZE_EVAL
 | `multilingual-holdout.jsonl` | 825 | 825 | 0 | `8a708bd75016fcc1241f7354c6750928470dffcce814df5ced0bc1572af18d1d` |
 | `spanish-holdout.jsonl` | 424 | 53 | 371 | `7c91e99f78eb2dfc84e6b006c621f7859674b09813472c73b2c93e7fe82aafd4` |
 | `promptprotection-stress.jsonl` | 376 | 180 | 196 | `6263b632697fb56667593d0071a7f60d67b07dc78427cd9baecf6caf0b40f4f5` |
+| `llmail-sealed.jsonl` | 460 | 300 | 160 | `74190e50ebc023f95a6d9868a58f1337d3b4933fd15c1f5ad7e9f3390f42cdfc` |
+| `browsesafe-sealed.jsonl` | 600 | 300 | 300 | `71dee4d78805617c0f1d70f2b3fe0625915fd64ca64886b09722e813ba4e7b03` |
+| `toolresp-sealed.jsonl` | 600 | 300 | 300 | `c4bf965f9e43d33d804942947e7729b4c89abcd7f8dd575dfa4e33c4d419dd7c` |
+| `nemotron-sealed.jsonl` | 600 | 300 | 300 | `e99fa3a60c44ae2eb203014ab4c38cf8a0c136961ecb060c0c6be6a6d2c7c9e9` |
 
 The files without a suffix are the **dev** sets used while tuning rules. The `*-holdout.jsonl`
 files are **holdout** sets: use them only to confirm that a change generalizes, never to
 pick rules or thresholds. The script checks that no holdout text appears in any dev set and
 exits non-zero if one does. The only exception is the LLMail benign emails (see below).
 `promptprotection-stress.jsonl` is a **report-only** stress set with no dev/holdout split.
+The `*-sealed.jsonl` files are **sealed** test sets (see "Sealed sets" below): evaluated once per
+round end, never used for keep/revert or rule design. `policy.yaml` (committed) holds the set
+roles and thresholds used by `safeanalyze gate`.
 How each set is used in the decision rules (primary, recall-only, guard-only, report-only)
 is defined in `CLAUDE.md` ("Set taxonomy").
 
@@ -237,6 +244,47 @@ Positives only (label 1), so only recall is meaningful.
   `test_heldout` split. The half split was chosen because the test split has only 105 usable Spanish injections; a
   300-row dev cap would leave the holdout with no positives. Benign BIPIA emails come in clean and
   "benign insert" versions of the same email, which can land on both sides of the split.
+
+## Sealed sets (added 2026-10-16)
+
+Why: dev and holdout are both read in every iteration, so the holdout is reused hundreds of times
+and decisions slowly adapt to it (Dwork et al. 2015, "The reusable holdout", arXiv:1506.02629;
+Blum & Hardt 2015, "The Ladder", arXiv:1502.04585). A sealed set is read **once per round, at round
+end**, and its result is recorded in that round's report-branch `COMPARISON.md`. It is never an input
+to `safeanalyze gate` (the gate ignores every `*-sealed` set), to keep/revert, or to rule design;
+its FP/FN files must not be read.
+
+Rules (all script-checked; `fetch_eval.sh` exits non-zero on a violation):
+
+- Built after every dev, holdout and stress set, each with a fresh `random.Random(1337)`, so the
+  existing files stay byte-identical. Same sources, revisions and sha256s as the dev/holdout files.
+- Candidate rows exclude every text in any dev, holdout or stress set. Each sealed set shares no text
+  with any dev, holdout or stress set or with another sealed set, except the llmail benign emails.
+- **llmail-sealed**: 300 further attack submissions with the dev per-stratum allocation (same
+  largest-remainder allocation and sorted-stratum order as dev/holdout), drawn from the attack submissions that
+  no dev or holdout set picked. **Benign rows:** the dataset has no unused benign emails (all 160 distinct
+  `emails_for_fp_tests.json` emails are in dev), so llmail-sealed reuses the same 160 benign rows, as
+  llmail-holdout does. Its precision and FP counts are therefore not independent; only its **recall** is
+  a sealed measurement. (A positives-only file was considered and rejected so that all three llmail
+  files have the same shape and F1 scale.)
+- **browsesafe-sealed**: 300 `yes` + 300 `no` rows from the 3,680 test rows that neither dev nor holdout
+  picked and whose content is in no other set (1,224 `yes` / 1,256 `no` rows are unpicked before that text filter). Same ordering rules as dev.
+- **toolresp-sealed**: from the **test** split (the holdout's split), the same group rule as the
+  holdout, by injection string: a row is a candidate only if its `injection` string is in no dev or
+  holdout row, its text is in no other set, and its `response_id` (the safe/injected pair key within the
+  split) is used by no holdout row, so no sealed row is the clean or injected twin of a holdout row.
+  646 injection / 937 safe candidates; 300 + 300 sampled (`injection` first). The 300 positives use
+  209 distinct injection strings. The script checks that no injection string is shared with dev or holdout.
+- **nemotron-sealed** (GUARD-ONLY): pairs from the union-find groups (shared normalized `injection_text`
+  or clean text, see nemotron above) that have **no** pair in nemotron dev or holdout: 311 pairs in 268
+  groups; 300 pairs sampled as for dev (positives, then their negatives). Wrappers: 228 `[PRIORITY MESSAGE]`,
+  71 `URGENT`, 1 bare.
+- **No sealed set** for deepset (dev and holdout use the whole test and train splits), spanish (holdout
+  takes every filtered test row dev did not pick), multilingual (every row is split between dev and
+  holdout) or promptprotection-stress (report-only, no split).
+- Round-5 end reading (v0.3.46 detection logic, 2026-10-16; `/tmp/safeanalyze-iter/v0.3.46-baseline/sealed/`):
+  llmail-sealed P 1.000 R 0.753 F1 0.859; browsesafe-sealed P 0.895 R 0.680 F1 0.773 (FP 24);
+  toolresp-sealed P 0.826 R 0.473 F1 0.602 (FP 30); nemotron-sealed P 1.000 R 0.137 F1 0.240.
 
 Parquet files are decoded by a small stdlib-only reader inside `fetch_eval.sh`, so no pyarrow is needed.
 It was cross-checked against the Hugging Face datasets-server `/rows` API.

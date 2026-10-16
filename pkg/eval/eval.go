@@ -4,6 +4,8 @@ package eval
 
 import (
 	"bufio"
+	"crypto/sha256"
+	"encoding/hex"
 	"encoding/json"
 	"fmt"
 	"io"
@@ -149,6 +151,15 @@ type Outcome struct {
 	Rules []string `json:"rules,omitempty"`
 }
 
+// Prediction is the detector's decision on one sample, in dataset order.
+// TextSHA256 identifies the sample so two runs can be paired safely.
+type Prediction struct {
+	Index      int    `json:"index"`
+	Label      int    `json:"label"`
+	Predicted  bool   `json:"predicted"`
+	TextSHA256 string `json:"text_sha256"`
+}
+
 // Result is the outcome of evaluating a detector on a dataset.
 type Result struct {
 	Metrics
@@ -158,6 +169,7 @@ type Result struct {
 	LatencyP95Ms   float64             `json:"latency_p95_ms"`
 	FalsePositives []Outcome           `json:"-"`
 	FalseNegatives []Outcome           `json:"-"`
+	Predictions    []Prediction        `json:"-"`
 }
 
 // Run evaluates detect on every sample. A sample is predicted positive when
@@ -181,6 +193,10 @@ func Run(samples []Sample, detect Detector) (*Result, error) {
 
 		predicted := len(findings) > 0
 		total.Add(s.Label, predicted)
+		sum := sha256.Sum256([]byte(s.Text))
+		res.Predictions = append(res.Predictions, Prediction{
+			Index: i, Label: s.Label, Predicted: predicted, TextSHA256: hex.EncodeToString(sum[:]),
+		})
 		sc, ok := bySource[s.Source]
 		if !ok {
 			sc = &Counts{}

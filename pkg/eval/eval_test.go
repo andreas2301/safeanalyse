@@ -151,6 +151,19 @@ func TestRun(t *testing.T) {
 	if len(res.FalseNegatives) != 1 || res.FalseNegatives[0].Text != "missed" {
 		t.Fatalf("false negatives = %+v", res.FalseNegatives)
 	}
+	if len(res.Predictions) != len(samples) {
+		t.Fatalf("predictions = %d, want %d", len(res.Predictions), len(samples))
+	}
+	wantPred := []bool{true, true, false, true, false}
+	for i, p := range res.Predictions {
+		if p.Index != i || p.Label != samples[i].Label || p.Predicted != wantPred[i] || len(p.TextSHA256) != 64 {
+			t.Fatalf("prediction %d = %+v", i, p)
+		}
+	}
+	// sha256("clean")
+	if got := res.Predictions[4].TextSHA256; got != "3b066804f6d1d077173cfe4d06002e6a61e6f21c2b2e648417962115f1afcd8e" {
+		t.Fatalf("text sha256 = %s", got)
+	}
 }
 
 func TestRunDetectorError(t *testing.T) {

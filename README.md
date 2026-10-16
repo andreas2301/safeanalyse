@@ -1,4 +1,4 @@
-# safeanalyze v0.3.46
+# safeanalyze v0.3.47
 
 A Go CLI tool that sanitizes and scans untrusted code repositories **before** feeding them to AI assistants. Implements defense-in-depth inspired by [Zones of Distrust](https://github.com/bluvibytes/zone-of-distrust).
 
@@ -52,6 +52,12 @@ What this means:
 See [docs/LLM_SCANNER_SPEC.md](docs/LLM_SCANNER_SPEC.md) for the proposed companion scanner
 that adds classifier/LLM-based detection, and [docs/ASSESSMENT.md](docs/ASSESSMENT.md) for
 the full assessment.
+
+## What's new in v0.3.47
+
+- **`safeanalyze gate`** — the autoresearch keep/revert rules as tested code: `safeanalyze gate --baseline <dir> --candidate <dir> [--policy testdata/eval/policy.yaml] [--json out]` reads the `eval-<set>.json` files of two runs and prints ACCEPT or REVERT with reasons (exit 0 / 3). It applies the set roles (PRIMARY, RECALL-ONLY, GUARD-ONLY, REPORT-ONLY, SEALED) and per-set no-regression rules with the single-sample tolerance, plus three stricter gates: a holdout F1 gain of at least half the dev F1 gain, a 95 % paired-bootstrap confidence interval above zero for the dev F1 gain, and latency rules (dev p95 ≤ 100 ms, no rise > 15 % without a gain, latency-only accept on a ≥ 10 % p95 drop with identical TP/FP). Roles and thresholds are in the committed `testdata/eval/policy.yaml`.
+- **`eval --predictions out.jsonl`** — writes per-sample predictions (index, label, predicted, text sha256) for the paired bootstrap. Existing output is unchanged.
+- **Sealed test sets** — `scripts/fetch_eval.sh` now also builds `llmail-sealed`, `browsesafe-sealed`, `toolresp-sealed` and `nemotron-sealed` from unused rows, disjoint from every dev and holdout set (script-checked). They are evaluated once per round end and never used for keep/revert. Dev and holdout files are byte-identical to before. Detection logic is unchanged.
 
 ## What's new in v0.3.46
 
@@ -351,6 +357,7 @@ Install optional scanner/model dependencies from source:
 | `install model` | Download the prompt-injection ONNX model |
 | `inspect` | Fast stdin/file inspection for reverse proxies (Squid helper) |
 | `eval <file.jsonl>` | Measure fast-mode precision/recall/F1/latency on a labeled dataset |
+| `gate --baseline <dir> --candidate <dir>` | ACCEPT/REVERT an autoresearch iteration from two eval result directories |
 | `scan <path>` | Run security checks and emit SARIF/Markdown/HTML/JSON reports |
 | `sanitize <src> [dst]` | Strip comments (AST-aware), remove non-ASCII, enforce limits |
 | `ingest <path>` | Full pipeline: scan → sanitize → format for AI |
@@ -581,6 +588,7 @@ pkg/
   sandbox/        Cross-platform sandbox abstraction
   ingest/         Markdown/JSON/plain formatter for AI consumption
   eval/           Labeled-dataset metrics for `safeanalyze eval`
+  gate/           Keep/revert decision rules for `safeanalyze gate`
   config/         YAML configuration loading
   version/        Release version constant
   utils/          Filesystem helpers

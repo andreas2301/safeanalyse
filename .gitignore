@@ -36,3 +36,4 @@ writetest.py
 # Labeled eval data (fetched by scripts/fetch_eval.sh; only SOURCES.md is committed)
 testdata/eval/*
 !testdata/eval/SOURCES.md
+!testdata/eval/policy.yaml

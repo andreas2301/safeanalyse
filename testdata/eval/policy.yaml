@@ -1,0 +1,50 @@
+# Keep/revert policy for `safeanalyze gate` (see CLAUDE.md, "Set taxonomy" and
+# "Decision rules"). Committed; every other file in testdata/eval is fetched.
+# The built-in default in pkg/gate (DefaultPolicy) must match this file.
+
+# Set roles. Each name covers the dev set and its holdout twin.
+roles:
+  # F1 and precision must not drop on dev or holdout; dev F1 gains count.
+  primary: [llmail, browsesafe, toolresp]
+  # Recall (TP) must not drop on dev or holdout, not even by one TP.
+  recall_only: [multilingual]
+  # F1 and precision must not drop on dev or holdout; gains are ignored.
+  guard_only: [deepset, nemotron, spanish]
+  # Recorded, never gating.
+  report_only: [promptprotection-stress]
+
+holdout_suffix: -holdout
+# Sealed sets are evaluated once per round end and are always ignored by gate.
+sealed_suffix: -sealed
+
+# Single-sample tolerance: an F1 drop on one PRIMARY or GUARD-ONLY set is
+# allowed if it loses at most max_tp_lost TP, its precision does not drop, and
+# the sum of F1 over the PRIMARY holdout sets rises (precedent v0.3.24).
+tolerance:
+  max_tp_lost: 1
+  max_sets: 1
+
+# For each PRIMARY set with a dev F1 gain, the holdout F1 gain must be at least
+# min_holdout_ratio x the dev F1 gain. When that required gain is smaller than
+# the holdout F1 change of one more TP, the ratio cannot be resolved and only
+# the no-drop rule applies to the holdout.
+generalization:
+  min_holdout_ratio: 0.5
+
+# Paired bootstrap over per-sample predictions of each PRIMARY dev set with a
+# dev F1 gain: the gain counts only when the lower bound of its two-sided
+# confidence interval is > 0.
+significance:
+  resamples: 10000
+  seed: 1337
+  confidence: 0.95
+
+# Fast-mode latency on the dev sets (eval latency_p95_ms).
+latency:
+  budget_p95_ms: 100
+  # A dev p95 rise above this percentage is a revert unless there is a gain.
+  max_rise_pct: 15
+  # Latency-only accept: all TP/FP identical and a dev p95 drop of at least this.
+  min_drop_pct: 10
+  # p95 changes smaller than this (ms) are treated as noise.
+  noise_floor_ms: 2

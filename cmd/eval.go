@@ -30,6 +30,7 @@ an injection and 0 is benign. Each sample is scanned as one payload, like
 		jsonOut, _ := cmd.Flags().GetString("json")
 		fpOut, _ := cmd.Flags().GetString("fp-out")
 		fnOut, _ := cmd.Flags().GetString("fn-out")
+		predOut, _ := cmd.Flags().GetString("predictions")
 
 		samples, err := eval.LoadFile(args[0])
 		if err != nil {
@@ -85,6 +86,11 @@ an injection and 0 is benign. Each sample is scanned as one payload, like
 				return err
 			}
 		}
+		if predOut != "" {
+			if err := writeJSONL(predOut, res.Predictions); err != nil {
+				return err
+			}
+		}
 		return nil
 	},
 }
@@ -124,6 +130,11 @@ func printEvalResult(dataset string, res *eval.Result, durationMs int64) {
 
 // writeOutcomes writes misclassified samples as JSONL for gap analysis.
 func writeOutcomes(path string, outcomes []eval.Outcome) error {
+	return writeJSONL(path, outcomes)
+}
+
+// writeJSONL writes one JSON object per line.
+func writeJSONL[T any](path string, rows []T) error {
 	f, err := os.Create(path)
 	if err != nil {
 		return fmt.Errorf("creating %s: %w", path, err)
@@ -132,7 +143,7 @@ func writeOutcomes(path string, outcomes []eval.Outcome) error {
 	w := bufio.NewWriter(f)
 	enc := json.NewEncoder(w)
 	enc.SetEscapeHTML(false)
-	for _, o := range outcomes {
+	for _, o := range rows {
 		if err := enc.Encode(o); err != nil {
 			return fmt.Errorf("writing %s: %w", path, err)
 		}
@@ -147,4 +158,5 @@ func init() {
 	evalCmd.Flags().String("json", "", "write metrics and metadata as JSON to this file")
 	evalCmd.Flags().String("fp-out", "", "write false-positive samples as JSONL to this file")
 	evalCmd.Flags().String("fn-out", "", "write false-negative samples as JSONL to this file")
+	evalCmd.Flags().String("predictions", "", "write per-sample predictions (index, label, predicted, text_sha256) as JSONL to this file (input for 'safeanalyze gate')")
 }

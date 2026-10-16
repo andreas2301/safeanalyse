@@ -3,7 +3,10 @@
 # testdata/eval/<set>.jsonl (dev) and testdata/eval/<set>-holdout.jsonl
 # (holdout) for `safeanalyze eval`, with <set> in deepset, llmail,
 # browsesafe, toolresp, nemotron, multilingual and spanish, plus the
-# report-only stress set testdata/eval/promptprotection-stress.jsonl.
+# report-only stress set testdata/eval/promptprotection-stress.jsonl, and
+# sealed sets testdata/eval/<set>-sealed.jsonl for llmail, browsesafe,
+# toolresp and nemotron (disjoint from every dev and holdout set except the
+# reused llmail benign emails; evaluated once per round end only).
 # Holdout sets share no text with any dev set, except that llmail-holdout
 # reuses the llmail benign emails (no unused ones exist). New sets share no
 # text with the deepset/llmail/browsesafe dev and holdout sets.
@@ -489,6 +492,7 @@ shared |= {norm(p[1]) for p in pairs[0]} & {norm(p[1]) for p in pairs[1]}
 if shared:
     raise SystemExit('nemotron dev/holdout share %d injection or clean texts' % len(shared))
 print('nemotron: dev/holdout share 0 normalized injection_text and 0 clean texts')
+nem_cands = [(find(c[0]),) + c[1:] for c in cands]  # (group, positive, clean, source, ninj), for the sealed set
 
 # Multilingual recall-only sets: CyberSecEval multilingual user_input +
 # yanismiraoui/prompt_injections (language guessed from stopwords, since the
@@ -640,10 +644,98 @@ for name, rs in list(new_dev.items()) + [(n + '-holdout', r) for n, r in new_hol
     if {r[0] for r in rs} & old_texts:
         raise SystemExit('%s shares text with an existing set' % name)
 print('new-set disjointness check passed')
+
+# ---------------- Sealed sets (disjoint from every dev and holdout set) ----------------
+# Evaluated once per round end, never used for keep/revert or rule design.
+# Each sealed set is drawn from rows that no dev, holdout or stress set uses,
+# with the holdout's group-split rules, and a fresh random.Random(seed), so
+# adding them leaves every dev/holdout file byte-identical.
+used_texts = all_dev | old_texts | {r[0] for rs in new_hold.values() for r in rs} | {r[0] for r in stress}
+sealed = {}
+
+# LLMail: 300 more attack submissions with the dev per-stratum allocation, from
+# submissions no dev or holdout set picked. No unused benign emails exist, so
+# the 160 dev benign emails are reused (as in llmail-holdout): only recall is
+# an independent sealed measurement.
+rng = random.Random(seed)
+rows_s = []
+for k in sorted(strata):
+    pool = [t for t in strata[k] if t not in used_texts]
+    if len(pool) < alloc[k]:
+        raise SystemExit('llmail stratum %r too small for sealed' % k)
+    for text in rng.sample(pool, alloc[k]):
+        rows_s.append((text, 1, 'llmail/' + k))
+rows_s.extend(r for r in rows_llmail if r[1] == 0)
+sealed['llmail'] = rows_s
+
+# BrowseSafe: seeded 300 yes + 300 no from test rows no dev or holdout set picked.
+c = read_parquet(cache + '/browsesafe-test.parquet')
+rng = random.Random(seed)
+rows_s = []
+for lab, num in (('yes', 1), ('no', 0)):
+    idx = [i for i, l in enumerate(c['label']) if l == lab and c['content'][i] not in used_texts]
+    for i in sorted(rng.sample(idx, 300)):
+        rows_s.append((c['content'][i], num, 'browsesafe'))
+sealed['browsesafe'] = rows_s
+
+# toolresp: from the test split (the holdout's split), rows whose injection
+# string is in no dev or holdout row and whose response_id (the safe/injected
+# pair key within the split) no holdout row uses; seeded 300 + 300.
+rows = [r for r in read_csv(cache + '/toolresp-test.csv') if r['label'] != 'injection' or injected(r)]
+hold_tr = {r[0] for r in new_hold['toolresp']}
+hold_ids = {r['response_id'] for r in rows if r['text'] in hold_tr}
+used_inj = {r[3] for r in d + h if r[3]}
+rng = random.Random(seed)
+rows_s = []
+for lab, num in (('injection', 1), ('safe', 0)):
+    pool = [(r['text'], num, 'toolresp', r['injection']) for r in rows if r['label'] == lab
+            and r['response_id'] not in hold_ids and r['injection'] not in used_inj]
+    pool = fresh(pool, 'toolresp-sealed', used_texts)
+    print('toolresp-sealed: %d unused %s candidates' % (len(pool), lab))
+    rows_s += take(pool, 300, rng)
+if {r[3] for r in rows_s if r[3]} & used_inj:
+    raise SystemExit('toolresp-sealed shares an injection string with dev/holdout')
+sealed['toolresp'] = [r[:3] for r in rows_s]
+
+# nemotron: pairs from union-find groups with no pair in nemotron dev or holdout.
+nem_used = {r[0] for r in new_dev['nemotron'] + new_hold['nemotron']}
+used_groups = {g for g, pos, clean, src, ninj in nem_cands if pos in nem_used or clean in nem_used}
+ok, seen = [], set(used_texts)
+for g, pos, clean, src, ninj in nem_cands:
+    if g in used_groups or pos in seen or clean in seen:
+        continue
+    seen.update((pos, clean)); ok.append((pos, clean, src, ninj))
+print('nemotron-sealed: %d unused pairs in %d unused groups' % (len(ok), len({g for g, *_ in nem_cands} - used_groups)))
+if len(ok) >= 100:
+    chosen = take(ok, 300, random.Random(seed))
+    sealed['nemotron'] = [(p[0], 1, p[2]) for p in chosen] + [(p[1], 0, p[2]) for p in chosen]
+    used_n = {norm(p[3]) for p in pairs[0] + pairs[1] if p[0] in nem_used} | {norm(p[1]) for p in pairs[0] + pairs[1] if p[0] in nem_used}
+    if {p[3] for p in chosen} & used_n or {norm(p[1]) for p in chosen} & used_n:
+        raise SystemExit('nemotron-sealed shares an injection or clean text with dev/holdout')
+# deepset, multilingual and spanish use every usable row in dev or holdout, and
+# promptprotection-stress has no split, so they have no sealed set.
+
+for name, rs in sealed.items():
+    write_jsonl(name + '-sealed', rs)
+reused = {r[0] for r in rows_llmail if r[1] == 0}
+for name, rs in sealed.items():
+    shared = {r[0] for r in rs} & used_texts
+    if name == 'llmail':
+        shared -= reused
+    if shared:
+        raise SystemExit('%s-sealed shares %d texts with a dev, holdout or stress set' % (name, len(shared)))
+names = sorted(sealed)
+for i, a in enumerate(names):
+    for b in names[i + 1:]:
+        if {r[0] for r in sealed[a]} & {r[0] for r in sealed[b]}:
+            raise SystemExit('%s-sealed and %s-sealed share text' % (a, b))
+print('sealed disjointness check passed (llmail-sealed reuses %d benign dev emails)' % len(reused))
 PY
 
 (cd "$OUT" && sha256sum deepset.jsonl llmail.jsonl browsesafe.jsonl \
   toolresp.jsonl nemotron.jsonl multilingual.jsonl spanish.jsonl \
   deepset-holdout.jsonl llmail-holdout.jsonl browsesafe-holdout.jsonl \
   toolresp-holdout.jsonl nemotron-holdout.jsonl multilingual-holdout.jsonl \
-  spanish-holdout.jsonl promptprotection-stress.jsonl)
+  spanish-holdout.jsonl promptprotection-stress.jsonl \
+  llmail-sealed.jsonl browsesafe-sealed.jsonl toolresp-sealed.jsonl \
+  nemotron-sealed.jsonl)
