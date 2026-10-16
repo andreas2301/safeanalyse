@@ -13,6 +13,46 @@ Prompt injection via malicious code is real. A repo can contain:
 
 **safeanalyze** runs a security pipeline so AI assistants never see raw, unverified code.
 
+## What safeanalyze can and cannot catch
+
+safeanalyze is a fast, deterministic tripwire: pattern rules (YARA-style regex), hidden/bidi
+Unicode detection, entropy checks and optional external scanners. It catches known
+injection phrasings cheaply and with few false positives. It does not understand meaning,
+so it misses much of what a determined attacker writes. Treat it as one layer of defense
+in depth, not as the only security boundary.
+
+Measured on the labeled **holdout** sets (fast mode, v0.3.44 detection logic, 2026-10; `safeanalyze eval`):
+
+| Holdout set | Precision | Recall | F1 | p95 latency |
+|-------------|-----------|--------|----|-------------|
+| llmail (email injections)\* | 1.00 | 0.72 | 0.84 | 13 ms |
+| browsesafe (HTML pages) | 0.87 | 0.60 | 0.71 | 74 ms |
+| toolresp (tool/API responses) | 0.82 | 0.52 | 0.64 | 10 ms |
+| spanish | 1.00 | 0.43 | 0.61 | 10 ms |
+| deepset (mixed prompts) | 1.00 | 0.31 | 0.47 | 9 ms |
+| nemotron (domain-specific) | 1.00 | 0.12 | 0.21 | 9 ms |
+| multilingual (injection-only, recall only) | — | 0.02 | 0.05 | 9 ms |
+
+promptprotection-stress (no holdout split): precision 0.50, recall 0.17, F1 0.25.
+\* llmail-holdout reuses the dev benign emails, so only its recall is independent.
+
+What this means:
+- **Good at:** classic override phrasing ("ignore all previous instructions"), chat-template
+  and delimiter breakouts, forced canned output, persona hijacks, email exfiltration
+  phrasing, hidden zero-width/bidi characters — with low false-positive rates on most sets.
+- **Blind spots:** paraphrased or indirect instructions with no tell-tale phrase; non-English
+  text beyond a few Spanish, German, French and Italian phrasings (multilingual recall ≈ 0.02);
+  encoded or obfuscated payloads (homoglyphs, `(at)` addresses, spaced letters, base64);
+  instructions that look like ordinary tasks in tool responses; and adaptive attackers who
+  can test against the rules (the rule set is public).
+- **Intended role:** a cheap first filter in front of AI assistants (≤ 100 ms fast path for
+  proxies, thorough mode for repository review), combined with least-privilege agents,
+  human review of sensitive actions, and model-based detection.
+
+See [docs/LLM_SCANNER_SPEC.md](docs/LLM_SCANNER_SPEC.md) for the proposed companion scanner
+that adds classifier/LLM-based detection, and [docs/ASSESSMENT.md](docs/ASSESSMENT.md) for
+the full assessment.
+
 ## What's new in v0.3.45
 
 - **Faster YARA prefilter** — the per-line literal prefilter is replaced by a single pass that records, for every prefilter literal, which lines contain it; each pattern's regex then runs only on its candidate lines. Detection results are byte-identical on every labeled set and the thorough corpus. Fast-mode browsesafe p95 drops from 70.7 ms to 44.1 ms dev (77.0 → 48.2 ms holdout), and p50 from about 28 ms to about 18 ms.
