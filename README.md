@@ -13,6 +13,46 @@ Prompt injection via malicious code is real. A repo can contain:
 
 **safeanalyze** runs a security pipeline so AI assistants never see raw, unverified code.
 
+## What safeanalyze can and cannot catch
+
+safeanalyze is a fast, deterministic tripwire: pattern rules (YARA-style regex), hidden/bidi
+Unicode detection, entropy checks and optional external scanners. It catches known
+injection phrasings cheaply and with few false positives. It does not understand meaning,
+so it misses much of what a determined attacker writes. Treat it as one layer of defense
+in depth, not as the only security boundary.
+
+Measured on the labeled **holdout** sets (fast mode, v0.3.44 detection logic, 2026-10; `safeanalyze eval`):
+
+| Holdout set | Precision | Recall | F1 | p95 latency |
+|-------------|-----------|--------|----|-------------|
+| llmail (email injections)\* | 1.00 | 0.72 | 0.84 | 13 ms |
+| browsesafe (HTML pages) | 0.87 | 0.60 | 0.71 | 74 ms |
+| toolresp (tool/API responses) | 0.82 | 0.52 | 0.64 | 10 ms |
+| spanish | 1.00 | 0.43 | 0.61 | 10 ms |
+| deepset (mixed prompts) | 1.00 | 0.31 | 0.47 | 9 ms |
+| nemotron (domain-specific) | 1.00 | 0.12 | 0.21 | 9 ms |
+| multilingual (injection-only, recall only) | — | 0.02 | 0.05 | 9 ms |
+
+promptprotection-stress (no holdout split): precision 0.50, recall 0.17, F1 0.25.
+\* llmail-holdout reuses the dev benign emails, so only its recall is independent.
+
+What this means:
+- **Good at:** classic override phrasing ("ignore all previous instructions"), chat-template
+  and delimiter breakouts, forced canned output, persona hijacks, email exfiltration
+  phrasing, hidden zero-width/bidi characters — with low false-positive rates on most sets.
+- **Blind spots:** paraphrased or indirect instructions with no tell-tale phrase; non-English
+  text beyond a few Spanish, German, French and Italian phrasings (multilingual recall ≈ 0.02);
+  encoded or obfuscated payloads (homoglyphs, `(at)` addresses, spaced letters, base64);
+  instructions that look like ordinary tasks in tool responses; and adaptive attackers who
+  can test against the rules (the rule set is public).
+- **Intended role:** a cheap first filter in front of AI assistants (≤ 100 ms fast path for
+  proxies, thorough mode for repository review), combined with least-privilege agents,
+  human review of sensitive actions, and model-based detection.
+
+See [docs/LLM_SCANNER_SPEC.md](docs/LLM_SCANNER_SPEC.md) for the proposed companion scanner
+that adds classifier/LLM-based detection, and [docs/ASSESSMENT.md](docs/ASSESSMENT.md) for
+the full assessment.
+
 ## What's new in v0.3.44
 
 - **"Follow all instructions in the following" hand-off** — the `prompt_injection_comment` rule gains one pattern for a line that tells the model to obey whatever text comes next: "Follow all instructions in the following:", "Follow every directive contained in the following text:", and spaced-letter forms such as "Fol lo W all  ins tructIonS  in the following:". The phrase must start the text, a sentence, a clause after `:` or a literal `\n`/`\t` escape in JSON, use "all" or "every" with instructions, directives or commands, and end with "the following" (optionally text, message, email, content, input, prompt or block) plus a colon. Everyday text such as "Please follow all instructions in the following section:", "Applicants should follow all the instructions given in the following: (a) attach a CV" or `<p>Follow all the instructions in the following text:</p>` stays unflagged. llmail dev recall rises 0.787 → 0.800 (F1 0.881 → 0.889) and llmail-holdout 0.713 → 0.720 (F1 0.833 → 0.837) with no new false positives on any set.
