@@ -29,6 +29,7 @@ Downloads are cached in `testdata/eval/.cache/` (override with `SAFEANALYZE_EVAL
 | `multilingual-holdout.jsonl` | 825 | 825 | 0 | `8a708bd75016fcc1241f7354c6750928470dffcce814df5ced0bc1572af18d1d` |
 | `spanish-holdout.jsonl` | 424 | 53 | 371 | `7c91e99f78eb2dfc84e6b006c621f7859674b09813472c73b2c93e7fe82aafd4` |
 | `promptprotection-stress.jsonl` | 376 | 180 | 196 | `6263b632697fb56667593d0071a7f60d67b07dc78427cd9baecf6caf0b40f4f5` |
+| `hardbenign.jsonl` (committed, not fetched) | 100 | 0 | 100 | `6a7b5559d077b35c882f50fa3dda56727a0e1bcacfdc4f68d1cc9f869d3c685d` |
 | `llmail-sealed.jsonl` | 460 | 300 | 160 | `74190e50ebc023f95a6d9868a58f1337d3b4933fd15c1f5ad7e9f3390f42cdfc` |
 | `browsesafe-sealed.jsonl` | 600 | 300 | 300 | `71dee4d78805617c0f1d70f2b3fe0625915fd64ca64886b09722e813ba4e7b03` |
 | `toolresp-sealed.jsonl` | 600 | 300 | 300 | `c4bf965f9e43d33d804942947e7729b4c89abcd7f8dd575dfa4e33c4d419dd7c` |
@@ -39,6 +40,8 @@ files are **holdout** sets: use them only to confirm that a change generalizes, 
 pick rules or thresholds. The script checks that no holdout text appears in any dev set and
 exits non-zero if one does. The only exception is the LLMail benign emails (see below).
 `promptprotection-stress.jsonl` is a **report-only** stress set with no dev/holdout split.
+`hardbenign.jsonl` is a **report-only** hard-benign false-positive probe (see "Hard-benign FP probe" below); it is
+hand-authored and committed, so `fetch_eval.sh` neither downloads nor checks it.
 The `*-sealed.jsonl` files are **sealed** test sets (see "Sealed sets" below): evaluated once per
 round end, never used for keep/revert or rule design. `policy.yaml` (committed) holds the set
 roles and thresholds used by `safeanalyze gate`.
@@ -176,6 +179,25 @@ Exact duplicate texts inside a pool are dropped (first occurrence kept).
   The agent-flows label describes the whole agent turn (including the tool call), not only the source text,
   so a few attack rows may have source text that is not an injection on its own.
 
+## Hard-benign FP probe (hardbenign, report-only)
+
+- Origin: hand-authored for this repository (author `Claude`, date 2026-10-16, user decision). Not downloaded; the file
+  is committed at `testdata/eval/hardbenign.jsonl` and listed as a `.gitignore` exception.
+- License: same as this repository.
+- Rows: 100, all `label:0` (benign); `source` = `hardbenign`, plus `category`, `author`, `date` fields (ignored by `safeanalyze eval`).
+  Categories (count): `security_article` 12 (articles and training material that quote or describe injection phrases),
+  `vendor_docs` 10 (LLM-safety vendor documentation), `support_forward` 12 (customer-support mail asking to forward
+  invoices/tickets to an address), `helpdesk_password` 10 (IT helpdesk and password-reset notices), `json_tool_response` 12
+  (JSON API/tool responses with `\u` escapes, base64 fields and keys like `instructions`/`system`), `recipe_manual` 10
+  (recipes and manuals with imperative instructions), `code_comment` 12 (code comments/READMEs using "ignore",
+  "override", "system prompt" in a programming sense), `roleplay_theatre` 10 ("act as", "stay in character" outside AI),
+  `multilingual` 12 (benign business mail: 4 de, 4 es, 4 fr).
+- Contains no prompt-injection attacks; quoted injection phrases appear only inside explanatory text.
+- No text duplicates (exactly or as a substring, whitespace/case-normalized) a text in any other eval set (checked 2026-10-16).
+- **Report-only:** no dev/holdout split, never gating, and never a hypothesis source: do not read its FP file to design
+  or tune rules. Record its FP rate (overall and per category) in the iteration notes and the round's `COMPARISON.md`.
+- Baseline (v0.3.48, `/tmp/safeanalyze-iter/v0.3.48-hardbenign/`): FP 14/100 (14 %).
+
 ## Multilingual recall-only sets (multilingual)
 
 Positives only (label 1), so only recall is meaningful.
@@ -281,7 +303,7 @@ Rules (all script-checked; `fetch_eval.sh` exits non-zero on a violation):
   71 `URGENT`, 1 bare.
 - **No sealed set** for deepset (dev and holdout use the whole test and train splits), spanish (holdout
   takes every filtered test row dev did not pick), multilingual (every row is split between dev and
-  holdout) or promptprotection-stress (report-only, no split).
+  holdout), promptprotection-stress or hardbenign (report-only, no split).
 - Round-5 end reading (v0.3.46 detection logic, 2026-10-16; `/tmp/safeanalyze-iter/v0.3.46-baseline/sealed/`):
   llmail-sealed P 1.000 R 0.753 F1 0.859; browsesafe-sealed P 0.895 R 0.680 F1 0.773 (FP 24);
   toolresp-sealed P 0.826 R 0.473 F1 0.602 (FP 30); nemotron-sealed P 1.000 R 0.137 F1 0.240.

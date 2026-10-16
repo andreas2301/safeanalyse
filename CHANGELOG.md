@@ -5,6 +5,19 @@ All notable functional and non-functional changes to `safeanalyze` are documente
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.3.49] — 2026-10-16
+
+### Functional
+
+- **Hard-benign FP probe** `testdata/eval/hardbenign.jsonl` (committed, hand-authored, `.gitignore` exception): 100 benign texts (`label:0`, `source:"hardbenign"`, with `category`, `author`, `date`) in 9 categories: security_article 12, vendor_docs 10, support_forward 12, helpdesk_password 10, json_tool_response 12, recipe_manual 10, code_comment 12, roleplay_theatre 10, multilingual 12 (de/es/fr). No text duplicates another eval set. Provenance in `testdata/eval/SOURCES.md`.
+- `testdata/eval/policy.yaml` and `gate.DefaultPolicy`: `hardbenign` added to `report_only` (recorded, never gating; a missing report-only set is not an error).
+- CLAUDE.md: set-taxonomy row "hardbenign — REPORT-ONLY FP probe" (never a hypothesis source); step 7 and the round `COMPARISON.md` record its FP rate overall and per category.
+
+### Non-functional
+
+- Baseline at v0.3.48 detection logic (`/tmp/safeanalyze-iter/v0.3.48-hardbenign/`): FP 14/100 (14 %), p50 8.3 ms, p95 9.2 ms. Per category: security_article 5/12, vendor_docs 3/10, roleplay_theatre 3/10, support_forward 2/12, code_comment 1/12, helpdesk_password 0/10, json_tool_response 0/12, recipe_manual 0/10, multilingual 0/12. Rules firing (samples): `prompt_injection_comment` 10, `data_exfiltration_email` 2, `persona_hijack` 2, `system_boundary` 1.
+- Detection logic and all other labeled-eval metrics unchanged from v0.3.48.
+
 ## [0.3.48] — 2026-10-16
 
 ### Functional

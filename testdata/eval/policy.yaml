@@ -1,5 +1,6 @@
 # Keep/revert policy for `safeanalyze gate` (see CLAUDE.md, "Set taxonomy" and
-# "Decision rules"). Committed; every other file in testdata/eval is fetched.
+# "Decision rules"). Committed, like the hand-authored hardbenign.jsonl; every
+# other file in testdata/eval is fetched.
 # The built-in default in pkg/gate (DefaultPolicy) must match this file.
 
 # Set roles. Each name covers the dev set and its holdout twin.
@@ -11,7 +12,7 @@ roles:
   # F1 and precision must not drop on dev or holdout; gains are ignored.
   guard_only: [deepset, nemotron, spanish]
   # Recorded, never gating.
-  report_only: [promptprotection-stress]
+  report_only: [promptprotection-stress, hardbenign]
 
 holdout_suffix: -holdout
 # Sealed sets are evaluated once per round end and are always ignored by gate.

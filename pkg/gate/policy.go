@@ -59,7 +59,7 @@ func DefaultPolicy() *Policy {
 	p.Roles.Primary = []string{"llmail", "browsesafe", "toolresp"}
 	p.Roles.RecallOnly = []string{"multilingual"}
 	p.Roles.GuardOnly = []string{"deepset", "nemotron", "spanish"}
-	p.Roles.ReportOnly = []string{"promptprotection-stress"}
+	p.Roles.ReportOnly = []string{"promptprotection-stress", "hardbenign"}
 	p.Tolerance.MaxTPLost = 1
 	p.Tolerance.MaxSets = 1
 	p.Generalization.MinHoldoutRatio = 0.5

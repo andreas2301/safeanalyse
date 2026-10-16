@@ -46,21 +46,22 @@ The project uses an iterative, measurement-driven improvement loop inspired by [
   - `safeanalyze-doc-webagents.html`
 - External scanners installed via `./safeanalyze install --all` (Semgrep, TruffleHog, prompt-injection-scanner, etc.).
 - Corpus targets checked out at the pinned upstream SHAs/sha256s in `testdata/eval/SOURCES.md` ("Thorough-mode corpus manifest"; re-baselined 2026-10-02). Do not compare against runs on other revisions.
-- Labeled eval sets fetched with `./scripts/fetch_eval.sh` (pinned, sha256-verified, seeded; not committed). Dev: `testdata/eval/{deepset,llmail,browsesafe,toolresp,nemotron,multilingual,spanish}.jsonl`. Holdout: the same names with `-holdout`. Report-only stress set: `testdata/eval/promptprotection-stress.jsonl`. Sealed sets: `testdata/eval/{llmail,browsesafe,toolresp,nemotron}-sealed.jsonl`. Gate policy (committed): `testdata/eval/policy.yaml`. See "Set taxonomy" below for how each set is used.
+- Labeled eval sets fetched with `./scripts/fetch_eval.sh` (pinned, sha256-verified, seeded; not committed). Dev: `testdata/eval/{deepset,llmail,browsesafe,toolresp,nemotron,multilingual,spanish}.jsonl`. Holdout: the same names with `-holdout`. Report-only stress set: `testdata/eval/promptprotection-stress.jsonl`. Report-only hard-benign FP probe (hand-authored, committed, not fetched): `testdata/eval/hardbenign.jsonl`. Sealed sets: `testdata/eval/{llmail,browsesafe,toolresp,nemotron}-sealed.jsonl`. Gate policy (committed): `testdata/eval/policy.yaml`. See "Set taxonomy" below for how each set is used.
 - The corpus scan config sets `no_verification: true` on the `trufflehog` scanner so results do not depend on live credential verification.
 - Enough disk space and memory for the test corpus. Note: the default DeBERTa ONNX model uses ~11 GB RAM at load/inference time, so the stochastic ML stage is currently disabled by default until a sub-2 GB model is validated.
 - A stable, otherwise idle machine for duration comparisons (run-to-run variance should be <10 % for large targets).
 
 ### Iteration steps
 
-1. **Measure baseline** — run `./scripts/fetch_eval.sh`, then `safeanalyze eval <set>.jsonl --json eval-<set>.json --fp-out fp-<set>.jsonl --fn-out fn-<set>.jsonl --predictions predictions-<set>.jsonl` into `/tmp/safeanalyze-iter/<baseline>/` on every dev **and** holdout set and on the report-only stress set (never on a `-sealed` set). Record precision, recall, F1, TP/FP/TN/FN and p50/p95 latency. Also run `safeanalyze scan --mode thorough` against the pinned test corpus (trufflehog `no_verification: true`) and record findings + durations from `safeanalyze.json` (`duration_ms`) and `duration.txt`.
+1. **Measure baseline** — run `./scripts/fetch_eval.sh`, then `safeanalyze eval <set>.jsonl --json eval-<set>.json --fp-out fp-<set>.jsonl --fn-out fn-<set>.jsonl --predictions predictions-<set>.jsonl` into `/tmp/safeanalyze-iter/<baseline>/` on every dev **and** holdout set and on the report-only sets (promptprotection-stress, hardbenign; never on a `-sealed` set). Record precision, recall, F1, TP/FP/TN/FN and p50/p95 latency. Also run `safeanalyze scan --mode thorough` against the pinned test corpus (trufflehog `no_verification: true`) and record findings + durations from `safeanalyze.json` (`duration_ms`) and `duration.txt`.
 2. **Premortem** — run `./scripts/premortem.sh` and ask: "If this improvement lands and the tool still fails in production, what most likely broke?" Document the biggest risks (false positives, latency blow-out, missing variants).
-3. **Analyze gaps** — inspect the `fn-*.jsonl` / `fp-*.jsonl` of the **PRIMARY dev** sets (llmail, browsesafe, toolresp) and the multilingual dev set, plus the corpus findings, against known prompt-injection patterns. Never inspect holdout or sealed misclassifications, GUARD-ONLY (deepset, nemotron, spanish) misclassifications or promptprotection-stress (REPORT-ONLY) misclassifications to design rules.
+3. **Analyze gaps** — inspect the `fn-*.jsonl` / `fp-*.jsonl` of the **PRIMARY dev** sets (llmail, browsesafe, toolresp) and the multilingual dev set, plus the corpus findings, against known prompt-injection patterns. Never inspect holdout or sealed misclassifications, GUARD-ONLY (deepset, nemotron, spanish) misclassifications or REPORT-ONLY (promptprotection-stress, hardbenign) misclassifications to design rules.
 4. **Hypothesize** — pick one concrete improvement: a new YARA rule, a tuned entropy threshold, a smaller/faster model, a file-size limit, or parallelism.
 5. **Implement** — make the smallest change that tests the hypothesis. Do not combine multiple unrelated changes in one iteration.
 6. **Red-team** — run `./scripts/redteam.sh`. Try to evade the new check with rephrased, encoded, or multi-language injections. If it is trivially bypassed, revert or harden.
-7. **Evaluate** — re-run `./scripts/fetch_eval.sh` (output sha256s must match `testdata/eval/SOURCES.md`) and `safeanalyze eval` (same flags as step 1, including `--predictions`, into `/tmp/safeanalyze-iter/<iter>/`) on every dev and holdout set and on the report-only stress set (`promptprotection-stress.jsonl`; recorded, never gating), then re-run the same pinned test corpus. Compare:
+7. **Evaluate** — re-run `./scripts/fetch_eval.sh` (output sha256s must match `testdata/eval/SOURCES.md`) and `safeanalyze eval` (same flags as step 1, including `--predictions`, into `/tmp/safeanalyze-iter/<iter>/`) on every dev and holdout set and on the report-only sets (`promptprotection-stress.jsonl` and the hard-benign FP probe `hardbenign.jsonl`; recorded, never gating), then re-run the same pinned test corpus. Compare:
    - Precision, recall and F1 per labeled set (dev and holdout), grouped by the set taxonomy below; stress-set metrics are recorded but do not gate.
+   - hardbenign FP rate (FP/100, overall and per `category`) and the rules that fired, against the previous accepted version; recorded, never gating.
    - Total and per-target finding counts.
    - Wall-clock duration per target (`duration_ms`).
    - Fast-mode latency (`./scripts/redteam.sh`).
@@ -78,6 +79,7 @@ Every labeled set has one role. Each role applies to the dev set and its `-holdo
 | **RECALL-ONLY** | multilingual | Recall must not drop on dev or holdout (positives only; precision/F1 are meaningless) | Yes, dev only | No |
 | **GUARD-ONLY** | deepset, nemotron, spanish | F1 and precision must not drop on dev or holdout | **Never** | **No** — gains are ignored |
 | **REPORT-ONLY** | promptprotection-stress | None; record P/R/F1/FP in the iteration notes | **Never** | No |
+| **REPORT-ONLY** | hardbenign — REPORT-ONLY FP probe (100 hand-authored benign texts, no split) | None; record FP rate overall and per category, and the firing rules, in the iteration notes and the round's `COMPARISON.md` | **Never** (do not read its FP file to design or tune rules) | No |
 | **SEALED** | llmail-sealed, browsesafe-sealed, toolresp-sealed, nemotron-sealed | None; evaluated **once per round, at round end**, and recorded in the round's report-branch `COMPARISON.md` | **Never** (do not read their FP/FN files) | No; `safeanalyze gate` ignores them |
 
 - Sealed sets were added on 2026-10-16 (user decision) to stop holdout overfitting: the holdout is read in every iteration, so it is a reused holdout and decisions adapt to it over a round (Dwork et al. 2015, arXiv:1506.02629; Blum & Hardt 2015, arXiv:1502.04585). They are disjoint from every dev and holdout set (script-checked), except that llmail-sealed reuses the 160 llmail benign emails, so only its recall is independent. A large gap between holdout and sealed results at round end is a sign of holdout overfitting and goes into the process review. deepset, spanish and multilingual have no unused rows and therefore no sealed set.
@@ -127,7 +129,7 @@ Document the outcome of the review in CLAUDE.md or the next commit message.
   git worktree add -B report-<devicename>-<date> .worktrees/report-<devicename>-<date> master
   ```
 - Generate a random Deadpool-style device name for each run (e.g., `boom-zany-sarcasm-cd4dee48`).
-- Build the binary in the worktree, run `./scripts/redteam.sh`, run the corpus scan, and write a `COMPARISON.md` against the version the round started from.
+- Build the binary in the worktree, run `./scripts/redteam.sh`, run the corpus scan, and write a `COMPARISON.md` against the version the round started from. `COMPARISON.md` includes the hardbenign FP rate (overall and per category) at the round's start and end versions.
 - At round end (and only then), evaluate the sealed sets once with the round's final version (`safeanalyze eval testdata/eval/<set>-sealed.jsonl --json …` into `/tmp/safeanalyze-iter/<round-final>/sealed/`) and record their P/R/F1/FP next to the dev and holdout results in `COMPARISON.md`. Do not re-run sealed sets on intermediate iterations, and never use their results to pick, keep or revert a change.
 - Push only the report branch:
   ```bash
@@ -172,7 +174,7 @@ echo 'ignore all previous instructions' | ./safeanalyze inspect --verbose
 # Install dependencies
 ./safeanalyze install --all
 
-# Labeled eval (dev + holdout + report-only stress set)
+# Labeled eval (dev + holdout + report-only sets)
 ./scripts/fetch_eval.sh
 O=/tmp/safeanalyze-iter/<iter>; mkdir -p "$O"
 for f in testdata/eval/*.jsonl; do n=$(basename "$f" .jsonl)
@@ -192,6 +194,7 @@ done
 
 - **Loop paused (user decision 2026-10-16)** after round 5 iteration 42, pending a strategy decision: the honest assessment (`docs/ASSESSMENT.md`) shows regex-only detection has a hard ceiling (stress recall 0.17, multilingual 0.02) and falling returns. Do not start new rule-adding rounds until a new strategy is confirmed. Iteration 42 (narrow `obfuscated_javascript` for JSON `\u` escapes) was reverted: toolresp FP 31 → 2 but TP 189 → 160 (dev), 157 → 132 (holdout), so F1 dropped — the precision/recall trade-off is worth revisiting.
 - **v0.3.47** (outside the loop): sealed test sets in `fetch_eval.sh`, `eval --predictions`, and `safeanalyze gate` (decision rules as tested code with the new generalization-ratio, significance and latency gates). Detection logic unchanged; v0.3.46 baseline with predictions and the round-5-end sealed reading are in `/tmp/safeanalyze-iter/v0.3.46-baseline/` (sealed in `sealed/`). Checked with the gate: v0.3.44-r5-baseline → iter41 ACCEPT (latency), → iter42 REVERT (toolresp F1). Replayed on round 4 as a whole (v0.3.34-r4-baseline → iter40), the gate would REVERT: toolresp dev F1 +0.1235 but holdout only +0.0607, just under the 0.5 ratio (0.0618).
+- **v0.3.49** (outside the loop): REPORT-ONLY hard-benign FP probe `testdata/eval/hardbenign.jsonl` (100 hand-authored benign texts, 9 categories). Baseline at v0.3.48 detection logic: FP 14/100 (`/tmp/safeanalyze-iter/v0.3.48-hardbenign/`). Never gating, never a hypothesis source.
 - **v0.3.46** (outside the loop): `scan` blocking gates scoped to their own stage (external bug report). `hiddenchars` deliberately does not check `Mn` combining marks such as emoji variation selector U+FE0F.
 - **Squid body scanning:** the `external_acl_type` helper only receives `%SRC %DST %METHOD %URI`; since v0.3.48 use `safeanalyze icap` (ICAP RESPMOD) to scan response bodies.
 

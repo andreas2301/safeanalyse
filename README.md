@@ -1,4 +1,4 @@
-# safeanalyze v0.3.48
+# safeanalyze v0.3.49
 
 A Go CLI tool that sanitizes and scans untrusted code repositories **before** feeding them to AI assistants. Implements defense-in-depth inspired by [Zones of Distrust](https://github.com/bluvibytes/zone-of-distrust).
 
@@ -34,6 +34,7 @@ Measured on the labeled **holdout** sets (fast mode, v0.3.44 detection logic, 20
 | multilingual (injection-only, recall only) | — | 0.02 | 0.05 | 9 ms |
 
 promptprotection-stress (no holdout split): precision 0.50, recall 0.17, F1 0.25.
+Hard-benign FP probe (`hardbenign`, 100 hand-authored benign texts, v0.3.48 detection logic): **14 % false-positive rate** (14/100) — security articles that quote injection phrases 5/12, vendor LLM-safety docs 3/10, theatre/role-play 3/10, support mail forwarding to an address 2/12, code comments 1/12; 0 on helpdesk/password notices, JSON tool responses, recipes/manuals and de/es/fr business mail.
 \* llmail-holdout reuses the dev benign emails, so only its recall is independent.
 
 What this means:
@@ -52,6 +53,10 @@ What this means:
 See [docs/LLM_SCANNER_SPEC.md](docs/LLM_SCANNER_SPEC.md) for the proposed companion scanner
 that adds classifier/LLM-based detection, and [docs/ASSESSMENT.md](docs/ASSESSMENT.md) for
 the full assessment.
+
+## What's new in v0.3.49
+
+- **Hard-benign false-positive probe.** New committed, hand-authored set `testdata/eval/hardbenign.jsonl`: 100 benign texts (label 0) in 9 categories that look risky to regex rules but are legitimate (security articles quoting injection phrases, vendor LLM-safety docs, support mail forwarding invoices to an address, helpdesk/password notices, JSON tool responses with `\u` escapes and base64, recipes/manuals, code comments, theatre role-play, de/es/fr business mail). It is REPORT-ONLY in `policy.yaml`: recorded every iteration, never gating and never used to design rules. Baseline at v0.3.48 detection logic: FP 14/100; rules firing: `prompt_injection_comment` 10, `data_exfiltration_email` 2, `persona_hijack` 2, `system_boundary` 1. Detection logic unchanged.
 
 ## What's new in v0.3.48
 
