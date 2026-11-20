@@ -79,6 +79,49 @@ type Finding struct {
 	Source      string `json:"source"`     // which check produced it
 	Confidence  string `json:"confidence"` // deterministic, heuristic, ml
 	Remediation string `json:"remediation,omitempty"`
+	// Tier ranks a finding for triage: A is verdict-relevant, B is capability
+	// inventory, C is hygiene/noise. Nothing is dropped; tiers only order output.
+	Tier string `json:"tier,omitempty"`
+	// FileRole is the role of File (source, test, docs, lockfile, ci, ...).
+	FileRole string `json:"file_role,omitempty"`
+	// Question is the verdict question this finding answers (see Verdict).
+	Question string `json:"question,omitempty"`
+	// Attributes carries finding-specific evidence such as host, trigger or
+	// dependency.
+	Attributes map[string]string `json:"attributes,omitempty"`
+}
+
+// Triage tiers.
+const (
+	TierA = "A"
+	TierB = "B"
+	TierC = "C"
+)
+
+// Verdict answers one fixed question about the target.
+type Verdict struct {
+	ID       string   `json:"id"`
+	Question string   `json:"question"`
+	Answer   string   `json:"answer"` // yes, unclear, no, not_checked
+	TierA    int      `json:"tier_a"`
+	TierB    int      `json:"tier_b"`
+	Evidence []string `json:"evidence,omitempty"`
+}
+
+// Verdict answers.
+const (
+	AnswerYes        = "yes"
+	AnswerUnclear    = "unclear"
+	AnswerNo         = "no"
+	AnswerNotChecked = "not_checked"
+)
+
+// CoverageItem states whether a check ran, so a clean result is not mistaken
+// for full coverage.
+type CoverageItem struct {
+	Check  string `json:"check"`
+	Status string `json:"status"` // ran, error, not_run, not_available
+	Note   string `json:"note,omitempty"`
 }
 
 // ErrorRecord captures a non-fatal error from a stage.
@@ -106,6 +149,8 @@ type Report struct {
 	Errors     []ErrorRecord     `json:"errors"`
 	Summary    Summary           `json:"summary"`
 	Metadata   map[string]string `json:"metadata,omitempty"`
+	Verdicts   []Verdict         `json:"verdicts,omitempty"`
+	Coverage   []CoverageItem    `json:"coverage,omitempty"`
 }
 
 // NewReport creates an empty report for a target.
@@ -150,6 +195,17 @@ func (r *Report) AddFinding(f Finding) {
 // AddError appends a non-fatal error record.
 func (r *Report) AddError(source, message string) {
 	r.Errors = append(r.Errors, ErrorRecord{Source: source, Message: message})
+}
+
+// CountTier returns the number of findings in the given tier.
+func (r *Report) CountTier(tier string) int {
+	n := 0
+	for _, f := range r.Findings {
+		if f.Tier == tier {
+			n++
+		}
+	}
+	return n
 }
 
 // HasSeverity returns true if the report contains any finding of the given severity.

@@ -134,6 +134,9 @@ type sarifResultProps struct {
 	Confidence  string `json:"confidence,omitempty"`
 	Source      string `json:"source,omitempty"`
 	Remediation string `json:"remediation,omitempty"`
+	Tier        string `json:"tier,omitempty"`
+	FileRole    string `json:"fileRole,omitempty"`
+	Question    string `json:"question,omitempty"`
 }
 
 type sarifInvocation struct {
@@ -207,6 +210,9 @@ func findingToResult(f Finding, ruleIndices map[string]int) sarifResult {
 			Confidence:  f.Confidence,
 			Source:      f.Source,
 			Remediation: f.Remediation,
+			Tier:        f.Tier,
+			FileRole:    f.FileRole,
+			Question:    f.Question,
 		},
 	}
 }

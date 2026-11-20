@@ -18,8 +18,17 @@ func WriteMarkdown(report *Report, cfg config.OutputConfig, path string) error {
 
 	var b strings.Builder
 	writeMDHeader(&b, report)
-	writeMDSummary(&b, report)
-	writeMDFindings(&b, report)
+	if len(report.Verdicts) > 0 {
+		writeMDVerdicts(&b, report)
+		writeMDEgress(&b, report)
+		writeMDAutorun(&b, report)
+		writeMDTiers(&b, report)
+		writeMDCoverage(&b, report)
+		writeMDSummary(&b, report)
+	} else {
+		writeMDSummary(&b, report)
+		writeMDFindings(&b, report)
+	}
 	writeMDErrors(&b, report)
 	if cfg.IncludeFileTree {
 		writeMDFileTree(&b, report)
@@ -35,7 +44,158 @@ func writeMDHeader(b *strings.Builder, report *Report) {
 	fmt.Fprintf(b, "# safeanalyze Report: %s\n\n", report.Target)
 	fmt.Fprintf(b, "- **Started:** %s\n", report.StartedAt.Format("2006-01-02 15:04:05 MST"))
 	fmt.Fprintf(b, "- **Duration:** %d ms\n", report.DurationMs)
+	if v := report.Metadata["safeanalyze_version"]; v != "" {
+		fmt.Fprintf(b, "- **Version:** %s (%s mode)\n", v, report.Metadata["scan_mode"])
+	}
 	fmt.Fprintf(b, "- **Total findings:** %d\n\n", len(report.Findings))
+}
+
+var answerLabel = map[string]string{
+	AnswerYes:        "**YES**",
+	AnswerUnclear:    "UNCLEAR",
+	AnswerNo:         "no",
+	AnswerNotChecked: "not checked",
+}
+
+func writeMDVerdicts(b *strings.Builder, report *Report) {
+	fmt.Fprintln(b, "## Verdict")
+	fmt.Fprintln(b)
+	fmt.Fprintf(b, "Tier A (verdict-relevant): **%d** · Tier B (capability inventory): %d · Tier C (noise/hygiene): %d\n\n",
+		report.CountTier(TierA), report.CountTier(TierB), report.CountTier(TierC))
+	fmt.Fprintln(b, "YES = Tier A evidence · UNCLEAR = only Tier B evidence, review it · no = checked, nothing found · not checked = no stage could answer.")
+	fmt.Fprintln(b)
+	fmt.Fprintln(b, "| Question | Answer | A | B | Evidence |")
+	fmt.Fprintln(b, "| --- | --- | --- | --- | --- |")
+	for _, v := range report.Verdicts {
+		fmt.Fprintf(b, "| %s | %s | %d | %d | %s |\n", escapeMD(v.Question), answerLabel[v.Answer], v.TierA, v.TierB,
+			escapeMD(strings.Join(v.Evidence, "<br>")))
+	}
+	fmt.Fprintln(b)
+}
+
+func writeMDEgress(b *strings.Builder, report *Report) {
+	entries := EgressMap(report.Findings)
+	fmt.Fprintln(b, "## Call-home map")
+	fmt.Fprintln(b)
+	if len(entries) == 0 {
+		fmt.Fprintln(b, "No outbound endpoints of tier A or B. Package registries, CDNs and documentation hosts are tier C and listed under Tier C.")
+		fmt.Fprintln(b)
+		return
+	}
+	fmt.Fprintln(b, "Hosts the code may contact. *guard* tells whether an environment/config check was found near the endpoint (a hint for opt-in, not proof).")
+	fmt.Fprintln(b)
+	fmt.Fprintln(b, "| Tier | Host | Class | Guard | Locations |")
+	fmt.Fprintln(b, "| --- | --- | --- | --- | --- |")
+	for _, e := range entries {
+		locs := e.Locations
+		more := ""
+		if len(locs) > 5 {
+			more = fmt.Sprintf(" (+%d more)", len(locs)-5)
+			locs = locs[:5]
+		}
+		fmt.Fprintf(b, "| %s | %s | %s | %s | %s%s |\n", e.Tier, escapeMD(e.Host), escapeMD(e.Class), escapeMD(e.Guard),
+			escapeMD(strings.Join(locs, ", ")), more)
+	}
+	fmt.Fprintln(b)
+}
+
+func writeMDAutorun(b *strings.Builder, report *Report) {
+	var rows []Finding
+	for _, f := range report.Findings {
+		if f.Question == "autorun" && (f.Tier == TierA || f.Tier == TierB) {
+			rows = append(rows, f)
+		}
+	}
+	fmt.Fprintln(b, "## Auto-run surface")
+	fmt.Fprintln(b)
+	if len(rows) == 0 {
+		fmt.Fprintln(b, "No code found that runs automatically on install, build, import, IDE/devcontainer open or agent start.")
+		fmt.Fprintln(b)
+		return
+	}
+	SortFindingsBySeverity(rows)
+	fmt.Fprintln(b, "| Tier | Runs on | File | Line | Rule | Message |")
+	fmt.Fprintln(b, "| --- | --- | --- | --- | --- | --- |")
+	for _, f := range rows {
+		fmt.Fprintf(b, "| %s | %s | %s | %d | %s | %s |\n", f.Tier, escapeMD(f.Attributes["trigger"]), escapeMD(f.File), f.Line,
+			escapeMD(f.RuleID), escapeMD(f.Message))
+	}
+	fmt.Fprintln(b)
+}
+
+func writeMDTiers(b *strings.Builder, report *Report) {
+	for _, t := range []struct{ tier, title string }{
+		{TierA, "Tier A findings (verdict-relevant)"},
+		{TierB, "Tier B findings (capability inventory, review)"},
+	} {
+		group := FindingsInTier(report.Findings, t.tier)
+		fmt.Fprintf(b, "## %s (%d)\n\n", t.title, len(group))
+		if len(group) == 0 {
+			fmt.Fprintln(b, "None.")
+			fmt.Fprintln(b)
+			continue
+		}
+		writeMDFindingTable(b, group)
+	}
+
+	tierC := FindingsInTier(report.Findings, TierC)
+	fmt.Fprintf(b, "## Tier C findings (noise/hygiene, %d)\n\n", len(tierC))
+	if len(tierC) == 0 {
+		fmt.Fprintln(b, "None.")
+		fmt.Fprintln(b)
+		return
+	}
+	fmt.Fprintln(b, "Grouped by rule and file role. Nothing is dropped: the full list follows below and is in safeanalyze.json.")
+	fmt.Fprintln(b)
+	fmt.Fprintln(b, "| Rule | File role | Count |")
+	fmt.Fprintln(b, "| --- | --- | --- |")
+	for _, rc := range TierSummary(report.Findings, TierC) {
+		fmt.Fprintf(b, "| %s | %s | %d |\n", escapeMD(rc.RuleID), escapeMD(rc.FileRole), rc.Count)
+	}
+	fmt.Fprintln(b)
+	fmt.Fprintln(b, "<details><summary>All Tier C findings</summary>")
+	fmt.Fprintln(b)
+	writeMDFindingTable(b, tierC)
+	fmt.Fprintln(b, "</details>")
+	fmt.Fprintln(b)
+}
+
+func writeMDFindingTable(b *strings.Builder, group []Finding) {
+	fmt.Fprintln(b, "| Severity | Rule | File | Line | Role | Message | Match | Source |")
+	fmt.Fprintln(b, "| --- | --- | --- | --- | --- | --- | --- | --- |")
+	for _, f := range group {
+		match := f.Match
+		if len(match) > 120 {
+			match = match[:120] + "…"
+		}
+		fmt.Fprintf(b, "| %s | %s | %s | %d | %s | %s | %s | %s |\n", f.Severity, escapeMD(f.RuleID), escapeMD(f.File), f.Line,
+			escapeMD(f.FileRole), escapeMD(f.Message), escapeMD(codeSpan(match)), escapeMD(f.Source))
+	}
+	fmt.Fprintln(b)
+}
+
+// codeSpan renders s as inline code so repository text is not interpreted as
+// Markdown/HTML by a viewer.
+func codeSpan(s string) string {
+	s = strings.TrimSpace(s)
+	if s == "" {
+		return ""
+	}
+	s = strings.ReplaceAll(s, "`", "'")
+	return "`" + s + "`"
+}
+
+func writeMDCoverage(b *strings.Builder, report *Report) {
+	fmt.Fprintln(b, "## Coverage")
+	fmt.Fprintln(b)
+	fmt.Fprintln(b, "What ran and what did not: a clean verdict only covers the checks that ran.")
+	fmt.Fprintln(b)
+	fmt.Fprintln(b, "| Check | Status | Note |")
+	fmt.Fprintln(b, "| --- | --- | --- |")
+	for _, c := range report.Coverage {
+		fmt.Fprintf(b, "| %s | %s | %s |\n", escapeMD(c.Check), escapeMD(c.Status), escapeMD(c.Note))
+	}
+	fmt.Fprintln(b)
 }
 
 func writeMDSummary(b *strings.Builder, report *Report) {

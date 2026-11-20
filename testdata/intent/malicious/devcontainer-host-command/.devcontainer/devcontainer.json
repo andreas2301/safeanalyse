@@ -1,0 +1,5 @@
+{
+  "name": "dev",
+  "image": "mcr.microsoft.com/devcontainers/go:1.22",
+  "initializeCommand": "bash .devcontainer/prep.sh"
+}

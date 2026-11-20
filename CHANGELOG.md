@@ -5,6 +5,36 @@ All notable functional and non-functional changes to `safeanalyze` are documente
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.4.0] — 2026-11-20
+
+### Functional
+
+- **Intent analysis** (`pkg/checks/intent`, thorough mode): nine new pipeline stages.
+  - `egress`: call-home map with host classes (exfil channel, raw IP, recon, telemetry, API, infra/mirror, unknown), call-site counts, telemetry SDKs, self-update code and an opt-in guard hint.
+  - `autorun`: npm lifecycle scripts, `setup.py`, `.pth`, Go `init()` and immediately-invoked initialisers, `go:generate`, `build.rs`, git hooks, `.envrc`, devcontainer commands, VS Code `folderOpen` tasks, Gradle wrapper source.
+  - `depsource`: go.mod fork/local replacements, missing go.sum entries (checked under the replacement path for replaced modules), disabled checksum DB, non-official registries and mirrors in lockfiles, git/URL/alias dependencies, `.npmrc` registries, pip `--extra-index-url` and `--trusted-host`.
+  - `installscripts`: pipe-to-shell (sh, Python, PowerShell), unverified downloads, unpinned Docker base images.
+  - `ci`: `pull_request_target` with head checkout, script injection, unpinned actions, secrets sent to third parties, self-hosted runners on PRs.
+  - `extensions`: browser-extension permissions, self-hosted updates, externally connectable, unsafe-eval.
+  - `chains`: behaviour signals and chains (secret→network, environment→network, decode→exec, download→exec, persistence) within 30 lines. Comments, regex definitions and natural-language strings are skipped.
+  - `agentsurface`: hidden instructions, concealment, safety bypass, registry substitution, image exfiltration, API redirects, hooks, broad permissions and MCP servers in agent files.
+  - `license`: repository and npm dependency licenses (AGPL network clause, GPL, source-available, non-commercial, missing license).
+- **File roles and tiers** (`pkg/filerole`, `pkg/triage`): every finding gets `file_role`, `tier` (A/B/C), `question` and `attributes`. Existing YARA, entropy, hidden-character and external-scanner findings are tiered by rule and role. Keyword rules (`backdoor_indicator`, `suspicious_shell`) in comments or prose are B. Nothing is dropped.
+- **Verdicts and coverage** in the report model (`verdicts`, `coverage`) and in Markdown, HTML, JSON and SARIF (`tier`, `fileRole`, `question` result properties). Markdown/HTML start with the verdict table, the call-home map, the auto-run surface, Tier A/B tables and a grouped Tier C summary with the full list in a collapsible block.
+- **Tier gate:** `scan` exits with status 2 on any Tier A finding (`--no-fail`, `intent.fail_on_tier_a`). The legacy YARA/hidden-character gates apply only when the tier gate is off.
+- **`scan --network` / `intent.network`:** downloads direct Go modules (`go mod download`, checksum DB enforced: `GOFLAGS`, `GONOSUMDB`, `GOINSECURE`, `GOSUMDB=off` are removed from the environment) and npm tarballs from `package-lock.json` (in memory, SRI integrity verified; a mismatch is a Tier A finding), then runs egress, autorun, chains, installscripts and license on their source. Nothing is installed or executed. Dependencies beyond `max_packages` are reported, not silently dropped.
+- Config: new `intent` section (`enabled`, `excluded_paths` keeping `build/`, `dist/`, `.vscode/` in scope, `fail_on_tier_a`, `network`). The bundled `safeanalyze.yaml` writes markdown, json, html and sarif.
+- CLI: `SilenceUsage`/`SilenceErrors` on the root command (no usage dump, error printed once); `main` maps `cmd.ExitError` to its exit code; the console summary shows tier counts, verdicts and Tier A only.
+- `yara.FoldString` and `yara.PatternPrefilter` exported for the intent stages' literal prefilter. YARA rules and detection logic are unchanged.
+
+### Non-functional
+
+- Recall gate `testdata/intent/`: 16 malicious fixtures (npm postinstall env exfil, Go init dropper, setup.py stealer, VS Code folderOpen, default-on telemetry, pwn-request CI, agent-rule poisoning, Claude settings hooks, pip dependency confusion, pipe-to-shell installer, cron persistence, disabled Go checksums, cookie-stealing extension, `.pth` loader, devcontainer host command, Go credential exfil), each with an `EXPECT` file and a benign twin. `go test ./pkg/checks/intent` fails if a malicious fixture misses Tier A for an expected question or a benign twin reaches Tier A.
+- Tests for file roles, host classes, pipe-to-shell variants, comment/regex/prose detection, SRI checks, Go env cleaning, replace-aware module listing, legacy tiering, verdicts/coverage and the end-to-end exit code.
+- Performance: alternations are split into separately prefiltered patterns (required literals via the YARA prefilter) and guard lookups use prefix sums. Intent analysis on the 890-file reference repository dropped from 16.7 s to about 2.6 s CPU (about 1.3 s wall clock).
+- Reference run on ARTEX (BaaRai/ARTEX @ 8e6acb0, 890 files): before 1905 unranked findings; now offline 6 Tier A / 164 B / 2002 C in 2.1 s. With `--network`: 75 direct dependencies fetched (Go modules and npm tarballs), 20 878 findings, still 6 Tier A (none in dependencies), 290 B; 1.2 GB peak RSS (dependency source is held in memory).
+- Labeled prompt-injection evals are unaffected (hardbenign FP 14/100, unchanged): `pkg/checks/yara` detection logic, `eval`, `inspect` and `icap` are unchanged.
+
 ## [0.3.49] — 2026-10-16
 
 ### Functional

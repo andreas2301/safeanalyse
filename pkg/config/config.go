@@ -17,6 +17,31 @@ type Config struct {
 	ML           MLConfig           `yaml:"ml"`
 	Output       OutputConfig       `yaml:"output"`
 	Sandbox      SandboxConfig      `yaml:"sandbox"`
+	Intent       IntentConfig       `yaml:"intent"`
+}
+
+// IntentConfig controls the intent checks (call home, auto-run, dependency
+// sources, install scripts, CI, extensions, behaviour chains, agent files,
+// licenses) and the tier gate.
+type IntentConfig struct {
+	Enabled bool `yaml:"enabled"`
+	// ExcludedPaths are path parts the intent checks skip. Unlike the
+	// sanitization list it keeps build/, dist/ and editor folders: code that
+	// runs automatically often lives there.
+	ExcludedPaths []string `yaml:"excluded_paths"`
+	// FailOnTierA makes `scan` exit with status 2 when any Tier A finding
+	// exists.
+	FailOnTierA bool          `yaml:"fail_on_tier_a"`
+	Network     NetworkConfig `yaml:"network"`
+}
+
+// NetworkConfig controls the optional dependency download stage (`scan
+// --network`). It is off by default: scans make no network requests.
+type NetworkConfig struct {
+	Enabled        bool   `yaml:"enabled"`
+	MaxPackages    int    `yaml:"max_packages"`
+	TimeoutSeconds int    `yaml:"timeout_seconds"`
+	GoBinary       string `yaml:"go_binary"`
 }
 
 // ScannerConfig defines an external tool to run.
@@ -197,6 +222,16 @@ func DefaultConfig() *Config {
 			Mode:            "none",
 			DockerImage:     "alpine:latest",
 			FirejailProfile: "default",
+		},
+		Intent: IntentConfig{
+			Enabled:       true,
+			ExcludedPaths: []string{".git", "node_modules", ".venv", "__pycache__", ".tox", ".pytest_cache", ".mypy_cache"},
+			FailOnTierA:   true,
+			Network: NetworkConfig{
+				MaxPackages:    300,
+				TimeoutSeconds: 600,
+				GoBinary:       "go",
+			},
 		},
 	}
 }

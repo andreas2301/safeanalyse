@@ -31,6 +31,9 @@ It implements a defense-in-depth pipeline inspired by Zones of Distrust:
 Use 'safeanalyze init' to create a configuration file.
 `,
 	Version: version.Version,
+	// main prints the error once; cobra's usage dump on a failed scan buries it.
+	SilenceUsage:  true,
+	SilenceErrors: true,
 	PersistentPreRunE: func(cmd *cobra.Command, args []string) error {
 		if cfgFile != "" {
 			var err error

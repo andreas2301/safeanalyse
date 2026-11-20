@@ -135,7 +135,11 @@ ml:
   fail_on_findings: false
 
 output:
-  format: markdown
+  formats:
+    - markdown
+    - json
+    - html
+    - sarif
   single_file: false
   include_file_tree: true
   out_dir: ./safeanalyze-out
@@ -144,3 +148,28 @@ sandbox:
   mode: none
   docker_image: alpine:latest
   firejail_profile: default
+
+# Intent checks: call home, auto-run, dependency sources, install scripts, CI,
+# browser extensions, behaviour chains, AI-agent files, licenses (thorough mode).
+intent:
+  enabled: true
+  # Unlike sanitization.excluded_paths, build/, dist/ and editor folders are
+  # scanned: code that runs automatically often lives there.
+  excluded_paths:
+    - .git
+    - node_modules
+    - .venv
+    - __pycache__
+    - .tox
+    - .pytest_cache
+    - .mypy_cache
+  # Exit with status 2 when any Tier A (verdict-relevant) finding exists.
+  fail_on_tier_a: true
+  # `scan --network` downloads direct, non-vendored dependencies (Go modules,
+  # npm packages from package-lock.json) and scans their source. Nothing is
+  # installed or executed. Off by default.
+  network:
+    enabled: false
+    max_packages: 300
+    timeout_seconds: 600
+    go_binary: go

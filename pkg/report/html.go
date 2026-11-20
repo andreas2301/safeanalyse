@@ -24,6 +24,7 @@ func WriteHTML(report *Report, cfg config.OutputConfig, path string) error {
 		SourceCounts:   sortMap(report.Summary.CountsBySource),
 		FindingsBySev:  groupBySeverityForHTML(report.Findings),
 		AffectedFiles:  affectedFiles(report.Findings),
+		Egress:         EgressMap(report.Findings),
 	}
 
 	tmpl, err := template.New("report").Funcs(template.FuncMap{
@@ -54,6 +55,7 @@ type htmlReportData struct {
 	SourceCounts   []keyValue
 	FindingsBySev  map[string][]Finding
 	AffectedFiles  []string
+	Egress         []EgressEntry
 }
 
 type keyValue struct {
@@ -276,6 +278,43 @@ const htmlTemplate = `<!DOCTYPE html>
       {{end}}
     </section>
 
+    {{if .Report.Verdicts}}
+    <section>
+      <h2>Verdict</h2>
+      <p>Tier A (verdict-relevant): <strong>{{index .Report.Metadata "tier_a"}}</strong> &middot; Tier B (capability inventory): {{index .Report.Metadata "tier_b"}} &middot; Tier C (noise/hygiene): {{index .Report.Metadata "tier_c"}}</p>
+      <table>
+        <thead><tr><th>Question</th><th>Answer</th><th>A</th><th>B</th><th>Evidence</th></tr></thead>
+        <tbody>
+          {{range .Report.Verdicts}}<tr><td>{{.Question}}</td><td><strong>{{.Answer}}</strong></td><td>{{.TierA}}</td><td>{{.TierB}}</td><td>{{range .Evidence}}{{.}}<br>{{end}}</td></tr>{{end}}
+        </tbody>
+      </table>
+    </section>
+
+    <section>
+      <h2>Call-home map</h2>
+      {{if .Egress}}
+      <table>
+        <thead><tr><th>Tier</th><th>Host</th><th>Class</th><th>Guard</th><th>Locations</th></tr></thead>
+        <tbody>
+          {{range .Egress}}<tr><td>{{.Tier}}</td><td>{{.Host}}</td><td>{{.Class}}</td><td>{{.Guard}}</td><td>{{range .Locations}}{{.}}<br>{{end}}</td></tr>{{end}}
+        </tbody>
+      </table>
+      {{else}}
+      <p class="empty">No outbound endpoints of tier A or B.</p>
+      {{end}}
+    </section>
+
+    <section>
+      <h2>Coverage</h2>
+      <table>
+        <thead><tr><th>Check</th><th>Status</th><th>Note</th></tr></thead>
+        <tbody>
+          {{range .Report.Coverage}}<tr><td>{{.Check}}</td><td>{{.Status}}</td><td>{{.Note}}</td></tr>{{end}}
+        </tbody>
+      </table>
+    </section>
+    {{end}}
+
     <section>
       <h2>Findings</h2>
       <div class="filter">
@@ -293,6 +332,8 @@ const htmlTemplate = `<!DOCTYPE html>
             <th onclick="sortTable(5)">Message</th>
             <th onclick="sortTable(6)">Source</th>
             <th onclick="sortTable(7)">Confidence</th>
+            <th onclick="sortTable(8)">Tier</th>
+            <th onclick="sortTable(9)">Role</th>
           </tr>
         </thead>
         <tbody>
@@ -306,6 +347,8 @@ const htmlTemplate = `<!DOCTYPE html>
             <td>{{.Message}}</td>
             <td>{{.Source}}</td>
             <td>{{.Confidence}}</td>
+            <td>{{.Tier}}</td>
+            <td>{{.FileRole}}</td>
           </tr>
           {{end}}{{end}}
         </tbody>

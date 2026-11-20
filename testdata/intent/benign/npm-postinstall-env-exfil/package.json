@@ -1,0 +1,8 @@
+{
+  "name": "color-utils",
+  "version": "1.0.3",
+  "scripts": {
+    "prepare": "husky",
+    "test": "vitest"
+  }
+}

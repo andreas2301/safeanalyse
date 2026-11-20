@@ -150,10 +150,18 @@ Document the outcome of the review in CLAUDE.md or the next commit message.
 - Fast mode runs only `yara` and `hiddenchars` stages on a single payload.
 - No ML inference, no external scanners, no entropy analysis, no repository walk.
 
+## Intent analysis (v0.4.0+)
+
+- Separate detection track from the prompt-injection loop: `pkg/checks/intent` (egress, autorun, depsource, installscripts, ci, extensions, chains, agentsurface, license, netdeps), `pkg/filerole`, `pkg/triage`. Owner decision 2026-11-20: recall over precision — a false positive is better than a missed malicious behaviour; noise is handled by tiers (A/B/C), never by dropping findings. `scan` exits 2 on Tier A.
+- Gate for every intent change: `go test ./pkg/checks/intent` — every `testdata/intent/malicious/*` fixture must reach Tier A for each question in its `EXPECT`, no `testdata/intent/benign/*` twin may reach Tier A. Add a malicious fixture *and* a benign twin for each new detection; never weaken a fixture to make a change pass.
+- Regression reference: the ARTEX repository (BaaRai/ARTEX @ 8e6acb0) — v0.4.0 baseline 6 Tier A / 164 B / 2002 C offline.
+- Regex cost: split large alternations with `compileMulti` (prefiltered by required literals) instead of one joined regex.
+
 ## Report contents
 
 - Each report directory includes `safeanalyze.json`, `safeanalyze.md`, `safeanalyze.html`, `safeanalyze.sarif`, and `duration.txt`.
 - Reports must include `safeanalyze_version` and `scan_mode` metadata.
+- Thorough-mode reports include `verdicts`, `coverage` and per-finding `tier`/`file_role`/`question`, plus `tier_a`/`tier_b`/`tier_c` metadata.
 - Durations are recorded in milliseconds (`duration_ms`), not wall-clock end times.
 
 ## Useful commands

@@ -1,4 +1,4 @@
-# safeanalyze v0.3.49
+# safeanalyze v0.4.0
 
 A Go CLI tool that sanitizes and scans untrusted code repositories **before** feeding them to AI assistants. Implements defense-in-depth inspired by [Zones of Distrust](https://github.com/bluvibytes/zone-of-distrust).
 
@@ -53,6 +53,16 @@ What this means:
 See [docs/LLM_SCANNER_SPEC.md](docs/LLM_SCANNER_SPEC.md) for the proposed companion scanner
 that adds classifier/LLM-based detection, and [docs/ASSESSMENT.md](docs/ASSESSMENT.md) for
 the full assessment.
+
+## What's new in v0.4.0
+
+- **Intent analysis: "what does this repository actually do?"** Thorough-mode `scan` adds nine checks that answer the questions a manual supply-chain review asks: outbound endpoints and call home (`egress`), code that runs automatically (`autorun`), dependency sources (`depsource`), install scripts (`installscripts`), CI (`ci`), browser extensions (`extensions`), behaviour chains (`chains`), AI-agent instruction files (`agentsurface`) and licenses (`license`). See "Intent analysis" below.
+- **Verdicts instead of a finding list.** Every report starts with eleven fixed questions answered YES / UNCLEAR / no / not checked with evidence, a call-home map, the auto-run surface and a coverage table that states what was *not* checked.
+- **Tiers instead of dropping.** Every finding gets a file role (source, test, docs, lockfile, CI, build, agent, ...) and a tier: A verdict-relevant, B capability inventory, C noise/hygiene. Nothing is removed. On a real 890-file Go/Next.js repository the old output had 1905 unranked findings; v0.4.0 reports 6 Tier A findings, 164 Tier B and 2002 Tier C.
+- **Blocking exit code.** `scan` exits with status **2** when any Tier A finding exists (`--no-fail` or `intent.fail_on_tier_a: false` to report only). The previous per-stage YARA/hidden-character gates apply only when the tier gate is disabled.
+- **`scan --network`** downloads the direct, non-vendored dependencies (Go modules via `go mod download` with checksum verification, npm tarballs from `package-lock.json` with SRI integrity verification) and runs the intent checks on their source. Nothing is installed or executed. Off by default.
+- **Recall gate:** 16 malicious fixtures with benign twins in `testdata/intent/` (`go test ./pkg/checks/intent`): every malicious fixture must reach Tier A for its expected questions, no benign twin may.
+- CLI: no usage dump on a failed scan; the console shows verdicts and Tier A only (all tiers are in the report files). The bundled `safeanalyze.yaml` writes all four report formats.
 
 ## What's new in v0.3.49
 
@@ -371,7 +381,7 @@ Install optional scanner/model dependencies from source:
 | `icap` | ICAP RESPMOD server that scans HTTP response bodies (Squid `icap_service`) |
 | `eval <file.jsonl>` | Measure fast-mode precision/recall/F1/latency on a labeled dataset |
 | `gate --baseline <dir> --candidate <dir>` | ACCEPT/REVERT an autoresearch iteration from two eval result directories |
-| `scan <path>` | Run security checks and emit SARIF/Markdown/HTML/JSON reports |
+| `scan <path>` | Run security checks and intent analysis, answer the verdict questions, emit SARIF/Markdown/HTML/JSON reports; exit 2 on Tier A (`--no-fail`, `--network`) |
 | `sanitize <src> [dst]` | Strip comments (AST-aware), remove non-ASCII, enforce limits |
 | `ingest <path>` | Full pipeline: scan → sanitize → format for AI |
 | `diff <orig> <sanitized>` | Show colored diff of what sanitization removed |
@@ -391,6 +401,28 @@ Install optional scanner/model dependencies from source:
 - **Checks:** fast checks + entropy analysis + stochastic ONNX prompt-injection classifier + optional external scanners.
 - **Latency:** seconds to minutes depending on repository size.
 - **Use case:** pre-ingestion security review of an entire repository.
+
+## Intent analysis
+
+Pattern rules answer "does this text look like an attack?". Intent analysis answers "what does this repository do when I install, build, open or run it?". It runs in thorough mode and favours recall: a pattern that may be malicious is kept and ranked, not dropped.
+
+| Check | Answers | Examples |
+|-------|---------|----------|
+| `egress` | Does it call home? | Every hardcoded host, classified as exfil channel (Discord/Slack webhooks with token, Telegram bot token, pastebin, ngrok, interactsh, DynDNS, cloud metadata IP), raw public IP, recon (ipify), telemetry (PostHog, Sentry, Segment, ...), third-party API, registry/CDN or unknown; telemetry SDKs and self-update code; whether an env/config guard is near (opt-in hint) |
+| `autorun` | What runs without being asked? | npm lifecycle scripts, `setup.py`, `.pth`, Go `init()` / immediately-invoked package initialisers with exec/network/decode, `go:generate`, `build.rs`, git hooks, `.envrc`, devcontainer commands (`initializeCommand` runs on the host), VS Code `runOn: folderOpen`, Gradle wrapper source |
+| `depsource` | Are the dependencies what they claim? | `go.mod` replace to a fork or local path, missing `go.sum` entries, disabled Go checksum DB, lockfile packages from non-official registries or mirrors, git/URL/alias dependencies, `.npmrc` registries and `strict-ssl=false`, pip `--extra-index-url` (dependency confusion) and `--trusted-host` |
+| `installscripts` | Does it run unverified remote code? | `curl \| sh`, `bash <(curl ...)`, `iex (iwr ...)`, downloads without checksum/signature, Docker base images without digest |
+| `ci` | Can CI leak secrets or run fork code? | `pull_request_target` + head checkout, `${{ github.event.* }}` in `run:` (script injection), unpinned third-party actions, secrets sent to third-party hosts, self-hosted runners on PRs |
+| `extensions` | What may a browser extension do? | `<all_urls>` with `debugger`/`cookies`/`webRequest`/..., self-hosted `update_url`, `externally_connectable`, `unsafe-eval` |
+| `chains` | Is there malicious *behaviour*? | Signals (NET, READ_SECRET, ENV_ENUM, DECODE, EVAL, SPAWN, WRITE_EXEC, PERSIST) within 30 lines form chains: secret→network, environment→network, decode→exec, download→exec, persistence→network. Comments, regex definitions and natural-language strings are skipped |
+| `agentsurface` | Can the repo hijack an AI agent? | Hidden HTML comments with instructions, "do not tell the user", safety bypass (`bypassPermissions`, auto-approve), registry substitution, image-URL exfiltration, `ANTHROPIC_BASE_URL` redirects, agent hooks, broad pre-approved tools, unpinned MCP servers |
+| `license` | What obligations come with it? | AGPL (network clause), GPL, SSPL/BUSL/Elastic/Commons Clause, non-commercial, missing license, copyleft npm dependencies |
+
+**Tiers.** A = verdict-relevant (blocks the scan), B = capability inventory to review, C = noise/hygiene. Findings in tests and docs are capped at B; lockfile entropy, template interpolation and the bare word "persistence" are C. Keywords such as "reverse shell" or "keylogger" in comments or prose strings are B.
+
+**Verdict questions.** call home, auto-run, exfiltration chain, remote code, dependency sources, CI, AI-agent manipulation, privileges/persistence, hidden content, secrets, license. YES = Tier A evidence, UNCLEAR = only Tier B, no = checked and clean, not checked = no stage could answer (see the coverage table).
+
+**Limits** (also listed in every report's coverage table): no dynamic analysis, no deobfuscation of encoded payloads, no call-graph reachability (chains are line-proximity heuristics), `node_modules` is not scanned in-tree, and `--network` fetches direct Go and npm dependencies only.
 
 ## Features
 
@@ -569,6 +601,16 @@ sandbox:
   mode: none              # none, docker, firejail
   docker_image: alpine:latest
   firejail_profile: default
+
+intent:
+  enabled: true
+  excluded_paths: [.git, node_modules, .venv, __pycache__, .tox, .pytest_cache, .mypy_cache]
+  fail_on_tier_a: true    # scan exits 2 on Tier A findings
+  network:                # same as `scan --network`
+    enabled: false
+    max_packages: 300     # dependencies beyond the cap are reported as skipped
+    timeout_seconds: 600
+    go_binary: go
 ```
 
 ## Squid Integration

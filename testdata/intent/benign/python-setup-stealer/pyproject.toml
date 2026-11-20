@@ -1,0 +1,4 @@
+[project]
+name = "toolbelt-ext"
+version = "0.1"
+dependencies = ["requests>=2.31"]

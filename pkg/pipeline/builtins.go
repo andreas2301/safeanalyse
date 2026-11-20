@@ -1,7 +1,10 @@
 package pipeline
 
 import (
+	"time"
+
 	"github.com/user/safeanalyze/pkg/checks/entropy"
+	"github.com/user/safeanalyze/pkg/checks/intent"
 	"github.com/user/safeanalyze/pkg/checks/hiddenchars"
 	"github.com/user/safeanalyze/pkg/checks/ml"
 	"github.com/user/safeanalyze/pkg/checks/yara"
@@ -22,6 +25,20 @@ func BuiltInRegistry(cfg *config.Config) *Registry {
 	})
 	r.Register("ml-prompt-injection", func() Stage {
 		return ml.NewStage(&cfg.ML)
+	})
+	for _, name := range intent.StageNames() {
+		name := name
+		r.Register(name, func() Stage {
+			return intent.NewStage(name, cfg.Intent.ExcludedPaths)
+		})
+	}
+	r.Register("netdeps", func() Stage {
+		n := cfg.Intent.Network
+		return intent.NewNetDepsStage(intent.NetDepsOptions{
+			MaxPackages: n.MaxPackages,
+			Timeout:     time.Duration(n.TimeoutSeconds) * time.Second,
+			GoBinary:    n.GoBinary,
+		}, cfg.Intent.ExcludedPaths)
 	})
 	return r
 }

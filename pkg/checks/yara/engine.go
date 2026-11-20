@@ -110,6 +110,14 @@ func foldRune(r rune) rune {
 
 func foldString(s string) string { return strings.Map(foldRune, s) }
 
+// FoldString case-folds s the way (?i) does, for use with PatternPrefilter.
+func FoldString(s string) string { return foldString(s) }
+
+// PatternPrefilter returns the required-literal clauses of pattern p: every
+// clause must have at least one of its folded literals in the folded text,
+// or p cannot match. nil means no constraint could be derived.
+func PatternPrefilter(p string) [][]string { return patternPrefilter(p) }
+
 // requiredLiterals returns a conjunction of disjunctions of folded literals
 // that any match of re must contain. Unknown ops yield nil (no constraint).
 func requiredLiterals(re *syntax.Regexp) [][]string {
