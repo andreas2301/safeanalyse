@@ -2,16 +2,14 @@ package cmd
 
 import (
 	"bufio"
-	"context"
 	"fmt"
+	"io"
 	"os"
 	"strings"
 	"time"
 
 	"github.com/spf13/cobra"
-	"github.com/user/safeanalyze/pkg/checks/hiddenchars"
-	"github.com/user/safeanalyze/pkg/checks/yara"
-	"github.com/user/safeanalyze/pkg/pipeline"
+	"github.com/user/safeanalyze/pkg/fastinspect"
 	"github.com/user/safeanalyze/pkg/report"
 )
 
@@ -40,38 +38,13 @@ attach it to Squid as an ICAP RESPMOD service.
 		squid, _ := cmd.Flags().GetBool("squid")
 		verbose, _ := cmd.Flags().GetBool("verbose")
 
-		var input string
-		if len(args) > 0 {
-			data, err := os.ReadFile(args[0])
-			if err != nil {
-				return fmt.Errorf("reading input file: %w", err)
-			}
-			input = string(data)
-		} else {
-			data, err := os.ReadFile("/dev/stdin")
-			if err != nil {
-				return fmt.Errorf("reading stdin: %w", err)
-			}
-			input = string(data)
-		}
-
-		var payloads []string
-		if body {
-			payloads = []string{input}
-		} else {
-			scanner := bufio.NewScanner(strings.NewReader(input))
-			for scanner.Scan() {
-				payloads = append(payloads, scanner.Text())
-			}
-			if err := scanner.Err(); err != nil {
-				return fmt.Errorf("scanning input: %w", err)
-			}
-		}
+		out := bufio.NewWriter(os.Stdout)
+		defer out.Flush()
 
 		anyFinding := false
-		for i, payload := range payloads {
+		handlePayload := func(idx int, payload string) error {
 			if strings.TrimSpace(payload) == "" {
-				continue
+				return nil
 			}
 			start := time.Now()
 			rep, err := inspectPayload(payload)
@@ -83,27 +56,75 @@ attach it to Squid as an ICAP RESPMOD service.
 			clean := len(rep.Findings) == 0
 			if squid {
 				if clean {
-					fmt.Println("OK")
+					fmt.Fprintln(out, "OK")
 				} else {
-					fmt.Printf("ERR %s\n", rep.Findings[0].RuleID)
+					fmt.Fprintf(out, "ERR %s\n", rep.Findings[0].RuleID)
 				}
 			} else if verbose {
 				if clean {
-					fmt.Printf("payload %d: clean (%.2f ms)\n", i+1, float64(elapsed.Microseconds())/1000)
+					fmt.Fprintf(out, "payload %d: clean (%.2f ms)\n", idx, float64(elapsed.Microseconds())/1000)
 				} else {
-					fmt.Printf("payload %d: %d finding(s) (%.2f ms)\n", i+1, len(rep.Findings), float64(elapsed.Microseconds())/1000)
+					fmt.Fprintf(out, "payload %d: %d finding(s) (%.2f ms)\n", idx, len(rep.Findings), float64(elapsed.Microseconds())/1000)
 					for _, f := range rep.Findings {
-						fmt.Printf("  [%s] %s: %s\n", f.Severity, f.RuleID, f.Message)
+						fmt.Fprintf(out, "  [%s] %s: %s\n", f.Severity, f.RuleID, f.Message)
 					}
 				}
 			} else {
 				if !clean {
-					fmt.Printf("payload %d: [%s] %s\n", i+1, rep.Findings[0].Severity, rep.Findings[0].Message)
+					fmt.Fprintf(out, "payload %d: [%s] %s\n", idx, rep.Findings[0].Severity, rep.Findings[0].Message)
 				}
+			}
+			if err := out.Flush(); err != nil {
+				return fmt.Errorf("flushing output: %w", err)
 			}
 
 			if !clean {
 				anyFinding = true
+			}
+			return nil
+		}
+
+		if body {
+			var data []byte
+			var err error
+			if len(args) > 0 {
+				data, err = os.ReadFile(args[0])
+				if err != nil {
+					return fmt.Errorf("reading input file: %w", err)
+				}
+			} else {
+				data, err = io.ReadAll(os.Stdin)
+				if err != nil {
+					return fmt.Errorf("reading stdin: %w", err)
+				}
+			}
+			if err := handlePayload(1, string(data)); err != nil {
+				return err
+			}
+		} else {
+			var r io.Reader
+			if len(args) > 0 {
+				f, err := os.Open(args[0])
+				if err != nil {
+					return fmt.Errorf("reading input file: %w", err)
+				}
+				defer f.Close()
+				r = f
+			} else {
+				r = os.Stdin
+			}
+
+			scanner := bufio.NewScanner(r)
+			scanner.Buffer(make([]byte, 0, 64*1024), 4<<20)
+			lineNum := 0
+			for scanner.Scan() {
+				lineNum++
+				if err := handlePayload(lineNum, scanner.Text()); err != nil {
+					return err
+				}
+			}
+			if err := scanner.Err(); err != nil {
+				return fmt.Errorf("scanning input: %w", err)
 			}
 		}
 
@@ -115,23 +136,7 @@ attach it to Squid as an ICAP RESPMOD service.
 }
 
 func inspectPayload(payload string) (*report.Report, error) {
-	stages := []pipeline.Stage{
-		yara.NewStage(nil),
-		hiddenchars.NewFastStage([]string{"zero_width", "bidi", "control"}),
-	}
-
-	engine := pipeline.NewEngine(stages, 4)
-	// Write payload to a temp file so existing Stage implementations can scan it.
-	tmpDir, err := os.MkdirTemp("", "safeanalyze-inspect-")
-	if err != nil {
-		return nil, err
-	}
-	defer os.RemoveAll(tmpDir)
-	payloadPath := tmpDir + "/payload.txt"
-	if err := os.WriteFile(payloadPath, []byte(payload), 0644); err != nil {
-		return nil, err
-	}
-	return engine.Run(context.Background(), tmpDir)
+	return fastinspect.Default().Scan(payload), nil
 }
 
 func init() {

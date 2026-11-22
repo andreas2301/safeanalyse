@@ -287,6 +287,49 @@ func (s *Stage) Name() string { return "hiddenchars" }
 // Dependencies returns no dependencies.
 func (s *Stage) Dependencies() []string { return nil }
 
+// ScanContent scans in-memory text content for suspicious characters and returns
+// unified report findings. When highSignalOnly is true, zero-width, bidi, and
+// format characters are reported only if content carries a smuggling signal;
+// control characters are always reported.
+func (d *Detector) ScanContent(content, filename string, highSignalOnly bool) []report.Finding {
+	gate := true
+	if highSignalOnly {
+		gate = hasSmugglingSignal(content)
+	}
+	var findings []report.Finding
+	lines := strings.Split(content, "\n")
+	for lineIdx, line := range lines {
+		col := 0
+		for _, r := range line {
+			if cat, name, ok := d.IsSuspicious(r); ok {
+				if !gate && (cat == "zero_width" || cat == "bidi" || cat == "format") {
+					col += utf8.RuneLen(r)
+					continue
+				}
+				sev := report.SeverityHigh
+				if cat == "whitespace" {
+					sev = report.SeverityLow
+				}
+				findings = append(findings, report.Finding{
+					RuleID:     "hidden_char_" + cat,
+					Title:      "Hidden Unicode character: " + name,
+					Severity:   sev,
+					Category:   "hidden_char",
+					File:       filename,
+					Line:       lineIdx + 1,
+					Column:     col + 1,
+					Match:      fmt.Sprintf("U+%04X", r),
+					Message:    fmt.Sprintf("%s (%s) in %s", name, cat, filename),
+					Source:     "hiddenchars",
+					Confidence: report.ConfidenceDeterministic,
+				})
+			}
+			col += utf8.RuneLen(r)
+		}
+	}
+	return findings
+}
+
 // Run scans all files under target and returns findings.
 func (s *Stage) Run(ctx context.Context, target string, input *report.Report) (*report.Report, error) {
 	out := report.NewReport(target)
@@ -302,39 +345,8 @@ func (s *Stage) Run(ctx context.Context, target string, input *report.Report) (*
 		default:
 		}
 
-		gate := true
-		if s.highSignalOnly {
-			gate = hasSmugglingSignal(string(content))
-		}
-		lines := strings.Split(string(content), "\n")
-		for lineIdx, line := range lines {
-			col := 0
-			for _, r := range line {
-				if cat, name, ok := det.IsSuspicious(r); ok {
-					if !gate && (cat == "zero_width" || cat == "bidi" || cat == "format") {
-						col += utf8.RuneLen(r)
-						continue
-					}
-					sev := report.SeverityHigh
-					if cat == "whitespace" {
-						sev = report.SeverityLow
-					}
-					out.AddFinding(report.Finding{
-						RuleID:     "hidden_char_" + cat,
-						Title:      "Hidden Unicode character: " + name,
-						Severity:   sev,
-						Category:   "hidden_char",
-						File:       rel,
-						Line:       lineIdx + 1,
-						Column:     col + 1,
-						Match:      fmt.Sprintf("U+%04X", r),
-						Message:    fmt.Sprintf("%s (%s) in %s", name, cat, rel),
-						Source:     s.Name(),
-						Confidence: report.ConfidenceDeterministic,
-					})
-				}
-				col += utf8.RuneLen(r)
-			}
+		for _, f := range det.ScanContent(string(content), rel, s.highSignalOnly) {
+			out.AddFinding(f)
 		}
 		out.Summary.FilesScanned++
 		return nil
