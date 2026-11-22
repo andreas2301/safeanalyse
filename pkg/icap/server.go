@@ -39,15 +39,30 @@ type Config struct {
 	// MaxConcurrentScans bounds scans in flight, including scans abandoned
 	// after a timeout that are still running. Default runtime.NumCPU()*2.
 	MaxConcurrentScans int
-	Scan               ScanFunc
-	Logger             *slog.Logger
+	// MaxConnections bounds concurrent TCP connections. Default 256;
+	// negative values disable the limit.
+	MaxConnections int
+	// LogOnly scans and logs findings (decision="shadow_block") without
+	// blocking responses.
+	LogOnly bool
+	// BlockContentTypes optionally restricts blocking to responses whose
+	// Content-Type matches one of these media types or prefixes (e.g.
+	// "text/plain", "message/rfc822", "text/"). Non-matching scannable
+	// responses are scanned in shadow mode (decision="shadow_block").
+	BlockContentTypes []string
+	// Metrics is an optional metrics collector. If nil, NewServer creates one.
+	Metrics *Metrics
+	Scan    ScanFunc
+	Logger  *slog.Logger
 }
 
 // Server is an ICAP RESPMOD server.
 type Server struct {
-	cfg       Config
-	blockRank int
-	sem       chan struct{} // scan slots
+	cfg               Config
+	blockRank         int
+	blockContentTypes []string
+	metrics           *Metrics
+	sem               chan struct{} // scan slots
 
 	mu     sync.Mutex
 	ln     net.Listener
@@ -92,10 +107,87 @@ func NewServer(cfg Config) (*Server, error) {
 	if cfg.MaxConcurrentScans <= 0 {
 		cfg.MaxConcurrentScans = runtime.NumCPU() * 2
 	}
+	if cfg.MaxConnections == 0 {
+		cfg.MaxConnections = 256
+	}
 	if cfg.Logger == nil {
 		cfg.Logger = slog.New(slog.NewJSONHandler(io.Discard, nil))
 	}
-	return &Server{cfg: cfg, blockRank: rank, sem: make(chan struct{}, cfg.MaxConcurrentScans), conns: map[net.Conn]struct{}{}}, nil
+	metrics := cfg.Metrics
+	if metrics == nil {
+		metrics = NewMetrics()
+	}
+	var blockCTs []string
+	for _, raw := range cfg.BlockContentTypes {
+		if norm := normalizeMediaType(raw); norm != "" {
+			blockCTs = append(blockCTs, norm)
+		}
+	}
+	return &Server{
+		cfg:               cfg,
+		blockRank:         rank,
+		blockContentTypes: blockCTs,
+		metrics:           metrics,
+		sem:               make(chan struct{}, cfg.MaxConcurrentScans),
+		conns:             map[net.Conn]struct{}{},
+	}, nil
+}
+
+// Metrics returns the server's metrics collector.
+func (s *Server) Metrics() *Metrics {
+	return s.metrics
+}
+
+// Ready reports whether the server is actively listening and accepting connections.
+func (s *Server) Ready() bool {
+	s.mu.Lock()
+	defer s.mu.Unlock()
+	return s.ln != nil && !s.closed
+}
+
+// shouldBlock reports whether a response with contentType may be blocked with
+// HTTP 403 rather than shadow-logged.
+func (s *Server) shouldBlock(contentType string) bool {
+	if s.cfg.LogOnly {
+		return false
+	}
+	if len(s.blockContentTypes) == 0 {
+		return true
+	}
+	return s.matchesBlockContentType(contentType)
+}
+
+func (s *Server) matchesBlockContentType(contentType string) bool {
+	if len(s.blockContentTypes) == 0 {
+		return false
+	}
+	mt := normalizeMediaType(contentType)
+	if mt == "" {
+		return false
+	}
+	for _, allowed := range s.blockContentTypes {
+		if mt == allowed {
+			return true
+		}
+		if strings.HasSuffix(allowed, "/") && strings.HasPrefix(mt, allowed) {
+			return true
+		}
+		if strings.HasSuffix(allowed, "/*") && strings.HasPrefix(mt, strings.TrimSuffix(allowed, "*")) {
+			return true
+		}
+	}
+	return false
+}
+
+func (s *Server) isScannable(contentType string) bool {
+	return isTextContentType(contentType) || s.matchesBlockContentType(contentType)
+}
+
+func (s *Server) shadowReason() string {
+	if s.cfg.LogOnly {
+		return "log_only"
+	}
+	return "content_type_shadow"
 }
 
 // Serve accepts connections on ln until Close is called.
@@ -129,15 +221,26 @@ func (s *Server) Serve(ln net.Listener) error {
 			conn.Close()
 			return nil
 		}
+		if s.cfg.MaxConnections > 0 && len(s.conns) >= s.cfg.MaxConnections {
+			s.mu.Unlock()
+			s.metrics.incRejectedConns()
+			s.cfg.Logger.Warn("icap connection rejected", "reason", "max_connections", "limit", s.cfg.MaxConnections, "remote", conn.RemoteAddr().String())
+			conn.Close()
+			continue
+		}
 		s.conns[conn] = struct{}{}
+		s.metrics.incActiveConns()
 		s.wg.Add(1)
 		s.mu.Unlock()
 		go func() {
 			defer s.wg.Done()
+			defer func() {
+				s.mu.Lock()
+				delete(s.conns, conn)
+				s.mu.Unlock()
+				s.metrics.decActiveConns()
+			}()
 			s.serveConn(conn)
-			s.mu.Lock()
-			delete(s.conns, conn)
-			s.mu.Unlock()
 		}()
 	}
 }
@@ -179,6 +282,7 @@ func (s *Server) serveConn(conn net.Conn) {
 		req, err := ReadRequest(br)
 		if err != nil {
 			if errors.Is(err, ErrMalformed) {
+				s.metrics.RecordDecision("error")
 				s.cfg.Logger.Warn("icap request", "decision", "bad_request", "error", err.Error(), "remote", conn.RemoteAddr().String())
 				s.writeStatus(conn, bw, 400, "Bad Request", true)
 			}
@@ -193,7 +297,7 @@ func (s *Server) serveConn(conn net.Conn) {
 
 // result describes the outcome of one request for logging.
 type result struct {
-	decision  string // allow, block, skip, error
+	decision  string // allow, block, shadow_block, skip, error, options
 	reason    string
 	rules     []string
 	bytes     int64
@@ -206,6 +310,7 @@ func (s *Server) handle(conn net.Conn, br *bufio.Reader, bw *bufio.Writer, req *
 	start := time.Now()
 	res := &result{}
 	defer func() {
+		s.metrics.RecordDecision(res.decision)
 		attrs := []any{
 			"method", req.Method,
 			"status", res.status,
@@ -266,7 +371,8 @@ func (s *Server) respmod(conn net.Conn, br *bufio.Reader, bw *bufio.Writer, req 
 		return true
 	}
 
-	scannable := isTextContentType(resHdr.Header.Get("Content-Type"))
+	contentType := resHdr.Header.Get("Content-Type")
+	scannable := s.isScannable(contentType)
 	encoding := resHdr.Header.Get("Content-Encoding")
 	inPreview := req.Preview >= 0
 	// Echoing the response back (200 instead of 204) needs the body, which is
@@ -275,7 +381,9 @@ func (s *Server) respmod(conn net.Conn, br *bufio.Reader, bw *bufio.Writer, req 
 	echo := &echoState{}
 	armEcho := func() {
 		if !req.Allows204() {
-			sink.onFull = func(buffered []byte) { s.echoOverflow(conn, bw, req, res, sink, echo, buffered, scannable, encoding) }
+			sink.onFull = func(buffered []byte) {
+				s.echoOverflow(conn, bw, req, res, sink, echo, buffered, scannable, contentType, encoding)
+			}
 		}
 	}
 	if !inPreview {
@@ -288,7 +396,7 @@ func (s *Server) respmod(conn net.Conn, br *bufio.Reader, bw *bufio.Writer, req 
 			res.bytes, res.decision, res.reason = sink.total, "error", "read: "+err.Error()
 			return false
 		}
-		return s.bodyError(conn, bw, req, res, sink, err)
+		return s.bodyError(conn, bw, req, res, sink, contentType, err)
 	}
 
 	ieof, err := readChunked(br, sink)
@@ -334,10 +442,17 @@ func (s *Server) respmod(conn net.Conn, br *bufio.Reader, bw *bufio.Writer, req 
 	res.truncated = sink.total > int64(s.cfg.MaxBodyBytes)
 	blocking, err := s.scanBody(raw, encoding, res)
 	if err != nil {
-		return s.failDecision(conn, bw, req, res, allow204, raw)
+		return s.failDecision(conn, bw, req, res, allow204, raw, contentType)
 	}
 	if len(blocking) > 0 {
-		res.decision, res.rules = "block", blocking
+		res.rules = blocking
+		if !s.shouldBlock(contentType) {
+			res.decision = "shadow_block"
+			res.reason = s.shadowReason()
+			res.status = s.writeAllow(conn, bw, req, allow204, true, raw)
+			return true
+		}
+		res.decision = "block"
 		res.status = s.writeBlock(conn, bw, blocking, "prompt-injection content detected")
 		return true
 	}
@@ -375,7 +490,9 @@ func (s *Server) scanBody(raw []byte, encoding string, res *result) ([]string, e
 		}
 		return nil, err
 	}
-	res.rules = ruleIDs(findings, 0)
+	allRules := ruleIDs(findings, 0)
+	res.rules = allRules
+	s.metrics.RecordRuleHits(allRules)
 	return ruleIDs(findings, s.blockRank), nil
 }
 
@@ -392,14 +509,20 @@ func (s *Server) scan(ctx context.Context, payload []byte) ([]report.Finding, er
 	case <-ctx.Done():
 		return nil, fmt.Errorf("%w: %w", errScanBusy, ctx.Err())
 	}
+	s.metrics.incInflightScans()
 	type out struct {
 		f   []report.Finding
 		err error
 	}
 	ch := make(chan out, 1)
 	go func() {
-		defer func() { <-s.sem }()
+		defer func() {
+			s.metrics.decInflightScans()
+			<-s.sem
+		}()
+		scanStart := time.Now()
 		f, err := s.cfg.Scan(ctx, payload)
+		s.metrics.RecordScanDuration(time.Since(scanStart))
 		ch <- out{f, err}
 	}()
 	select {
@@ -419,25 +542,35 @@ type echoState struct {
 
 // echoOverflow runs once when a body that must be echoed (client sent no
 // "Allow: 204") grows past MaxBodyBytes. The first MaxBodyBytes are buffered.
-//   - fail-closed, text: the rest is drained and the response replaced by a 403.
-//   - fail-open, or non-text: the buffered prefix is scanned (text only, like
-//     the 204 path); on a finding the rest is drained and a 403 sent, otherwise
-//     a 200 echo starts streaming immediately and the remaining chunks are
-//     forwarded unscanned as they arrive, without buffering.
-func (s *Server) echoOverflow(conn net.Conn, bw *bufio.Writer, req *Request, res *result, sink *chunkSink, echo *echoState, buffered []byte, scannable bool, encoding string) {
+//   - fail-closed, text (and eligible to block): the rest is drained and the
+//     response replaced by a 403.
+//   - fail-open, shadow mode, or non-text: the buffered prefix is scanned
+//     (text only, like the 204 path); on a finding the rest is drained and a
+//     403 sent (unless shadow mode applies, in which case decision="shadow_block"
+//     is recorded and the echo streams through); otherwise a 200 echo starts
+//     streaming immediately and the remaining chunks are forwarded unscanned as
+//     they arrive, without buffering.
+func (s *Server) echoOverflow(conn net.Conn, bw *bufio.Writer, req *Request, res *result, sink *chunkSink, echo *echoState, buffered []byte, scannable bool, contentType, encoding string) {
 	res.truncated = true
 	if scannable {
-		if !s.cfg.FailOpen {
+		allowBlock := s.shouldBlock(contentType)
+		if !s.cfg.FailOpen && allowBlock {
 			res.reason = "echo_body_over_cap"
 			return
 		}
 		blocking, err := s.scanBody(buffered, encoding, res)
 		switch {
 		case err != nil:
-			res.decision = "error" // reason set by scanBody; fail-open
+			res.decision = "error" // reason set by scanBody; fail-open or shadow
 		case len(blocking) > 0:
-			echo.rules = blocking
-			return
+			if !allowBlock {
+				res.decision = "shadow_block"
+				res.reason = s.shadowReason()
+				res.rules = blocking
+			} else {
+				echo.rules = blocking
+				return
+			}
 		default:
 			res.decision, res.reason = "allow", "echo_body_over_cap"
 		}
@@ -497,7 +630,7 @@ func (s *Server) finishEchoOverflow(conn net.Conn, bw *bufio.Writer, res *result
 
 // bodyError handles a failure while reading the chunked body. The stream is
 // out of sync afterwards, so the connection is always closed.
-func (s *Server) bodyError(conn net.Conn, bw *bufio.Writer, req *Request, res *result, sink *chunkSink, err error) bool {
+func (s *Server) bodyError(conn net.Conn, bw *bufio.Writer, req *Request, res *result, sink *chunkSink, contentType string, err error) bool {
 	res.bytes = sink.total
 	if errors.Is(err, ErrMalformed) {
 		res.decision, res.reason, res.status = "error", err.Error(), 400
@@ -510,7 +643,7 @@ func (s *Server) bodyError(conn net.Conn, bw *bufio.Writer, req *Request, res *r
 	} else {
 		res.reason = "read: " + err.Error()
 	}
-	if s.cfg.FailOpen {
+	if s.cfg.FailOpen || !s.shouldBlock(contentType) {
 		res.decision = "error"
 		if req.Allows204() || req.Preview >= 0 {
 			res.status = s.writeAllow(conn, bw, req, true, false, nil)
@@ -528,8 +661,8 @@ func (s *Server) bodyError(conn net.Conn, bw *bufio.Writer, req *Request, res *r
 
 // failDecision applies the fail-open / fail-closed policy after the body was
 // read completely.
-func (s *Server) failDecision(conn net.Conn, bw *bufio.Writer, req *Request, res *result, allow204 bool, raw []byte) bool {
-	if s.cfg.FailOpen {
+func (s *Server) failDecision(conn net.Conn, bw *bufio.Writer, req *Request, res *result, allow204 bool, raw []byte, contentType string) bool {
+	if s.cfg.FailOpen || !s.shouldBlock(contentType) {
 		res.decision = "error"
 		res.status = s.writeAllow(conn, bw, req, allow204, true, raw)
 		return true
@@ -677,15 +810,25 @@ func sanitizeToken(s string) string {
 	}, s)
 }
 
-// isTextContentType reports whether a response with this Content-Type should
-// be scanned. A missing type is scanned.
-func isTextContentType(ct string) bool {
-	if strings.TrimSpace(ct) == "" {
-		return true
+// normalizeMediaType returns the lowercased media type without parameters.
+func normalizeMediaType(ct string) string {
+	ct = strings.TrimSpace(ct)
+	if ct == "" {
+		return ""
 	}
 	mt, _, err := mime.ParseMediaType(ct)
 	if err != nil {
 		mt = strings.ToLower(strings.TrimSpace(strings.SplitN(ct, ";", 2)[0]))
+	}
+	return strings.ToLower(mt)
+}
+
+// isTextContentType reports whether a response with this Content-Type should
+// be scanned. A missing type is scanned.
+func isTextContentType(ct string) bool {
+	mt := normalizeMediaType(ct)
+	if mt == "" {
+		return true
 	}
 	if strings.HasPrefix(mt, "text/") || strings.HasSuffix(mt, "+json") || strings.HasSuffix(mt, "+xml") {
 		return true
@@ -694,7 +837,8 @@ func isTextContentType(ct string) bool {
 	case "application/json", "application/xml", "application/javascript",
 		"application/ecmascript", "application/x-javascript", "application/x-ndjson",
 		"application/x-www-form-urlencoded", "application/yaml", "application/x-yaml",
-		"application/graphql", "application/rss+xml", "application/atom+xml":
+		"application/graphql", "application/rss+xml", "application/atom+xml",
+		"message/rfc822":
 		return true
 	}
 	return false

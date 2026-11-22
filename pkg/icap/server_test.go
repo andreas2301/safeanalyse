@@ -7,7 +7,10 @@ import (
 	"context"
 	"fmt"
 	"io"
+	"log/slog"
 	"net"
+	"net/http"
+	"net/http/httptest"
 	"net/textproto"
 	"strconv"
 	"strings"
@@ -576,5 +579,336 @@ func TestScanSlotBound(t *testing.T) {
 	defer fs.mu.Unlock()
 	if fs.maxInflight > 2 || fs.maxInflight == 0 {
 		t.Fatalf("max in-flight scans %d, want 1..2", fs.maxInflight)
+	}
+}
+
+type syncBuffer struct {
+	mu  sync.Mutex
+	buf bytes.Buffer
+}
+
+func (b *syncBuffer) Write(p []byte) (int, error) {
+	b.mu.Lock()
+	defer b.mu.Unlock()
+	return b.buf.Write(p)
+}
+
+func (b *syncBuffer) String() string {
+	b.mu.Lock()
+	defer b.mu.Unlock()
+	return b.buf.String()
+}
+
+func startServerInstance(t *testing.T, cfg Config) (*Server, string) {
+	t.Helper()
+	srv, err := NewServer(cfg)
+	if err != nil {
+		t.Fatal(err)
+	}
+	ln, err := net.Listen("tcp", "127.0.0.1:0")
+	if err != nil {
+		t.Fatal(err)
+	}
+	go srv.Serve(ln)
+	t.Cleanup(func() { srv.Close() })
+	waitFor(t, 2*time.Second, srv.Ready, "server ready")
+	return srv, ln.Addr().String()
+}
+
+func waitFor(t *testing.T, timeout time.Duration, cond func() bool, desc string) {
+	t.Helper()
+	deadline := time.Now().Add(timeout)
+	for time.Now().Before(deadline) {
+		if cond() {
+			return
+		}
+		time.Sleep(5 * time.Millisecond)
+	}
+	t.Fatalf("timed out waiting for %s", desc)
+}
+
+func TestMaxConnectionsRejectsExcess(t *testing.T) {
+	cfg := baseConfig(&fakeScan{})
+	cfg.MaxConnections = 2
+	srv, addr := startServerInstance(t, cfg)
+
+	sendOptions := func(c *client) {
+		t.Helper()
+		if _, err := c.conn.Write([]byte("OPTIONS icap://127.0.0.1/safeanalyze ICAP/1.0\r\nHost: 127.0.0.1\r\n\r\n")); err != nil {
+			t.Fatal(err)
+		}
+		if resp := readICAPResponse(t, c.br); resp.code != 200 {
+			t.Fatalf("OPTIONS: got %d want 200", resp.code)
+		}
+	}
+
+	// Open two connections up to the limit and confirm both are active.
+	c1 := dial(t, addr)
+	sendOptions(c1)
+	c2 := dial(t, addr)
+	sendOptions(c2)
+
+	if got := srv.Metrics().ActiveConns(); got != 2 {
+		t.Fatalf("active conns = %d, want 2", got)
+	}
+
+	// A 3rd connection must be rejected immediately.
+	c3, err := net.Dial("tcp", addr)
+	if err != nil {
+		t.Fatal(err)
+	}
+	defer c3.Close()
+	c3.SetDeadline(time.Now().Add(2 * time.Second))
+	_, _ = c3.Write([]byte("OPTIONS icap://127.0.0.1/safeanalyze ICAP/1.0\r\nHost: 127.0.0.1\r\n\r\n"))
+	buf := make([]byte, 64)
+	n, err := c3.Read(buf)
+	if err == nil || n != 0 {
+		t.Fatalf("expected excess connection to be closed immediately, got n=%d err=%v data=%q", n, err, string(buf[:n]))
+	}
+	waitFor(t, 2*time.Second, func() bool { return srv.Metrics().RejectedConns() >= 1 }, "rejectedConns >= 1")
+
+	// Closing one active connection frees a slot for a new connection.
+	c1.conn.Close()
+	waitFor(t, 2*time.Second, func() bool { return srv.Metrics().ActiveConns() == 1 }, "activeConns == 1")
+
+	c4 := dial(t, addr)
+	sendOptions(c4)
+
+	// Negative MaxConnections disables the limit.
+	unlimCfg := baseConfig(&fakeScan{})
+	unlimCfg.MaxConnections = -1
+	_, unlimAddr := startServerInstance(t, unlimCfg)
+	for i := 0; i < 4; i++ {
+		sendOptions(dial(t, unlimAddr))
+	}
+}
+
+func TestLogOnlyShadowModeAllowsResponse(t *testing.T) {
+	var logBuf syncBuffer
+	cfg := baseConfig(&fakeScan{})
+	cfg.LogOnly = true
+	cfg.MaxBodyBytes = 1000
+	cfg.Logger = slog.New(slog.NewJSONHandler(&logBuf, nil))
+	srv, addr := startServerInstance(t, cfg)
+
+	c := dial(t, addr)
+
+	// Allow: 204 path returns 204 instead of 403 and logs shadow_block.
+	resp := c.respmod(t, []byte(injectionHTML), respmodOpts{contentType: "text/html", preview: -1})
+	if resp.code != 204 {
+		t.Fatalf("log-only Allow:204 injection: got %d, want 204", resp.code)
+	}
+
+	// No Allow: 204 path echoes the original HTTP 200 response instead of 403.
+	resp = c.respmod(t, []byte(injectionHTML), respmodOpts{contentType: "text/html", preview: -1, noAllow204: true})
+	if resp.code != 200 || !strings.HasPrefix(resp.resHdr, "HTTP/1.1 200 OK") || resp.body != injectionHTML {
+		t.Fatalf("log-only no-Allow:204 injection: code=%d hdr=%q body=%q", resp.code, resp.resHdr, resp.body)
+	}
+
+	// Oversized echoOverflow path must also shadow-allow and stream the full body.
+	bigInj := []byte(injectionHTML + strings.Repeat("<p>padding</p>", 200))
+	resp = c.respmod(t, bigInj, respmodOpts{contentType: "text/html", preview: -1, noAllow204: true})
+	if resp.code != 200 || !strings.HasPrefix(resp.resHdr, "HTTP/1.1 200 OK") || resp.body != string(bigInj) {
+		t.Fatalf("log-only echoOverflow injection: code=%d hdr=%q body_len=%d want=%d", resp.code, resp.resHdr, len(resp.body), len(bigInj))
+	}
+
+	waitFor(t, 2*time.Second, func() bool { return srv.Metrics().DecisionCount("shadow_block") == 3 }, "3 shadow_block decisions")
+	if got := srv.Metrics().DecisionCount("block"); got != 0 {
+		t.Fatalf("log-only block count = %d, want 0", got)
+	}
+
+	logs := logBuf.String()
+	if !strings.Contains(logs, `"decision":"shadow_block"`) {
+		t.Fatalf("expected shadow_block in logs, got: %s", logs)
+	}
+	if !strings.Contains(logs, "prompt_injection_ignore") {
+		t.Fatalf("expected rule ID in logs, got: %s", logs)
+	}
+
+	// Even with FailOpen=false, LogOnly shadow mode must not return 403 on echoOverflow.
+	cfgClosed := baseConfig(&fakeScan{})
+	cfgClosed.LogOnly = true
+	cfgClosed.FailOpen = false
+	cfgClosed.MaxBodyBytes = 1000
+	srvClosed, addrClosed := startServerInstance(t, cfgClosed)
+	resp = dial(t, addrClosed).respmod(t, bigInj, respmodOpts{contentType: "text/html", preview: -1, noAllow204: true})
+	if resp.code != 200 || !strings.HasPrefix(resp.resHdr, "HTTP/1.1 200 OK") || resp.body != string(bigInj) {
+		t.Fatalf("log-only fail-closed echoOverflow: code=%d hdr=%q", resp.code, resp.resHdr)
+	}
+	waitFor(t, 2*time.Second, func() bool { return srvClosed.Metrics().DecisionCount("shadow_block") == 1 }, "1 shadow_block decision")
+}
+
+func TestBlockContentTypesSelectiveBlocking(t *testing.T) {
+	cfg := baseConfig(&fakeScan{})
+	cfg.MaxBodyBytes = 1000
+	cfg.BlockContentTypes = []string{"text/plain", "message/rfc822"}
+	srv, addr := startServerInstance(t, cfg)
+	c := dial(t, addr)
+
+	// text/plain matches BlockContentTypes -> blocked with 403.
+	resp := c.respmod(t, []byte(injection), respmodOpts{contentType: "text/plain; charset=utf-8", preview: -1})
+	if resp.code != 200 || !strings.HasPrefix(resp.resHdr, "HTTP/1.1 403 Forbidden") || !strings.Contains(resp.body, "prompt_injection_ignore") {
+		t.Fatalf("text/plain injection should block: code=%d hdr=%q body=%q", resp.code, resp.resHdr, resp.body)
+	}
+
+	// message/rfc822 matches BlockContentTypes -> scanned and blocked with 403.
+	resp = c.respmod(t, []byte("Subject: hi\r\n\r\n"+injection), respmodOpts{contentType: "message/rfc822", preview: -1})
+	if resp.code != 200 || !strings.HasPrefix(resp.resHdr, "HTTP/1.1 403 Forbidden") {
+		t.Fatalf("message/rfc822 injection should block: code=%d hdr=%q", resp.code, resp.resHdr)
+	}
+
+	// text/html is NOT in BlockContentTypes -> shadow-allowed (204).
+	resp = c.respmod(t, []byte(injectionHTML), respmodOpts{contentType: "text/html; charset=utf-8", preview: -1})
+	if resp.code != 204 {
+		t.Fatalf("text/html injection should shadow-allow (204): got %d hdr=%q", resp.code, resp.resHdr)
+	}
+
+	// application/json is NOT in BlockContentTypes -> shadow-allowed (204).
+	resp = c.respmod(t, []byte(`{"msg":"`+injection+`"}`), respmodOpts{contentType: "application/json", preview: -1})
+	if resp.code != 204 {
+		t.Fatalf("application/json injection should shadow-allow (204): got %d", resp.code)
+	}
+
+	// echoOverflow honors BlockContentTypes: text/html shadow-streams, text/plain blocks.
+	bigHTML := []byte(injectionHTML + strings.Repeat("<p>filler</p>", 200))
+	resp = c.respmod(t, bigHTML, respmodOpts{contentType: "text/html", preview: -1, noAllow204: true})
+	if resp.code != 200 || !strings.HasPrefix(resp.resHdr, "HTTP/1.1 200 OK") || resp.body != string(bigHTML) {
+		t.Fatalf("echoOverflow text/html should shadow-stream: code=%d hdr=%q body_len=%d", resp.code, resp.resHdr, len(resp.body))
+	}
+
+	bigPlain := []byte(injection + strings.Repeat(" filler text ", 200))
+	resp = c.respmod(t, bigPlain, respmodOpts{contentType: "text/plain", preview: -1, noAllow204: true})
+	if resp.code != 200 || !strings.HasPrefix(resp.resHdr, "HTTP/1.1 403 Forbidden") {
+		t.Fatalf("echoOverflow text/plain should block: code=%d hdr=%q", resp.code, resp.resHdr)
+	}
+
+	waitFor(t, 2*time.Second, func() bool {
+		return srv.Metrics().DecisionCount("block") == 3 && srv.Metrics().DecisionCount("shadow_block") == 3
+	}, "3 blocks and 3 shadow_blocks")
+
+	// Prefix matching (e.g. "text/") blocks text/html and text/plain, shadows application/json.
+	prefixCfg := baseConfig(&fakeScan{})
+	prefixCfg.BlockContentTypes = []string{"text/"}
+	_, prefixAddr := startServerInstance(t, prefixCfg)
+	pc := dial(t, prefixAddr)
+	if resp := pc.respmod(t, []byte(injectionHTML), respmodOpts{contentType: "text/html", preview: -1}); resp.code != 200 || !strings.HasPrefix(resp.resHdr, "HTTP/1.1 403") {
+		t.Fatalf("prefix text/ should block text/html: code=%d hdr=%q", resp.code, resp.resHdr)
+	}
+	if resp := pc.respmod(t, []byte(`{"msg":"`+injection+`"}`), respmodOpts{contentType: "application/json", preview: -1}); resp.code != 204 {
+		t.Fatalf("prefix text/ should shadow-allow application/json: got %d", resp.code)
+	}
+}
+
+func TestMetricsAndHealthEndpoints(t *testing.T) {
+	cfg := baseConfig(&fakeScan{})
+	cfg.BlockContentTypes = []string{"text/plain"}
+	srv, err := NewServer(cfg)
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	handler := srv.Metrics().Handler(srv.Ready)
+	get := func(path string) *httptest.ResponseRecorder {
+		rec := httptest.NewRecorder()
+		req := httptest.NewRequest(http.MethodGet, path, nil)
+		handler.ServeHTTP(rec, req)
+		return rec
+	}
+
+	// Before Serve: /healthz is 200 ok, /readyz is 503 not ready.
+	if rec := get("/healthz"); rec.Code != http.StatusOK || rec.Body.String() != "ok\n" {
+		t.Fatalf("/healthz before Serve: %d %q", rec.Code, rec.Body.String())
+	}
+	if rec := get("/readyz"); rec.Code != http.StatusServiceUnavailable || rec.Body.String() != "not ready\n" {
+		t.Fatalf("/readyz before Serve: %d %q", rec.Code, rec.Body.String())
+	}
+
+	ln, err := net.Listen("tcp", "127.0.0.1:0")
+	if err != nil {
+		t.Fatal(err)
+	}
+	go srv.Serve(ln)
+	t.Cleanup(func() { srv.Close() })
+	waitFor(t, 2*time.Second, srv.Ready, "server ready")
+
+	// While serving: /readyz is 200 ready.
+	if rec := get("/readyz"); rec.Code != http.StatusOK || rec.Body.String() != "ready\n" {
+		t.Fatalf("/readyz while serving: %d %q", rec.Code, rec.Body.String())
+	}
+
+	c := dial(t, ln.Addr().String())
+	// 1. OPTIONS -> options
+	if _, err := c.conn.Write([]byte("OPTIONS icap://127.0.0.1/safeanalyze ICAP/1.0\r\nHost: 127.0.0.1\r\n\r\n")); err != nil {
+		t.Fatal(err)
+	}
+	if resp := readICAPResponse(t, c.br); resp.code != 200 {
+		t.Fatalf("OPTIONS: %d", resp.code)
+	}
+	// 2. Clean text/plain -> allow
+	if resp := c.respmod(t, []byte("hello world"), respmodOpts{contentType: "text/plain", preview: -1}); resp.code != 204 {
+		t.Fatalf("clean: %d", resp.code)
+	}
+	// 3. Injection text/plain -> block
+	if resp := c.respmod(t, []byte(injection), respmodOpts{contentType: "text/plain", preview: -1}); resp.code != 200 {
+		t.Fatalf("block: %d", resp.code)
+	}
+	// 4. Injection text/html -> shadow_block
+	if resp := c.respmod(t, []byte(injectionHTML), respmodOpts{contentType: "text/html", preview: -1}); resp.code != 204 {
+		t.Fatalf("shadow_block: %d", resp.code)
+	}
+	// 5. Non-text image/png -> skip
+	if resp := c.respmod(t, []byte("\x89PNG\r\n\x1a\n"), respmodOpts{contentType: "image/png", preview: -1}); resp.code != 204 {
+		t.Fatalf("skip: %d", resp.code)
+	}
+	// 6. Unknown service -> error
+	cErr := dial(t, ln.Addr().String())
+	if _, err := cErr.conn.Write([]byte("OPTIONS icap://127.0.0.1/nope ICAP/1.0\r\n\r\n")); err != nil {
+		t.Fatal(err)
+	}
+	if resp := readICAPResponse(t, cErr.br); resp.code != 404 {
+		t.Fatalf("unknown service: %d", resp.code)
+	}
+
+	waitFor(t, 2*time.Second, func() bool {
+		return srv.Metrics().DecisionCount("error") == 1 && srv.Metrics().DecisionCount("skip") == 1
+	}, "all request metrics recorded")
+
+	rec := get("/metrics")
+	if rec.Code != http.StatusOK {
+		t.Fatalf("/metrics status = %d, want 200", rec.Code)
+	}
+	if ct := rec.Header().Get("Content-Type"); ct != "text/plain; version=0.0.4; charset=utf-8" {
+		t.Fatalf("/metrics Content-Type = %q", ct)
+	}
+	body := rec.Body.String()
+	wantLines := []string{
+		`safeanalyze_icap_requests_total{decision="allow"} 1`,
+		`safeanalyze_icap_requests_total{decision="block"} 1`,
+		`safeanalyze_icap_requests_total{decision="shadow_block"} 1`,
+		`safeanalyze_icap_requests_total{decision="skip"} 1`,
+		`safeanalyze_icap_requests_total{decision="error"} 1`,
+		`safeanalyze_icap_requests_total{decision="options"} 1`,
+		`safeanalyze_icap_active_connections `,
+		`safeanalyze_icap_rejected_connections_total 0`,
+		`safeanalyze_icap_inflight_scans 0`,
+		`safeanalyze_icap_scan_duration_ms_sum `,
+		`safeanalyze_icap_scan_duration_ms_count 3`,
+		`safeanalyze_icap_rule_hits_total{rule="prompt_injection_ignore"} 2`,
+	}
+	for _, want := range wantLines {
+		if !strings.Contains(body, want) {
+			t.Errorf("/metrics missing %q\nfull output:\n%s", want, body)
+		}
+	}
+
+	// After Close: /readyz flips back to 503 while /healthz stays 200.
+	if err := srv.Close(); err != nil {
+		t.Fatal(err)
+	}
+	if rec := get("/readyz"); rec.Code != http.StatusServiceUnavailable || rec.Body.String() != "not ready\n" {
+		t.Fatalf("/readyz after Close: %d %q", rec.Code, rec.Body.String())
+	}
+	if rec := get("/healthz"); rec.Code != http.StatusOK || rec.Body.String() != "ok\n" {
+		t.Fatalf("/healthz after Close: %d %q", rec.Code, rec.Body.String())
 	}
 }
