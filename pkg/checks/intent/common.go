@@ -43,15 +43,16 @@ type File struct {
 	Role    string
 	Content string
 	// Dep marks source of a downloaded dependency (scan --network).
-	Dep   bool
-	lines []string
+	Dep       bool
+	linesOnce sync.Once
+	lines     []string
 }
 
-// Lines returns the file content split into lines.
+// Lines returns the file content split into lines. Safe for concurrent callers.
 func (f *File) Lines() []string {
-	if f.lines == nil {
+	f.linesOnce.Do(func() {
 		f.lines = strings.Split(f.Content, "\n")
-	}
+	})
 	return f.lines
 }
 
@@ -131,6 +132,8 @@ func (s *Stage) Run(ctx context.Context, target string, _ *report.Report) (*repo
 	return rep, nil
 }
 
+const maxCachedTargets = 16
+
 var (
 	cacheMu sync.Mutex
 	cache   = map[string]*cachedFiles{}
@@ -142,12 +145,22 @@ type cachedFiles struct {
 	err   error
 }
 
+// ClearCache drops all cached repository file snapshots.
+func ClearCache() {
+	cacheMu.Lock()
+	cache = map[string]*cachedFiles{}
+	cacheMu.Unlock()
+}
+
 // loadCached reads the target once for all intent stages of a run.
 func loadCached(target string, excluded []string) ([]*File, error) {
 	key := target + "\x00" + strings.Join(excluded, "\x00")
 	cacheMu.Lock()
 	c, ok := cache[key]
 	if !ok {
+		if len(cache) >= maxCachedTargets {
+			cache = map[string]*cachedFiles{}
+		}
 		c = &cachedFiles{}
 		cache[key] = c
 	}

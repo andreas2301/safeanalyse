@@ -92,3 +92,31 @@ func TestEnginePropagatesStageError(t *testing.T) {
 		t.Fatal("expected stage error")
 	}
 }
+
+type blockingStage struct {
+	name string
+	deps []string
+}
+
+func (b *blockingStage) Name() string           { return b.name }
+func (b *blockingStage) Dependencies() []string { return b.deps }
+func (b *blockingStage) Run(ctx context.Context, target string, _ *report.Report) (*report.Report, error) {
+	<-ctx.Done()
+	return nil, ctx.Err()
+}
+
+func TestEngineContextCancelUnblocksDependents(t *testing.T) {
+	ctx, cancel := context.WithCancel(context.Background())
+	stages := []Stage{
+		&blockingStage{name: "slow"},
+		&mockStage{name: "dependent", deps: []string{"slow"}},
+	}
+	engine := NewEngine(stages, 2)
+	go func() {
+		cancel()
+	}()
+	_, err := engine.Run(ctx, "target")
+	if err == nil {
+		t.Fatal("expected context cancellation error")
+	}
+}

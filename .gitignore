@@ -20,6 +20,8 @@ vendor/
 # IDE
 .idea/
 .vscode/
+!testdata/intent/**/.vscode/
+!testdata/intent/**/.vscode/**
 *.swp
 *.swo
 *~

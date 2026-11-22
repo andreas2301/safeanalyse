@@ -26,9 +26,15 @@ func WriteAll(report *Report, cfg config.OutputConfig) error {
 		return fmt.Errorf("creating output directory %s: %w", cfg.OutDir, err)
 	}
 
+	report.Redact()
+
 	reportToWrite := report
 	if max := cfg.EffectiveMaxFindings(); max > 0 && len(report.Findings) > max {
 		capped := *report
+		capped.Metadata = make(map[string]string, len(report.Metadata)+1)
+		for k, v := range report.Metadata {
+			capped.Metadata[k] = v
+		}
 		capped.Findings = make([]Finding, len(report.Findings))
 		copy(capped.Findings, report.Findings)
 		SortFindingsBySeverity(capped.Findings)
@@ -37,8 +43,6 @@ func WriteAll(report *Report, cfg config.OutputConfig) error {
 		capped.Metadata["findings_capped"] = fmt.Sprintf("showing %d of %d", max, len(report.Findings))
 		reportToWrite = &capped
 	}
-
-	report.Redact()
 
 	formats := cfg.EffectiveFormats()
 	var errs []string

@@ -34,6 +34,9 @@ func (e *Engine) Run(ctx context.Context, target string) (*report.Report, error)
 		return nil, err
 	}
 
+	runCtx, cancelRun := context.WithCancel(ctx)
+	defer cancelRun()
+
 	// Reports indexed by stage name.
 	reports := make(map[string]*report.Report)
 	var mu sync.Mutex
@@ -41,6 +44,15 @@ func (e *Engine) Run(ctx context.Context, target string) (*report.Report, error)
 	// Track completed stages.
 	completed := make(map[string]bool)
 	cond := sync.NewCond(&mu)
+
+	// Wake any goroutines blocked in cond.Wait when runCtx is canceled so they
+	// exit promptly instead of leaking.
+	go func() {
+		<-runCtx.Done()
+		mu.Lock()
+		cond.Broadcast()
+		mu.Unlock()
+	}()
 
 	errCh := make(chan error, 1)
 	var wg sync.WaitGroup
@@ -68,7 +80,7 @@ func (e *Engine) Run(ctx context.Context, target string) (*report.Report, error)
 					continue
 				}
 				for !completed[dep] {
-					if ctx.Err() != nil {
+					if runCtx.Err() != nil {
 						mu.Unlock()
 						return
 					}
@@ -103,11 +115,11 @@ func (e *Engine) Run(ctx context.Context, target string) (*report.Report, error)
 			// Acquire slot.
 			select {
 			case sem <- struct{}{}:
-			case <-ctx.Done():
+			case <-runCtx.Done():
 				return
 			}
 
-			out, runErr := stage.Run(ctx, target, input)
+			out, runErr := stage.Run(runCtx, target, input)
 			<-sem
 
 			if runErr != nil {
@@ -115,6 +127,7 @@ func (e *Engine) Run(ctx context.Context, target string) (*report.Report, error)
 				case errCh <- fmt.Errorf("stage %q failed: %w", stage.Name(), runErr):
 				default:
 				}
+				cancelRun()
 			}
 
 			mu.Lock()
@@ -139,8 +152,12 @@ func (e *Engine) Run(ctx context.Context, target string) (*report.Report, error)
 	select {
 	case <-done:
 	case err := <-errCh:
+		cancelRun()
+		<-done
 		return nil, err
 	case <-ctx.Done():
+		cancelRun()
+		<-done
 		return nil, ctx.Err()
 	}
 

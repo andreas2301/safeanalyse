@@ -52,9 +52,17 @@ Examples:
 
 		color.Cyan("\n[CLONE] %s -> %s\n", url, cloneDir)
 
-		// Run git clone. The '--' separator ensures the URL and directory are
-		// treated as positional arguments even if they start with '-'.
-		gitCmd := exec.Command("git", "clone", "--depth", "1", "--", url, cloneDir)
+		// Run git clone with untrusted-repo hardening: disable hooks,
+		// fsmonitor, symlinks, and LFS smudge filters, and use '--' so URL and
+		// directory are always positional arguments.
+		gitCmd := exec.Command("git", "clone",
+			"--depth", "1",
+			"-c", "core.hooksPath=/dev/null",
+			"-c", "core.fsmonitor=false",
+			"-c", "core.symlinks=false",
+			"-c", "filter.lfs.smudge=",
+			"--", url, cloneDir,
+		)
 		gitCmd.Stdout = os.Stdout
 		gitCmd.Stderr = os.Stderr
 		if err := gitCmd.Run(); err != nil {

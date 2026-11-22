@@ -12,7 +12,10 @@ import (
 	"errors"
 	"fmt"
 	"io"
+	"net"
 	"net/http"
+	"net/netip"
+	"net/url"
 	"os"
 	"os/exec"
 	"path"
@@ -237,9 +240,15 @@ func (s *NetDepsStage) fetchGo(ctx context.Context, deps []depRef) ([]*depSource
 		_ = os.RemoveAll(tmp)
 	}()
 
-	args := []string{"mod", "download", "-json"}
+	args := []string{"mod", "download", "-json", "--"}
 	for _, d := range deps {
+		if strings.HasPrefix(d.name, "-") || strings.HasPrefix(d.version, "-") {
+			continue
+		}
 		args = append(args, d.name+"@"+d.version)
+	}
+	if len(args) == 4 {
+		return nil, nil
 	}
 	cmd := exec.CommandContext(ctx, goBin, args...)
 	cmd.Env, cmd.Dir = env, tmp // outside the target: its go.mod/go.work are not used
@@ -370,10 +379,86 @@ func npmDeps(files []*File, budget int) ([]depRef, int) {
 	return deps, skipped
 }
 
-const maxTarballBytes = 64 << 20
+const (
+	maxTarballBytes         = 64 << 20
+	maxTarballUnpackedBytes = 128 << 20
+	maxTarballFiles         = 5000
+)
+
+// isDisallowedAddr reports whether ip is loopback, private, link-local,
+// multicast, unspecified, or CGNAT (100.64.0.0/10) — i.e., unsafe to contact
+// when fetching dependency URLs from an untrusted lockfile.
+func isDisallowedAddr(ip netip.Addr) bool {
+	ip = ip.Unmap()
+	if !ip.IsValid() || ip.IsLoopback() || ip.IsPrivate() ||
+		ip.IsLinkLocalUnicast() || ip.IsLinkLocalMulticast() ||
+		ip.IsMulticast() || ip.IsUnspecified() || ip.IsInterfaceLocalMulticast() {
+		return true
+	}
+	// CGNAT 100.64.0.0/10 (RFC 6598)
+	cgnat := netip.MustParsePrefix("100.64.0.0/10")
+	return cgnat.Contains(ip)
+}
+
+// validatePublicHTTPSURL verifies rawURL uses https and does not target
+// localhost or a literal private/internal IP.
+func validatePublicHTTPSURL(rawURL string) error {
+	u, err := url.Parse(rawURL)
+	if err != nil {
+		return fmt.Errorf("invalid URL: %w", err)
+	}
+	if u.Scheme != "https" {
+		return fmt.Errorf("disallowed URL scheme %q (https required)", u.Scheme)
+	}
+	host := strings.ToLower(u.Hostname())
+	if host == "" || host == "localhost" || strings.HasSuffix(host, ".localhost") || strings.HasSuffix(host, ".local") || strings.HasSuffix(host, ".internal") {
+		return fmt.Errorf("disallowed internal host %q", host)
+	}
+	if ip, err := netip.ParseAddr(host); err == nil && isDisallowedAddr(ip) {
+		return fmt.Errorf("disallowed internal IP %s", ip)
+	}
+	return nil
+}
+
+// safeHTTPClient returns an HTTP client that blocks SSRF to private/internal
+// IP ranges at DNS resolution time and on redirects.
+func safeHTTPClient() *http.Client {
+	dialer := &net.Dialer{Timeout: 30 * time.Second}
+	transport := &http.Transport{
+		DialContext: func(ctx context.Context, network, addr string) (net.Conn, error) {
+			host, port, err := net.SplitHostPort(addr)
+			if err != nil {
+				return nil, err
+			}
+			ips, err := net.DefaultResolver.LookupNetIP(ctx, "ip", host)
+			if err != nil {
+				return nil, err
+			}
+			for _, ip := range ips {
+				if isDisallowedAddr(ip) {
+					return nil, fmt.Errorf("refusing connection to non-public IP %s (%s)", ip, host)
+				}
+			}
+			if len(ips) == 0 {
+				return nil, fmt.Errorf("no IPs resolved for %s", host)
+			}
+			return dialer.DialContext(ctx, network, net.JoinHostPort(ips[0].String(), port))
+		},
+	}
+	return &http.Client{
+		Timeout:   2 * time.Minute,
+		Transport: transport,
+		CheckRedirect: func(req *http.Request, via []*http.Request) error {
+			if len(via) >= 5 {
+				return errors.New("stopped after 5 redirects")
+			}
+			return validatePublicHTTPSURL(req.URL.String())
+		},
+	}
+}
 
 func fetchNPM(ctx context.Context, deps []depRef) ([]*depSource, []string) {
-	client := &http.Client{Timeout: 2 * time.Minute}
+	client := safeHTTPClient()
 	var (
 		mu   sync.Mutex
 		out  []*depSource
@@ -406,6 +491,9 @@ func fetchNPM(ctx context.Context, deps []depRef) ([]*depSource, []string) {
 }
 
 func fetchTarball(ctx context.Context, client *http.Client, d depRef) (*depSource, error) {
+	if err := validatePublicHTTPSURL(d.resolved); err != nil {
+		return nil, err
+	}
 	id := d.name + "@" + d.version
 	src := &depSource{id: id, prefix: "deps/npm/" + id + "/"}
 	req, err := http.NewRequestWithContext(ctx, http.MethodGet, d.resolved, nil)
@@ -434,18 +522,35 @@ func fetchTarball(ctx context.Context, client *http.Client, d depRef) (*depSourc
 			"Downloaded tarball of "+id+" does not match the lockfile integrity hash: the registry serves different content", map[string]string{"dependency": id}))
 		return src, nil // do not analyse content that failed verification as if it were the dependency
 	}
+	if err := unpackTarball(src, data); err != nil {
+		return src, err
+	}
+	return src, nil
+}
+
+// unpackTarball extracts regular text files from a gzipped npm tarball in
+// memory while enforcing total decompressed size and file-count caps.
+func unpackTarball(src *depSource, data []byte) error {
 	gz, err := gzip.NewReader(bytes.NewReader(data))
 	if err != nil {
-		return nil, err
+		return err
 	}
-	tr := tar.NewReader(gz)
+	defer gz.Close()
+
+	tr := tar.NewReader(io.LimitReader(gz, maxTarballUnpackedBytes+1))
+	var totalRead int64
+	entries := 0
 	for {
 		h, err := tr.Next()
 		if err == io.EOF {
 			break
 		}
 		if err != nil {
-			return src, fmt.Errorf("reading tarball: %w", err)
+			return fmt.Errorf("reading tarball: %w", err)
+		}
+		entries++
+		if entries > maxTarballFiles {
+			return fmt.Errorf("tarball exceeds maximum entry count (%d)", maxTarballFiles)
 		}
 		if h.Typeflag != tar.TypeReg || h.Size > maxFileBytes {
 			continue
@@ -457,14 +562,26 @@ func fetchTarball(ctx context.Context, client *http.Client, d depRef) (*depSourc
 		if name == "" || strings.HasPrefix(name, "..") {
 			continue
 		}
-		content, err := io.ReadAll(io.LimitReader(tr, maxFileBytes))
-		if err != nil || yara.IsBinaryContent(content) {
+		remaining := maxTarballUnpackedBytes - totalRead
+		if remaining <= 0 {
+			return fmt.Errorf("tarball exceeds maximum decompressed size (%d bytes)", maxTarballUnpackedBytes)
+		}
+		limit := min(int64(maxFileBytes), remaining)
+		content, err := io.ReadAll(io.LimitReader(tr, limit+1))
+		if err != nil {
+			continue
+		}
+		totalRead += int64(len(content))
+		if totalRead > maxTarballUnpackedBytes {
+			return fmt.Errorf("tarball exceeds maximum decompressed size (%d bytes)", maxTarballUnpackedBytes)
+		}
+		if len(content) > maxFileBytes || yara.IsBinaryContent(content) {
 			continue
 		}
 		src.files = append(src.files, depFile(src.prefix, name, content))
 	}
 	sort.Slice(src.files, func(i, j int) bool { return src.files[i].Rel < src.files[j].Rel })
-	return src, nil
+	return nil
 }
 
 // checkIntegrity verifies an SRI string (sha512-… or sha1-…). known is false

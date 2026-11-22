@@ -70,11 +70,18 @@ func SanitizeDir(srcDir, dstDir string, opts Options) (*Result, error) {
 			return os.MkdirAll(outPath, 0755)
 		}
 
-		// Check extension
+		// Never follow symlinks or read special files from an untrusted repo.
+		if d.Type()&os.ModeSymlink != 0 || !d.Type().IsRegular() {
+			res.FilesSkipped++
+			return nil
+		}
+
+		// Enforce extension allowlist strictly: never copy non-allowlisted
+		// files verbatim into the sanitized AI ingest directory.
 		ext := strings.ToLower(filepath.Ext(path))
 		if len(opts.AllowedExtensions) > 0 && !extMap[ext] {
-			// Copy verbatim if extension not in allowlist
-			return copyFile(path, outPath)
+			res.FilesSkipped++
+			return nil
 		}
 
 		if err := sanitizeFile(path, outPath, opts, res, ext); err != nil {
@@ -97,15 +104,27 @@ func sanitizeFile(srcPath, dstPath string, opts Options, res *Result, ext string
 	if err != nil {
 		return err
 	}
+	if !info.Mode().IsRegular() {
+		res.FilesSkipped++
+		return nil
+	}
 
 	if opts.MaxFileSizeBytes > 0 && info.Size() > int64(opts.MaxFileSizeBytes) {
 		res.FilesSkipped++
 		return nil
 	}
 
-	content, err := io.ReadAll(f)
+	var reader io.Reader = f
+	if opts.MaxFileSizeBytes > 0 {
+		reader = io.LimitReader(f, int64(opts.MaxFileSizeBytes)+1)
+	}
+	content, err := io.ReadAll(reader)
 	if err != nil {
 		return err
+	}
+	if opts.MaxFileSizeBytes > 0 && len(content) > opts.MaxFileSizeBytes {
+		res.FilesSkipped++
+		return nil
 	}
 	res.FilesProcessed++
 	res.BytesBefore += int64(len(content))
@@ -164,15 +183,4 @@ func removeNonASCII(data []byte, res *Result) []byte {
 		data = data[size:]
 	}
 	return out.Bytes()
-}
-
-func copyFile(src, dst string) error {
-	if err := os.MkdirAll(filepath.Dir(dst), 0755); err != nil {
-		return err
-	}
-	in, err := os.ReadFile(src)
-	if err != nil {
-		return err
-	}
-	return os.WriteFile(dst, in, 0644)
 }

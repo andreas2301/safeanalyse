@@ -13,21 +13,32 @@ import (
 // credentials found in test data.
 var secretTokenPatterns = []*regexp.Regexp{
 	regexp.MustCompile(`(?i)(sk_|rk_|pk_)(live|test)_[A-Za-z0-9_\-]{10,}`),
+	regexp.MustCompile(`(?i)sk-ant-[A-Za-z0-9_\-]{16,}`),
+	regexp.MustCompile(`(?i)sk-(proj-|svcacct-)?[A-Za-z0-9_\-]{20,}`),
 	regexp.MustCompile(`(?i)glpat-[A-Za-z0-9_\-]{10,}`),
 	regexp.MustCompile(`(?i)gh[pousr]_[A-Za-z0-9]{30,}`),
-	regexp.MustCompile(`(?i)AKIA[A-Z0-9]{16}`),
+	regexp.MustCompile(`(?i)github_pat_[A-Za-z0-9_]{20,}`),
+	regexp.MustCompile(`(?i)xox[baprs]-[A-Za-z0-9\-]{10,}`),
+	regexp.MustCompile(`(?i)(AKIA|ASIA)[A-Z0-9]{16}`),
+	regexp.MustCompile(`(?s)-----BEGIN [A-Z0-9 ]*PRIVATE KEY-----.*?-----END [A-Z0-9 ]*PRIVATE KEY-----`),
+	regexp.MustCompile(`-----BEGIN [A-Z0-9 ]*PRIVATE KEY-----`),
 }
 
 // quotedString matches a double-quoted string. It is used for conservative
 // redaction of credential-like findings.
 var quotedString = regexp.MustCompile(`"[^"]{4,}"`)
 
-// redactMatch sanitizes a finding match string for public report output.
-func redactMatch(match, ruleID, source string) string {
-	// Redact known secret token patterns anywhere they appear.
+// redactTokens replaces known secret token patterns in arbitrary text.
+func redactTokens(s string) string {
 	for _, re := range secretTokenPatterns {
-		match = re.ReplaceAllString(match, "[REDACTED]")
+		s = re.ReplaceAllString(s, "[REDACTED]")
 	}
+	return s
+}
+
+// redactMatch sanitizes a finding match string for public report output.
+func redactMatch(match, ruleID, source, category string) string {
+	match = redactTokens(match)
 
 	// For credential findings, also redact any quoted value so fake keys in
 	// test fixtures are not pushed verbatim.
@@ -37,16 +48,31 @@ func redactMatch(match, ruleID, source string) string {
 	if source == "entropy" && strings.Contains(strings.ToLower(match), "pat") {
 		match = quotedString.ReplaceAllString(match, `"[REDACTED]"`)
 	}
+	// External secret scanners (trufflehog, gitleaks) may detect provider-specific
+	// tokens that do not match generic prefix regexes; never emit raw secrets.
+	if category == "secret" && match != "" && !strings.Contains(match, "[REDACTED]") {
+		return "[REDACTED]"
+	}
 
 	return match
 }
 
-// Redact sanitizes finding match strings in place so reports can be stored or
-// shared without leaking credentials found in scanned targets.
+// Redact sanitizes finding fields and verdict evidence in place so reports can
+// be stored or shared without leaking credentials found in scanned targets.
 func (r *Report) Redact() {
 	for i := range r.Findings {
 		f := &r.Findings[i]
-		f.Match = redactMatch(f.Match, f.RuleID, f.Source)
+		f.Match = redactMatch(f.Match, f.RuleID, f.Source, f.Category)
+		f.Message = redactTokens(f.Message)
+		f.Description = redactTokens(f.Description)
+		for k, v := range f.Attributes {
+			f.Attributes[k] = redactTokens(v)
+		}
+	}
+	for i := range r.Verdicts {
+		for j, ev := range r.Verdicts[i].Evidence {
+			r.Verdicts[i].Evidence[j] = redactTokens(ev)
+		}
 	}
 }
 const (
