@@ -26,9 +26,9 @@ var Questions = []struct {
 	{intent.QAutorun, "Does code run automatically on install, build, import, IDE/devcontainer open or agent start?", []string{"autorun", "agentsurface"}},
 	{intent.QExfil, "Is there a data-exfiltration chain (secrets or environment → network)?", []string{"chains"}},
 	{intent.QRemoteExec, "Does it download, decode or evaluate code at runtime or install time?", []string{"chains", "installscripts"}},
-	{intent.QDeps, "Do dependencies come from unexpected sources (forks, mirrors, git/URL, disabled checksums)?", []string{"depsource"}},
+	{intent.QDeps, "Do dependencies come from unexpected sources (forks, mirrors, git/URL, disabled checksums)?", []string{"depsource", "bumblebee"}},
 	{intent.QCI, "Can CI leak secrets or run untrusted contributor code?", []string{"ci"}},
-	{intent.QAgent, "Can the repository manipulate an AI agent that opens it (prompt injection, agent config)?", []string{"agentsurface", "yara"}},
+	{intent.QAgent, "Can the repository manipulate an AI agent that opens it (prompt injection, agent config)?", []string{"agentsurface", "yara", "llm"}},
 	{intent.QPrivileges, "Does it request broad privileges or install persistence?", []string{"extensions", "chains"}},
 	{intent.QHidden, "Is there hidden or obfuscated content (invisible Unicode, encoded payloads)?", []string{"hiddenchars", "entropy", "yara"}},
 	{intent.QSecrets, "Does it contain hardcoded secrets?", []string{"yara", "trufflehog", "gitleaks"}},
@@ -125,7 +125,7 @@ func legacyTier(f *report.Finding) (string, string) {
 			return report.TierB, intent.QHidden // tests run on `go test`/CI: keep visible
 		}
 		return report.TierC, intent.QHidden
-	case "yara", "ml-prompt-injection", "prompt-injection-scanner":
+	case "yara", "ml-prompt-injection", "prompt-injection-scanner", "llm":
 		return yaraTier(f, role)
 	case "trufflehog", "gitleaks":
 		if test || role == filerole.Docs {
@@ -135,14 +135,37 @@ func legacyTier(f *report.Finding) (string, string) {
 			return report.TierA, intent.QSecrets
 		}
 		return report.TierB, intent.QSecrets
-	}
-	if test {
+	case "bumblebee":
+		if test {
+			return report.TierC, intent.QDeps
+		}
+		if report.SeverityRank(f.Severity) >= report.SeverityRank(report.SeverityHigh) {
+			return report.TierA, intent.QDeps
+		}
+		return report.TierB, intent.QDeps
+	case "semgrep":
+		if test {
+			return report.TierC, ""
+		}
+		if report.SeverityRank(f.Severity) >= report.SeverityRank(report.SeverityCritical) {
+			return report.TierA, intent.QRemoteExec
+		}
+		if report.SeverityRank(f.Severity) >= report.SeverityRank(report.SeverityHigh) {
+			return report.TierB, intent.QRemoteExec
+		}
 		return report.TierC, ""
 	}
-	if report.SeverityRank(f.Severity) >= report.SeverityRank(report.SeverityHigh) {
-		return report.TierB, ""
+	q := f.Question
+	if test {
+		return report.TierC, q
 	}
-	return report.TierC, ""
+	if q != "" && report.SeverityRank(f.Severity) >= report.SeverityRank(report.SeverityCritical) {
+		return report.TierA, q
+	}
+	if report.SeverityRank(f.Severity) >= report.SeverityRank(report.SeverityHigh) {
+		return report.TierB, q
+	}
+	return report.TierC, q
 }
 
 // weakPromptMatch reports matches that merely name a concept ("system

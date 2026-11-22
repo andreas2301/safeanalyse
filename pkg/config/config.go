@@ -44,16 +44,32 @@ type NetworkConfig struct {
 	GoBinary       string `yaml:"go_binary"`
 }
 
-// ScannerConfig defines an external tool to run.
+// ScannerConfig defines an external tool or declarative plugin to run.
 type ScannerConfig struct {
 	Name           string `yaml:"name"`
 	Command        string `yaml:"command"`
 	Enabled        bool   `yaml:"enabled"`
 	FailOnFindings bool   `yaml:"fail_on_findings"`
 	// NoVerification disables live credential verification for scanners that
-	// support it (currently the trufflehog `scan` pipeline stage only; ingest
-	// runs Command verbatim), keeping corpus runs deterministic.
+	// support it (e.g., trufflehog). Retained for backward compatibility;
+	// verification is now off by default unless Verify is true.
 	NoVerification bool `yaml:"no_verification,omitempty"`
+	// Verify opts in to live network credential verification (e.g. trufflehog).
+	// Offline-first default is false.
+	Verify bool `yaml:"verify,omitempty"`
+	// TimeoutSeconds bounds execution time for this external scanner (default 300).
+	TimeoutSeconds int `yaml:"timeout_seconds,omitempty"`
+	// ExposureCatalog points Bumblebee at a JSON exposure catalog file or directory.
+	// When empty, safeanalyze auto-discovers ~/.safeanalyze/tools/bumblebee/threat_intel.
+	ExposureCatalog string `yaml:"exposure_catalog,omitempty"`
+	// RemoteRules opts in to fetching remote rules (e.g. semgrep). Off by default.
+	RemoteRules bool `yaml:"remote_rules,omitempty"`
+	// Format selects the output parser for generic/custom plugin scanners:
+	// "sarif", "safeanalyze-json", or "ndjson".
+	Format string `yaml:"format,omitempty"`
+	// Question optionally maps generic plugin findings to a verdict question ID
+	// (e.g. "deps", "agent", "secrets", "call_home", "remote_exec").
+	Question string `yaml:"question,omitempty"`
 }
 
 // SanitizationConfig controls how files are cleaned before AI ingestion.

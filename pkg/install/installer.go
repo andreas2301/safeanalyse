@@ -202,6 +202,21 @@ func ResolveBinary(name string) string {
 	return ""
 }
 
+// ResolveAsset returns the path to a bundled asset (such as Bumblebee's
+// threat_intel directory) inside an installed scanner's tool checkout, or ""
+// if it does not exist.
+func ResolveAsset(scannerName, relPath string) string {
+	td, err := toolDir(scannerName)
+	if err != nil {
+		return ""
+	}
+	candidate := filepath.Join(td, relPath)
+	if _, err := os.Stat(candidate); err == nil {
+		return candidate
+	}
+	return ""
+}
+
 func ensureDirs(lang string) error {
 	dirs, err := dirsForLang(lang)
 	if err != nil {

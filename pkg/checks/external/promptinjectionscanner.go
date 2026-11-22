@@ -1,20 +1,31 @@
 package external
 
 import (
+	"bytes"
 	"context"
 	"encoding/json"
 	"fmt"
-	"os/exec"
+	"time"
 
 	"github.com/user/safeanalyze/pkg/report"
 )
 
 // promptInjectionScannerStage runs the prompt-injection-scanner.
-type promptInjectionScannerStage struct{}
+type promptInjectionScannerStage struct {
+	timeout time.Duration
+}
 
 // NewPromptInjectionScannerStage creates a prompt-injection-scanner pipeline stage.
 func NewPromptInjectionScannerStage() *promptInjectionScannerStage {
-	return &promptInjectionScannerStage{}
+	return &promptInjectionScannerStage{timeout: defaultScannerTimeout}
+}
+
+// NewPromptInjectionScannerStageWithTimeout creates a stage with custom timeout.
+func NewPromptInjectionScannerStageWithTimeout(timeout time.Duration) *promptInjectionScannerStage {
+	if timeout <= 0 {
+		timeout = defaultScannerTimeout
+	}
+	return &promptInjectionScannerStage{timeout: timeout}
 }
 
 // Name returns the stage name.
@@ -30,11 +41,17 @@ func (s *promptInjectionScannerStage) Run(ctx context.Context, target string, in
 	if binary == "" {
 		return missingBinary(out, s.Name()), nil
 	}
-	args := []string{target, "--format", "json", "--min-severity", "HIGH", "--no-fail"}
-	cmd := exec.CommandContext(ctx, binary, args...)
-	output, err := cmd.Output()
+	args := []string{"--format", "json", "--min-severity", "HIGH", "--no-fail", "--", target}
+	output, stderr, exitCode, err := runCommand(ctx, s.timeout, binary, args)
 	if err != nil {
-		out.AddError(s.Name(), fmt.Sprintf("prompt-injection-scanner execution failed: %v", err))
+		if exitCode == 1 && len(bytes.TrimSpace(output)) > 0 {
+			return parsePromptInjectionScannerOutput(out, output)
+		}
+		msg := fmt.Sprintf("prompt-injection-scanner execution failed: %v", err)
+		if stderr != "" {
+			msg += ": " + stderr
+		}
+		out.AddError(s.Name(), msg)
 		return out, nil
 	}
 	return parsePromptInjectionScannerOutput(out, output)

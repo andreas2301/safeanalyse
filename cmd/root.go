@@ -55,5 +55,5 @@ func Execute() error {
 
 func init() {
 	rootCmd.PersistentFlags().StringVarP(&cfgFile, "config", "c", "", "config file path")
-	rootCmd.AddCommand(initCmd, installCmd, inspectCmd, evalCmd, scanCmd, sanitizeCmd, ingestCmd, diffCmd, cloneCmd)
+	rootCmd.AddCommand(initCmd, installCmd, inspectCmd, evalCmd, scanCmd, sanitizeCmd, ingestCmd, diffCmd, cloneCmd, mergeCmd, doctorCmd)
 }

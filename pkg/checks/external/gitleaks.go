@@ -1,19 +1,30 @@
 package external
 
 import (
+	"bytes"
 	"context"
 	"encoding/json"
 	"fmt"
-	"os/exec"
+	"time"
 
 	"github.com/user/safeanalyze/pkg/report"
 )
 
 // gitleaksStage runs Gitleaks against a directory.
-type gitleaksStage struct{}
+type gitleaksStage struct {
+	timeout time.Duration
+}
 
 // NewGitleaksStage creates a Gitleaks pipeline stage.
-func NewGitleaksStage() *gitleaksStage { return &gitleaksStage{} }
+func NewGitleaksStage() *gitleaksStage { return &gitleaksStage{timeout: defaultScannerTimeout} }
+
+// NewGitleaksStageWithTimeout creates a Gitleaks stage with a custom timeout.
+func NewGitleaksStageWithTimeout(timeout time.Duration) *gitleaksStage {
+	if timeout <= 0 {
+		timeout = defaultScannerTimeout
+	}
+	return &gitleaksStage{timeout: timeout}
+}
 
 // Name returns the stage name.
 func (s *gitleaksStage) Name() string { return "gitleaks" }
@@ -21,18 +32,30 @@ func (s *gitleaksStage) Name() string { return "gitleaks" }
 // Dependencies returns no dependencies.
 func (s *gitleaksStage) Dependencies() []string { return nil }
 
-// Run executes gitleaks and parses JSON findings.
+// Run executes gitleaks and parses JSON findings. Gitleaks exits with status 1
+// when leaks are found, so exit code 1 with valid JSON stdout is treated as a
+// normal findings result rather than an execution failure.
 func (s *gitleaksStage) Run(ctx context.Context, target string, input *report.Report) (*report.Report, error) {
 	out := prepareReport(input, target)
 	binary := resolveBinary("gitleaks")
 	if binary == "" {
 		return missingBinary(out, s.Name()), nil
 	}
-	args := []string{"dir", target, "--report-format", "json", "--report-path", "-"}
-	cmd := exec.CommandContext(ctx, binary, args...)
-	output, err := cmd.Output()
+	args := []string{"dir", "--report-format", "json", "--report-path", "-", "--", target}
+	output, stderr, exitCode, err := runCommand(ctx, s.timeout, binary, args)
 	if err != nil {
-		out.AddError(s.Name(), fmt.Sprintf("gitleaks execution failed: %v", err))
+		// Exit code 1 means leaks detected; parse stdout if present.
+		if exitCode == 1 && len(bytes.TrimSpace(output)) > 0 {
+			return parseGitleaksOutput(out, output)
+		}
+		msg := fmt.Sprintf("gitleaks execution failed: %v", err)
+		if stderr != "" {
+			msg += ": " + stderr
+		}
+		out.AddError(s.Name(), msg)
+		return out, nil
+	}
+	if len(bytes.TrimSpace(output)) == 0 {
 		return out, nil
 	}
 	return parseGitleaksOutput(out, output)
@@ -65,6 +88,8 @@ func parseGitleaksOutput(out *report.Report, data []byte) (*report.Report, error
 		if match == "" {
 			match = f.Match
 		}
+		// Never embed the raw secret in Message; Match is redacted before write.
+		msg := coalesce(f.Description, f.RuleID, "Potential secret detected")
 		out.AddFinding(report.Finding{
 			RuleID:      f.RuleID,
 			Title:       coalesce(f.RuleID, "secret"),
@@ -75,7 +100,7 @@ func parseGitleaksOutput(out *report.Report, data []byte) (*report.Report, error
 			Line:        f.StartLine,
 			Column:      f.StartColumn,
 			Match:       match,
-			Message:     fmt.Sprintf("%s: %s", f.Description, match),
+			Message:     msg,
 			Source:      "gitleaks",
 			Confidence:  report.ConfidenceDeterministic,
 		})
