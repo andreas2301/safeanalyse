@@ -6,8 +6,8 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
-	"os/exec"
 	"strings"
+	"time"
 
 	"github.com/user/safeanalyze/pkg/report"
 )
@@ -15,13 +15,22 @@ import (
 // trufflehogStage runs TruffleHog filesystem scanner.
 type trufflehogStage struct {
 	noVerification bool
+	timeout        time.Duration
 }
 
 // NewTrufflehogStage creates a TruffleHog pipeline stage. When noVerification
 // is true, trufflehog is run with --no-verification so results do not depend on
 // network access to credential providers.
 func NewTrufflehogStage(noVerification bool) *trufflehogStage {
-	return &trufflehogStage{noVerification: noVerification}
+	return &trufflehogStage{noVerification: noVerification, timeout: defaultScannerTimeout}
+}
+
+// NewTrufflehogStageWithTimeout creates a TruffleHog stage with custom timeout.
+func NewTrufflehogStageWithTimeout(noVerification bool, timeout time.Duration) *trufflehogStage {
+	if timeout <= 0 {
+		timeout = defaultScannerTimeout
+	}
+	return &trufflehogStage{noVerification: noVerification, timeout: timeout}
 }
 
 // Name returns the stage name.
@@ -37,14 +46,26 @@ func (s *trufflehogStage) Run(ctx context.Context, target string, input *report.
 	if binary == "" {
 		return missingBinary(out, s.Name()), nil
 	}
-	args := []string{"filesystem", target, "--json"}
+	args := []string{"filesystem", "--json"}
 	if s.noVerification {
 		args = append(args, "--no-verification")
 	}
-	cmd := exec.CommandContext(ctx, binary, args...)
-	output, err := cmd.Output()
+	args = append(args, "--", target)
+
+	output, stderr, _, err := runCommand(ctx, s.timeout, binary, args)
 	if err != nil {
-		out.AddError(s.Name(), fmt.Sprintf("trufflehog execution failed: %v", err))
+		if len(bytes.TrimSpace(output)) > 0 {
+			before := len(out.Findings)
+			parsed, _ := parseTrufflehogOutput(out, output)
+			if len(parsed.Findings) > before {
+				return parsed, nil
+			}
+		}
+		msg := fmt.Sprintf("trufflehog execution failed: %v", err)
+		if stderr != "" {
+			msg += ": " + stderr
+		}
+		out.AddError(s.Name(), msg)
 		return out, nil
 	}
 	return parseTrufflehogOutput(out, output)
@@ -52,7 +73,7 @@ func (s *trufflehogStage) Run(ctx context.Context, target string, input *report.
 
 func parseTrufflehogOutput(out *report.Report, data []byte) (*report.Report, error) {
 	scanner := bufio.NewScanner(bytes.NewReader(data))
-	scanner.Buffer(make([]byte, 1024), 1024*1024)
+	scanner.Buffer(make([]byte, 1024), 4*1024*1024)
 	for scanner.Scan() {
 		scanLine := scanner.Bytes()
 		if len(bytes.TrimSpace(scanLine)) == 0 {

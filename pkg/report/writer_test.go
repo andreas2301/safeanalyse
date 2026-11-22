@@ -295,3 +295,44 @@ func TestWriteAll_CapPreservesSeverity(t *testing.T) {
 		t.Errorf("critical finding was dropped by cap")
 	}
 }
+
+func TestWriteAll_RedactsWhenCappedAndAllFields(t *testing.T) {
+	dir := t.TempDir()
+	cfg := config.OutputConfig{Formats: []string{"json"}, OutDir: dir, MaxFindings: 2}
+
+	openAIKey := "sk-" + "proj-" + "1234567890abcdefghij1234"
+	antKey := "sk-" + "ant-" + "1234567890abcdefghij1234"
+	customSecret := "super-secret-custom-provider-token-999"
+
+	r := NewReport("cap-redact-test")
+	r.AddFinding(Finding{
+		RuleID:      "gitleaks-custom",
+		Severity:    SeverityCritical,
+		Category:    "secret",
+		File:        "a.env",
+		Line:        1,
+		Match:       customSecret,
+		Message:     "leaked " + openAIKey,
+		Description: "found " + antKey,
+		Source:      "gitleaks",
+		Attributes:  map[string]string{"raw": openAIKey},
+	})
+	r.AddFinding(Finding{RuleID: "low1", Severity: SeverityLow, File: "b.go", Line: 1, Source: "test"})
+	r.AddFinding(Finding{RuleID: "low2", Severity: SeverityLow, File: "c.go", Line: 1, Source: "test"})
+	r.Verdicts = []Verdict{{ID: "secrets", Question: "secrets?", Answer: AnswerYes, Evidence: []string{"token=" + openAIKey}}}
+
+	if err := WriteAll(r, cfg); err != nil {
+		t.Fatalf("WriteAll failed: %v", err)
+	}
+
+	raw, err := os.ReadFile(filepath.Join(dir, "safeanalyze.json"))
+	if err != nil {
+		t.Fatalf("reading output: %v", err)
+	}
+	text := string(raw)
+	for _, leak := range []string{openAIKey, antKey, customSecret} {
+		if strings.Contains(text, leak) {
+			t.Errorf("capped JSON report leaked secret %q", leak)
+		}
+	}
+}

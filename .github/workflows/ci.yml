@@ -1,0 +1,35 @@
+name: Go CI
+
+on:
+  push:
+    branches: [master]
+  pull_request:
+
+permissions:
+  contents: read
+
+jobs:
+  test-and-verify:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-go@v5
+        with:
+          go-version-file: go.mod
+          cache: true
+
+      - name: Vet
+        run: go vet ./...
+
+      - name: Test (with race detector)
+        run: go test -race -count=1 ./...
+
+      - name: Build binary
+        run: go build -o ./safeanalyze .
+
+      - name: Pre-flight diagnostics
+        run: ./safeanalyze doctor --json
+
+      - name: Offline synthetic eval check
+        run: ./safeanalyze eval testdata/synthetic/prompt_injection_suite.jsonl

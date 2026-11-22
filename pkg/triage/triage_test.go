@@ -25,6 +25,9 @@ func TestLegacyTiers(t *testing.T) {
 		{"system prompt mention in agent file", report.Finding{Source: "yara", RuleID: "prompt_injection_comment", Severity: "critical", Match: "system prompt", File: "skills/x/SKILL.md"}, report.TierB},
 		{"prompt injection in changelog", report.Finding{Source: "yara", RuleID: "prompt_injection_comment", Severity: "critical", Match: "ignore previous instructions", File: "CHANGELOG.md"}, report.TierB},
 		{"template interpolation is noise", report.Finding{Source: "yara", RuleID: "template_injection", Severity: "medium", File: "pkg/a.go"}, report.TierC},
+		{"bumblebee critical exposure is Tier A", report.Finding{Source: "bumblebee", RuleID: "advisory-2026-0042", Severity: "critical", File: "package-lock.json"}, report.TierA},
+		{"bumblebee medium exposure is Tier B", report.Finding{Source: "bumblebee", RuleID: "advisory-2026-0043", Severity: "medium", File: "package-lock.json"}, report.TierB},
+		{"generic plugin critical with question is Tier A", report.Finding{Source: "osv-scanner", RuleID: "OSV-1", Severity: "critical", Question: "deps", File: "go.mod"}, report.TierA},
 	}
 	for _, c := range cases {
 		rep := report.NewReport(t.TempDir())

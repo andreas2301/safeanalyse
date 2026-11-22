@@ -22,6 +22,9 @@ func CopyDir(src, dst string) error {
 		if d.IsDir() {
 			return os.MkdirAll(outPath, 0755)
 		}
+		if d.Type()&os.ModeSymlink != 0 || !d.Type().IsRegular() {
+			return nil
+		}
 
 		data, err := os.ReadFile(path)
 		if err != nil {

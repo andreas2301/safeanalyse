@@ -1,6 +1,8 @@
 package report
 
 import (
+	"crypto/sha256"
+	"encoding/hex"
 	"encoding/json"
 	"fmt"
 	"os"
@@ -28,6 +30,11 @@ func WriteSARIF(report *Report, path string) error {
 		results = append(results, findingToResult(f, ruleIndices))
 	}
 
+	driverVersion := ""
+	if report.Metadata != nil {
+		driverVersion = report.Metadata["safeanalyze_version"]
+	}
+
 	log := sarifLog{
 		Version: "2.1.0",
 		Schema:  "https://raw.githubusercontent.com/oasis-tcs/sarif-spec/master/Schemata/sarif-schema-2.1.0.json",
@@ -36,14 +43,15 @@ func WriteSARIF(report *Report, path string) error {
 				Tool: sarifTool{
 					Driver: sarifDriver{
 						Name:           "safeanalyze",
-						InformationURI: "https://github.com/user/safeanalyze",
+						Version:        driverVersion,
+						InformationURI: "https://github.com/andreas2301/safeanalyse",
 						Rules:          rules,
 					},
 				},
 				Results: results,
 				Invocations: []sarifInvocation{
 					{
-						ExecutionSuccessful: true,
+						ExecutionSuccessful: len(report.Errors) == 0,
 						StartTimeUTC:        report.StartedAt.Format(timeRFC3339Millis),
 						EndTimeUTC:          report.StartedAt.Add(time.Duration(report.DurationMs) * time.Millisecond).Format(timeRFC3339Millis),
 					},
@@ -84,6 +92,7 @@ type sarifTool struct {
 
 type sarifDriver struct {
 	Name           string      `json:"name"`
+	Version        string      `json:"version,omitempty"`
 	InformationURI string      `json:"informationUri"`
 	Rules          []sarifRule `json:"rules"`
 }
@@ -102,12 +111,13 @@ type sarifMessage struct {
 }
 
 type sarifResult struct {
-	RuleID     string           `json:"ruleId"`
-	RuleIndex  int              `json:"ruleIndex"`
-	Level      string           `json:"level"`
-	Message    sarifMessage     `json:"message"`
-	Locations  []sarifLocation  `json:"locations"`
-	Properties sarifResultProps `json:"properties"`
+	RuleID              string            `json:"ruleId"`
+	RuleIndex           *int              `json:"ruleIndex,omitempty"`
+	Level               string            `json:"level"`
+	Message             sarifMessage      `json:"message"`
+	Locations           []sarifLocation   `json:"locations"`
+	PartialFingerprints map[string]string `json:"partialFingerprints,omitempty"`
+	Properties          sarifResultProps  `json:"properties"`
 }
 
 type sarifLocation struct {
@@ -168,10 +178,16 @@ func buildSARIFRules(findings []Finding) []sarifRule {
 	return rules
 }
 
+func findingFingerprint(f Finding) string {
+	h := sha256.Sum256([]byte(fmt.Sprintf("%s|%s|%d|%d|%s", f.RuleID, f.File, f.Line, f.Column, f.Source)))
+	return hex.EncodeToString(h[:16])
+}
+
 func findingToResult(f Finding, ruleIndices map[string]int) sarifResult {
-	idx := -1
+	var ruleIndex *int
 	if i, ok := ruleIndices[f.RuleID]; ok {
-		idx = i
+		idx := i
+		ruleIndex = &idx
 	}
 
 	msg := f.Message
@@ -190,7 +206,7 @@ func findingToResult(f Finding, ruleIndices map[string]int) sarifResult {
 
 	return sarifResult{
 		RuleID:    f.RuleID,
-		RuleIndex: idx,
+		RuleIndex: ruleIndex,
 		Level:     severityToSARIFLevel(f.Severity),
 		Message:   sarifMessage{Text: msg},
 		Locations: []sarifLocation{
@@ -204,6 +220,9 @@ func findingToResult(f Finding, ruleIndices map[string]int) sarifResult {
 					},
 				},
 			},
+		},
+		PartialFingerprints: map[string]string{
+			"primaryLocationLineHash": findingFingerprint(f),
 		},
 		Properties: sarifResultProps{
 			Category:    f.Category,

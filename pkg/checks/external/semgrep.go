@@ -1,20 +1,44 @@
 package external
 
 import (
+	"bytes"
 	"context"
 	"encoding/json"
 	"fmt"
-	"os/exec"
+	"time"
 
 	"github.com/user/safeanalyze/pkg/report"
 )
 
-// semgrepStage runs Semgrep with security-audit and prompt-injection rules.
-type semgrepStage struct{}
+const semgrepRemoteAIRulesURL = "https://raw.githubusercontent.com/foundationmachines/semgrep-ai-security/main/rules/prompt-injection.yml"
+
+// semgrepStage runs Semgrep with security-audit rules. Remote rule fetches are
+// disabled by default to preserve offline-first and supply-chain integrity.
+type semgrepStage struct {
+	excludedPaths []string
+	remoteRules   bool
+	timeout       time.Duration
+}
 
 // NewSemgrepStage creates a Semgrep pipeline stage.
 func NewSemgrepStage(excludedPaths []string) *semgrepStage {
-	return &semgrepStage{}
+	return &semgrepStage{
+		excludedPaths: excludedPaths,
+		timeout:       defaultScannerTimeout,
+	}
+}
+
+// NewSemgrepStageWithOptions creates a Semgrep pipeline stage with explicit
+// remote-rules opt-in and timeout.
+func NewSemgrepStageWithOptions(excludedPaths []string, remoteRules bool, timeout time.Duration) *semgrepStage {
+	if timeout <= 0 {
+		timeout = defaultScannerTimeout
+	}
+	return &semgrepStage{
+		excludedPaths: excludedPaths,
+		remoteRules:   remoteRules,
+		timeout:       timeout,
+	}
 }
 
 // Name returns the stage name.
@@ -31,16 +55,28 @@ func (s *semgrepStage) Run(ctx context.Context, target string, input *report.Rep
 	if binary == "" {
 		return missingBinary(out, s.Name()), nil
 	}
-	args := []string{
-		"--config=p/security-audit",
-		"--config=https://raw.githubusercontent.com/foundationmachines/semgrep-ai-security/main/rules/prompt-injection.yml",
-		target,
-		"--json",
+	args := []string{"--config=p/security-audit", "--json"}
+	if s.remoteRules {
+		args = append(args, "--config="+semgrepRemoteAIRulesURL)
 	}
-	cmd := exec.CommandContext(ctx, binary, args...)
-	output, err := cmd.Output()
+	for _, ex := range s.excludedPaths {
+		if ex != "" {
+			args = append(args, "--exclude="+ex)
+		}
+	}
+	args = append(args, "--", target)
+
+	output, stderr, exitCode, err := runCommand(ctx, s.timeout, binary, args)
 	if err != nil {
-		out.AddError(s.Name(), fmt.Sprintf("semgrep execution failed: %v", err))
+		// Semgrep exits 1 when findings are reported with --error; parse JSON if present.
+		if exitCode == 1 && len(bytes.TrimSpace(output)) > 0 {
+			return parseSemgrepOutput(out, output)
+		}
+		msg := fmt.Sprintf("semgrep execution failed: %v", err)
+		if stderr != "" {
+			msg += ": " + stderr
+		}
+		out.AddError(s.Name(), msg)
 		return out, nil
 	}
 	return parseSemgrepOutput(out, output)

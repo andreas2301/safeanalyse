@@ -776,10 +776,13 @@ func IsBinaryContent(data []byte) bool {
 	return nonPrintable*100/n > 30
 }
 
+// maxWalkFileBytes bounds single-file reads during directory walks so a giant
+// file in an untrusted repository cannot OOM the scanner.
+const maxWalkFileBytes = 16 << 20
+
 // WalkDirSorted walks a directory deterministically, skipping excluded paths,
-// and calls fn for each regular file with its content and relative path.
-// Binary files are skipped because they cannot contain prompt-injection
-// payloads in a form the text-based checks can reason about.
+// symlinks, non-regular files, oversized files, and binaries, and calls fn for
+// each regular text file with its content and relative path.
 func WalkDirSorted(root string, excludedPaths []string, fn func(path string, content []byte, rel string) error) error {
 	excluded := make(map[string]bool)
 	for _, p := range excludedPaths {
@@ -788,7 +791,12 @@ func WalkDirSorted(root string, excludedPaths []string, fn func(path string, con
 
 	return filepath.WalkDir(root, func(path string, d os.DirEntry, err error) error {
 		if err != nil {
-			return err
+			// Ignore unreadable sub-entries when walking untrusted trees unless
+			// the root itself cannot be accessed.
+			if path == root {
+				return err
+			}
+			return nil
 		}
 		rel, err := filepath.Rel(root, path)
 		if err != nil {
@@ -805,12 +813,21 @@ func WalkDirSorted(root string, excludedPaths []string, fn func(path string, con
 		if d.IsDir() {
 			return nil
 		}
+		// Never follow symlinks or read special files (FIFOs, device nodes,
+		// sockets) inside an untrusted repository.
+		if d.Type()&os.ModeSymlink != 0 || !d.Type().IsRegular() {
+			return nil
+		}
 		if binaryExtensions[strings.ToLower(filepath.Ext(rel))] {
+			return nil
+		}
+		info, err := d.Info()
+		if err != nil || info.Size() > maxWalkFileBytes {
 			return nil
 		}
 		content, err := os.ReadFile(path)
 		if err != nil {
-			return err
+			return nil
 		}
 		if IsBinaryContent(content) {
 			return nil
