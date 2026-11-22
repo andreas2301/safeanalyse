@@ -2,9 +2,11 @@ package cmd
 
 import (
 	"context"
+	"errors"
 	"fmt"
 	"log/slog"
 	"net"
+	"net/http"
 	"os"
 	"os/signal"
 	"runtime"
@@ -50,6 +52,10 @@ Squid configuration:
 		failClosed, _ := cmd.Flags().GetBool("fail-closed")
 		blockSev, _ := cmd.Flags().GetString("block-severity")
 		maxScans, _ := cmd.Flags().GetInt("max-concurrent-scans")
+		maxConns, _ := cmd.Flags().GetInt("max-connections")
+		logOnly, _ := cmd.Flags().GetBool("log-only")
+		blockCTRaw, _ := cmd.Flags().GetString("block-content-types")
+		adminListen, _ := cmd.Flags().GetString("admin-listen")
 		if maxScans < 1 {
 			return fmt.Errorf("--max-concurrent-scans must be >= 1")
 		}
@@ -61,6 +67,7 @@ Squid configuration:
 		if report.SeverityRank(blockSev) == 0 {
 			return fmt.Errorf("invalid --block-severity %q (critical, high, medium or low)", blockSev)
 		}
+		blockContentTypes := parseContentTypeList(blockCTRaw)
 
 		logger := slog.New(slog.NewJSONHandler(os.Stderr, nil))
 		srv, err := icap.NewServer(icap.Config{
@@ -70,6 +77,9 @@ Squid configuration:
 			FailOpen:           !failClosed,
 			BlockSeverity:      blockSev,
 			MaxConcurrentScans: maxScans,
+			MaxConnections:     maxConns,
+			LogOnly:            logOnly,
+			BlockContentTypes:  blockContentTypes,
 			ISTag:              "safeanalyze-" + version.Version,
 			Scan:               icapScan,
 			Logger:             logger,
@@ -81,9 +91,38 @@ Squid configuration:
 		if err != nil {
 			return fmt.Errorf("listening on %s: %w", listen, err)
 		}
+
+		var adminSrv *http.Server
+		var adminAddr string
+		if adminListen != "" {
+			adminLn, err := net.Listen("tcp", adminListen)
+			if err != nil {
+				ln.Close()
+				return fmt.Errorf("listening admin on %s: %w", adminListen, err)
+			}
+			adminAddr = adminLn.Addr().String()
+			adminSrv = &http.Server{
+				Handler:           srv.Metrics().Handler(srv.Ready),
+				ReadHeaderTimeout: 5 * time.Second,
+			}
+			logger.Info("icap admin server listening", "addr", adminAddr)
+			go func() {
+				if err := adminSrv.Serve(adminLn); err != nil && !errors.Is(err, http.ErrServerClosed) {
+					logger.Error("icap admin server error", "error", err.Error())
+				}
+			}()
+			defer func() {
+				shutdownCtx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
+				defer cancel()
+				_ = adminSrv.Shutdown(shutdownCtx)
+			}()
+		}
+
 		logger.Info("icap server listening", "addr", ln.Addr().String(), "service", service,
 			"max_body_bytes", maxBody, "timeout", timeout.String(), "fail_open", !failClosed,
 			"block_severity", blockSev, "max_concurrent_scans", maxScans,
+			"max_connections", maxConns, "log_only", logOnly,
+			"block_content_types", blockContentTypes, "admin_addr", adminAddr,
 			"safeanalyze_version", version.Version)
 
 		ctx, stop := signal.NotifyContext(context.Background(), os.Interrupt, syscall.SIGTERM)
@@ -91,9 +130,29 @@ Squid configuration:
 		go func() {
 			<-ctx.Done()
 			srv.Close()
+			if adminSrv != nil {
+				shutdownCtx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
+				defer cancel()
+				_ = adminSrv.Shutdown(shutdownCtx)
+			}
 		}()
 		return srv.Serve(ln)
 	},
+}
+
+// parseContentTypeList splits a comma-separated list of media types into
+// trimmed non-empty entries.
+func parseContentTypeList(raw string) []string {
+	if strings.TrimSpace(raw) == "" {
+		return nil
+	}
+	var out []string
+	for _, part := range strings.Split(raw, ",") {
+		if s := strings.TrimSpace(part); s != "" {
+			out = append(out, s)
+		}
+	}
+	return out
 }
 
 // icapScan runs the same fast-mode detection path as inspect and eval.
@@ -111,6 +170,10 @@ func init() {
 	icapCmd.Flags().Int("max-body-bytes", 2<<20, "scan at most this many (decoded) body bytes per response")
 	icapCmd.Flags().Duration("timeout", 2*time.Second, "scan time budget per response (includes waiting for a scan slot)")
 	icapCmd.Flags().Int("max-concurrent-scans", runtime.NumCPU()*2, "maximum scans in flight, including timed-out scans still running")
+	icapCmd.Flags().Int("max-connections", 256, "maximum concurrent TCP connections (<0 for unlimited)")
+	icapCmd.Flags().Bool("log-only", false, "scan and log findings without blocking responses (shadow mode)")
+	icapCmd.Flags().String("block-content-types", "", "comma-separated media types eligible to block, e.g. text/plain,message/rfc822 (empty blocks all scannable types)")
+	icapCmd.Flags().String("admin-listen", "", "optional HTTP listen address for /healthz, /readyz, /metrics, e.g. 127.0.0.1:9102")
 	icapCmd.Flags().Bool("fail-open", false, "allow responses on errors/timeouts (default)")
 	icapCmd.Flags().Bool("fail-closed", false, "block responses on errors/timeouts")
 	icapCmd.Flags().String("block-severity", "high", "minimum finding severity that blocks (critical|high|medium|low)")

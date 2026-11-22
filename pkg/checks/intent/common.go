@@ -43,15 +43,16 @@ type File struct {
 	Role    string
 	Content string
 	// Dep marks source of a downloaded dependency (scan --network).
-	Dep   bool
-	lines []string
+	Dep       bool
+	linesOnce sync.Once
+	lines     []string
 }
 
-// Lines returns the file content split into lines.
+// Lines returns the file content split into lines. Safe for concurrent callers.
 func (f *File) Lines() []string {
-	if f.lines == nil {
+	f.linesOnce.Do(func() {
 		f.lines = strings.Split(f.Content, "\n")
-	}
+	})
 	return f.lines
 }
 
